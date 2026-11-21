@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, Coins, Flame, Layers, Loader2, ScanFace, ShieldCheck, Timer, Users } from 'lucide-react';
+import { ChevronRight, Coins, FilePlus2, Flame, Layers, Loader2, ScanFace, ShieldCheck, Timer, Users, Wallet } from 'lucide-react';
 import clsx from 'clsx';
 import type { VerifySession } from '@/types';
 import { useApp } from '@/components/AppProvider';
@@ -136,6 +136,18 @@ export default function HomePage() {
               </>
             )}
           </section>
+
+          {/* 빠른 이동 (일부 모바일 WebView 하단 시스템 바 가림 대비) */}
+          <div className="grid grid-cols-2 gap-2">
+            <Link href="/submit" className="btn-ghost">
+              <FilePlus2 className="h-4 w-4 text-human" />
+              의뢰하기
+            </Link>
+            <Link href="/wallet" className="btn-ghost">
+              <Wallet className="h-4 w-4 text-pi" />
+              내 지갑
+            </Link>
+          </div>
         </>
       )}
 
