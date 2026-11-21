@@ -50,3 +50,11 @@ create unique index if not exists vl_ledger_payment_uniq
 -- ---------------------------------------------------------------------
 alter table public.vl_documents enable row level security;
 alter table public.vl_votes enable row level security;
+
+-- ---------------------------------------------------------------------
+-- 권한 부여: service_role 에 테이블/시퀀스 권한 명시적 부여
+-- (최신 Supabase 프로젝트에서는 SQL Editor 로 만든 테이블에 자동 부여되지 않을 수 있음)
+-- ---------------------------------------------------------------------
+grant all on table public.vl_documents to service_role;
+grant all on table public.vl_votes to service_role;
+grant usage, select on sequence public.vl_votes_id_seq to service_role;
