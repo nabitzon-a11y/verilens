@@ -36,6 +36,21 @@ const STAGE_LABEL: Record<Stage | 'draft', string> = {
 const TEXT_MIN = 10;
 const TEXT_MAX = 600;
 
+const PROMPT_PRESETS: Record<MissionKind, readonly string[]> = {
+  text: [
+    '어느 쪽이 실제 사람이 직접 쓴 글일까요?',
+    '실제 경험에 기반한 후기는 어느 쪽인가요?',
+    'AI가 지어내지 않은 자연스러운 글은?',
+  ],
+  image: [
+    '어느 쪽이 AI가 만들지 않은 원본 장면일까요?',
+    '실제 카메라로 찍은 사진은 어느 쪽인가요?',
+    '합성 흔적이 없는 자연스러운 이미지는?',
+  ],
+};
+
+const SOURCE_PRESETS = ['뉴스 기사', '배달앱 리뷰', '쇼핑몰 상품평', 'SNS 게시글', '커뮤니티 답변', '카페/식당 후기'] as const;
+
 export default function SubmitPage() {
   const { ready, profile, paymentsMode, refresh } = useApp();
 
@@ -195,6 +210,14 @@ export default function SubmitPage() {
               placeholder={kind === 'text' ? '어느 쪽이 실제 사람이 직접 쓴 글일까요?' : '어느 쪽이 AI가 만들지 않은 원본 장면일까요?'}
               className="input"
             />
+            <PresetChips
+              options={PROMPT_PRESETS[kind]}
+              value={prompt}
+              onPick={(v) => {
+                setPrompt(v);
+                touch();
+              }}
+            />
           </Field>
 
           {kind === 'text' ? (
@@ -209,6 +232,14 @@ export default function SubmitPage() {
                   }}
                   placeholder="예: 쇼핑몰 상품평, 뉴스 기사"
                   className="input"
+                />
+                <PresetChips
+                  options={SOURCE_PRESETS}
+                  value={sourceLabel}
+                  onPick={(v) => {
+                    setSourceLabel(v);
+                    touch();
+                  }}
                 />
               </Field>
               {(['A', 'B'] as const).map((side) => {
@@ -289,13 +320,46 @@ export default function SubmitPage() {
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
-    <label className="block space-y-1.5">
-      <span className="flex justify-between text-xs font-medium text-slate-400">
-        {label}
+    <div className="space-y-1.5">
+      <div className="flex justify-between text-xs font-medium text-slate-400">
+        <span>{label}</span>
         {hint && <span className="text-slate-600">{hint}</span>}
-      </span>
+      </div>
       {children}
-    </label>
+    </div>
+  );
+}
+
+function PresetChips({
+  options,
+  value,
+  onPick,
+}: {
+  options: readonly string[];
+  value: string;
+  onPick: (v: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-1.5 pt-0.5">
+      {options.map((opt) => {
+        const active = value === opt;
+        return (
+          <button
+            key={opt}
+            type="button"
+            onClick={() => onPick(active ? '' : opt)}
+            className={clsx(
+              'rounded-full border px-2.5 py-1 text-[11px] transition',
+              active
+                ? 'border-human bg-human/15 font-semibold text-human'
+                : 'border-white/10 bg-white/[0.03] text-slate-400 hover:border-white/20 hover:text-slate-200',
+            )}
+          >
+            {opt}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
