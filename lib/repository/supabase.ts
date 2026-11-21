@@ -47,9 +47,12 @@ export class SupabaseRepository implements Repository {
   private async request<T>(path: string, init: { method?: string; body?: unknown; prefer?: string } = {}): Promise<T> {
     const headers: Record<string, string> = {
       apikey: this.key,
-      Authorization: `Bearer ${this.key}`,
       'Content-Type': 'application/json',
     };
+    // legacy JWT(service_role) 만 Authorization: Bearer 사용 (sb_secret_ 새 키는 apikey 헤더만 사용)
+    if (!this.key.startsWith('sb_')) {
+      headers.Authorization = `Bearer ${this.key}`;
+    }
     if (init.prefer) headers.Prefer = init.prefer;
 
     let res: Response;
