@@ -110,6 +110,8 @@ export function shouldUseDemoMode(): boolean {
 
 let sdkPromise: Promise<PiSdk | null> | null = null;
 let initPromise: Promise<void> | null = null;
+/** 현재 페이지 로드에서 Pi.authenticate(['username','payments']) 를 통과했는지 */
+let piAuthenticated = false;
 
 /** pi-sdk.js 를 (layout 에서 이미 로드되지 않았다면) 동적으로 삽입하고 window.Pi 를 반환 */
 export function loadPiSdk(): Promise<PiSdk | null> {
@@ -192,11 +194,13 @@ async function flushIncompletePayments(): Promise<IncompletePaymentResponse[]> {
 
 async function authenticateWithPi(): Promise<PiAuthResult> {
   const Pi = await getInitializedPi();
-  return withTimeout(
+  const res = await withTimeout(
     Pi.authenticate(['username', 'payments'], onIncompletePaymentFound),
     AUTH_TIMEOUT_MS,
     'Pi 인증 응답이 없습니다. Pi Browser 에서 앱을 열었는지 확인해 주세요.',
   );
+  piAuthenticated = true;
+  return res;
 }
 
 export interface SignInResult extends SignInResponse {
@@ -225,6 +229,7 @@ export async function signIn(opts: { forceDemo?: boolean } = {}): Promise<SignIn
 }
 
 export function signOut(): void {
+  piAuthenticated = false;
   setAuthToken(null);
 }
 
@@ -278,6 +283,11 @@ async function payWithPi(
   onStage?: SubmissionPaymentParams['onStage'],
 ): Promise<PaymentCompleteResponse> {
   const Pi = await getInitializedPi();
+  // 페이지를 새로고침해 localStorage 로그인만 복원된 경우에도 SDK 에 payments 권한을 다시 연결
+  if (!piAuthenticated) {
+    await authenticateWithPi();
+    await flushIncompletePayments();
+  }
   onStage?.('creating');
 
   return new Promise<PaymentCompleteResponse>((resolve, reject) => {
