@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300" role="img" aria-label="Bakery storefront">
+  <rect width="400" height="300" fill="#BFDBFE"/>
+  <!-- facade -->
+  <rect x="40" y="40" width="320" height="260" fill="#D6C3A5"/>
+  <!-- sign board -->
+  <rect x="70" y="56" width="260" height="66" rx="8" fill="#1F2937"/>
+  <text x="200" y="96" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="32" font-weight="700" letter-spacing="6" fill="#FFFFFF">BAKERY</text>
+  <text x="200" y="114" text-anchor="middle" font-family="'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif" font-size="12" fill="#FDE68A">동네빵집 · 매일 08:00 – 21:00</text>
+  <!-- awning -->
+  <g>
+    <rect x="56" y="132" width="288" height="26" fill="#FFFFFF"/>
+    <rect x="56" y="132" width="24" height="26" fill="#DC2626"/>
+    <rect x="104" y="132" width="24" height="26" fill="#DC2626"/>
+    <rect x="152" y="132" width="24" height="26" fill="#DC2626"/>
+    <rect x="200" y="132" width="24" height="26" fill="#DC2626"/>
+    <rect x="248" y="132" width="24" height="26" fill="#DC2626"/>
+    <rect x="296" y="132" width="24" height="26" fill="#DC2626"/>
+  </g>
+  <!-- windows -->
+  <rect x="64" y="176" width="88" height="80" fill="#93C5FD" stroke="#7C4A2D" stroke-width="4"/>
+  <line x1="108" y1="176" x2="108" y2="256" stroke="#7C4A2D" stroke-width="4"/>
+  <rect x="248" y="176" width="88" height="80" fill="#93C5FD" stroke="#7C4A2D" stroke-width="4"/>
+  <line x1="292" y1="176" x2="292" y2="256" stroke="#7C4A2D" stroke-width="4"/>
+  <!-- bread in window -->
+  <ellipse cx="86" cy="244" rx="14" ry="7" fill="#B45309"/>
+  <ellipse cx="130" cy="244" rx="14" ry="7" fill="#D97706"/>
+  <ellipse cx="270" cy="244" rx="14" ry="7" fill="#D97706"/>
+  <ellipse cx="314" cy="244" rx="14" ry="7" fill="#B45309"/>
+  <!-- door -->
+  <rect x="168" y="172" width="64" height="128" fill="#7C4A2D"/>
+  <rect x="178" y="184" width="44" height="40" fill="#93C5FD"/>
+  <circle cx="222" cy="240" r="3" fill="#FDE68A"/>
+  <!-- open sign -->
+  <rect x="180" y="230" width="40" height="18" rx="3" fill="#FFFFFF"/>
+  <text x="200" y="243" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#16A34A">OPEN</text>
+</svg>

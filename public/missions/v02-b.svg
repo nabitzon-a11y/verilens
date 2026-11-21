@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300" role="img" aria-label="Bakery storefront">
+  <rect width="400" height="300" fill="#BFDBFE"/>
+  <!-- facade -->
+  <rect x="40" y="40" width="320" height="260" fill="#D6C3A5"/>
+  <!-- sign board (garbled glyphs) -->
+  <rect x="70" y="56" width="260" height="66" rx="8" fill="#1F2937"/>
+  <text x="200" y="96" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="32" font-weight="700" letter-spacing="6" fill="#FFFFFF">BΛKΞЯY</text>
+  <text x="200" y="114" text-anchor="middle" font-family="'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif" font-size="12" fill="#FDE68A">돔네빵짒 · 매잂 08:6O – 2l:0O</text>
+  <!-- awning (uneven stripes) -->
+  <g>
+    <rect x="56" y="132" width="288" height="26" fill="#FFFFFF"/>
+    <rect x="56" y="132" width="24" height="26" fill="#DC2626"/>
+    <rect x="98" y="132" width="30" height="26" fill="#DC2626"/>
+    <rect x="152" y="132" width="16" height="26" fill="#DC2626"/>
+    <rect x="196" y="132" width="34" height="26" fill="#DC2626"/>
+    <rect x="252" y="132" width="20" height="26" fill="#DC2626"/>
+    <rect x="290" y="132" width="28" height="26" fill="#DC2626"/>
+  </g>
+  <!-- windows (mismatched frames) -->
+  <rect x="64" y="176" width="88" height="80" fill="#93C5FD" stroke="#7C4A2D" stroke-width="4"/>
+  <line x1="94" y1="176" x2="94" y2="256" stroke="#7C4A2D" stroke-width="4"/>
+  <line x1="124" y1="176" x2="120" y2="256" stroke="#7C4A2D" stroke-width="4"/>
+  <rect x="248" y="170" width="88" height="86" fill="#93C5FD" stroke="#7C4A2D" stroke-width="4"/>
+  <line x1="248" y1="210" x2="336" y2="214" stroke="#7C4A2D" stroke-width="4"/>
+  <!-- bread in window (one floating) -->
+  <ellipse cx="86" cy="244" rx="14" ry="7" fill="#B45309"/>
+  <ellipse cx="134" cy="226" rx="14" ry="7" fill="#D97706"/>
+  <ellipse cx="270" cy="244" rx="14" ry="7" fill="#D97706"/>
+  <ellipse cx="314" cy="244" rx="14" ry="7" fill="#B45309"/>
+  <!-- door -->
+  <rect x="168" y="172" width="64" height="128" fill="#7C4A2D"/>
+  <rect x="178" y="184" width="44" height="40" fill="#93C5FD"/>
+  <circle cx="222" cy="240" r="3" fill="#FDE68A"/>
+  <circle cx="178" cy="262" r="3" fill="#FDE68A"/>
+  <!-- open sign (garbled) -->
+  <rect x="180" y="230" width="40" height="18" rx="3" fill="#FFFFFF"/>
+  <text x="200" y="243" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#16A34A">OPEИ</text>
+</svg>

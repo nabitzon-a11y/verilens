@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300" role="img" aria-label="Lake with mountain reflection">
+<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FDBA74"/><stop offset="1" stop-color="#FDE68A"/></linearGradient>
+<linearGradient id="water" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3B82F6"/><stop offset="1" stop-color="#1E3A8A"/></linearGradient></defs>
+<rect width="400" height="170" fill="url(#sky)"/>
+<rect y="170" width="400" height="130" fill="url(#water)"/>
+<circle cx="330" cy="50" r="18" fill="#FFF7ED"/>
+<polygon points="120,170 200,80 290,170" fill="#475569"/>
+<polygon points="178,105 200,80 222,105 210,100 200,108 190,100" fill="#F8FAFC"/>
+<rect x="56" y="130" width="8" height="40" fill="#78350F"/>
+<circle cx="60" cy="115" r="22" fill="#166534"/>
+<g opacity="0.45">
+<polygon points="100,170 170,240 210,200 260,252 310,170" fill="#475569"/>
+<circle cx="70" cy="282" r="18" fill="#FFF7ED"/>
+</g>
+<path d="M20 196h60 M150 214h90 M280 232h70 M60 262h80 M220 280h100" stroke="#BFDBFE" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+</svg>

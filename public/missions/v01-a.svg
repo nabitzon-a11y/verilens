@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300" role="img" aria-label="Open hand">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E2E8F0"/>
+      <stop offset="1" stop-color="#CBD5E1"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#bg)"/>
+  <!-- sleeve -->
+  <rect x="160" y="228" width="84" height="60" fill="#E2A97E"/>
+  <rect x="146" y="262" width="112" height="38" rx="6" fill="#3B82F6"/>
+  <!-- thumb -->
+  <rect x="118" y="140" width="24" height="82" rx="12" fill="#E2A97E" transform="rotate(-38 142 218)"/>
+  <!-- fingers: 5 + thumb (one too many), 3rd & 4th fused at the tip -->
+  <rect x="152" y="72" width="18" height="96" rx="9" fill="#E2A97E"/>
+  <rect x="172" y="54" width="18" height="110" rx="9" fill="#E2A97E"/>
+  <rect x="192" y="46" width="18" height="118" rx="9" fill="#E2A97E"/>
+  <rect x="212" y="58" width="18" height="106" rx="9" fill="#E2A97E"/>
+  <path d="M199 58 Q211 40 223 66 L216 70 Q211 58 205 66 Z" fill="#E2A97E"/>
+  <rect x="232" y="84" width="18" height="84" rx="9" fill="#E2A97E"/>
+  <!-- palm -->
+  <rect x="150" y="138" width="104" height="108" rx="34" fill="#E2A97E"/>
+  <!-- knuckle lines (irregular) -->
+  <path d="M156 108h10 M176 92h10 M176 120h10 M196 84h10 M196 104h10 M196 126h10 M216 98h10 M236 116h10" stroke="#C98B62" stroke-width="2" stroke-linecap="round"/>
+  <!-- palm crease -->
+  <path d="M168 196 Q200 214 238 186" stroke="#C98B62" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>

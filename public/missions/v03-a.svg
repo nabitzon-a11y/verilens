@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300" role="img" aria-label="Outdoor scene with tree, pole and house">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7DD3FC"/>
+      <stop offset="1" stop-color="#E0F2FE"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#sky)"/>
+  <rect y="180" width="400" height="120" fill="#86EFAC"/>
+  <!-- single sun (top-left) -->
+  <circle cx="58" cy="48" r="24" fill="#FDE047"/>
+  <!-- inconsistent shadows -->
+  <!-- tree shadow → bottom-right -->
+  <polygon points="145,200 157,200 222,236 204,242" fill="#000" opacity="0.22"/>
+  <ellipse cx="226" cy="242" rx="30" ry="10" fill="#000" opacity="0.22"/>
+  <!-- pole shadow → bottom-LEFT (wrong) -->
+  <polygon points="258,204 264,204 206,240 198,236" fill="#000" opacity="0.22"/>
+  <!-- house shadow → up-LEFT toward the sun (wrong) -->
+  <polygon points="300,206 362,206 338,192 278,192" fill="#000" opacity="0.22"/>
+  <!-- tree -->
+  <rect x="145" y="140" width="12" height="60" fill="#78350F"/>
+  <circle cx="151" cy="124" r="32" fill="#15803D"/>
+  <!-- pole -->
+  <rect x="258" y="110" width="6" height="94" fill="#475569"/>
+  <rect x="246" y="116" width="30" height="4" fill="#475569"/>
+  <!-- house -->
+  <rect x="300" y="160" width="62" height="46" fill="#FEF3C7"/>
+  <polygon points="294,162 331,132 368,162" fill="#B91C1C"/>
+  <rect x="324" y="180" width="14" height="26" fill="#92400E"/>
+</svg>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300" role="img" aria-label="Wall clock">
+  <rect width="400" height="300" fill="#E7E5E4"/>
+  <circle cx="204" cy="156" r="118" fill="#000" opacity="0.08"/>
+  <circle cx="200" cy="150" r="115" fill="#FFFFFF" stroke="#334155" stroke-width="8"/>
+  <g font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#1E293B" text-anchor="middle">
+    <text x="244" y="74" dy="0.35em">1</text>
+    <text x="276" y="106" dy="0.35em">2</text>
+    <text x="288" y="150" dy="0.35em">3</text>
+    <text x="276" y="194" dy="0.35em">4</text>
+    <text x="244" y="226" dy="0.35em">5</text>
+    <text x="200" y="238" dy="0.35em">6</text>
+    <text x="156" y="226" dy="0.35em">7</text>
+    <text x="124" y="194" dy="0.35em">8</text>
+    <text x="112" y="150" dy="0.35em">8</text>
+    <text x="124" y="106" dy="0.35em">10</text>
+    <text x="156" y="74" dy="0.35em">11</text>
+    <text x="200" y="62" dy="0.35em">13</text>
+  </g>
+  <!-- three hands of equal weight, minute hand bent -->
+  <line x1="200" y1="150" x2="159" y2="121" stroke="#0F172A" stroke-width="6" stroke-linecap="round"/>
+  <polyline points="200,150 236,132 270,124" fill="none" stroke="#0F172A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="200" y1="150" x2="160" y2="214" stroke="#0F172A" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="200" cy="150" r="6" fill="#0F172A"/>
+</svg>

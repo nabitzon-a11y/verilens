@@ -1,0 +1,91 @@
+# VeriLens
+
+인간 직관 기반 AI 합성·딥페이크 진위 판별 플랫폼 (Pi Next 해커톤 MVP)
+
+> KYC 인증된 진짜 인간이 '실제 원본 vs AI 생성 가짜'를 5초 만에 판별하고,
+> 숨김 기준 문항 + 5인 다수결로 검증된 '청정 인간 라벨'을 생산해 Pi 로 보상받습니다.
+
+## 빠른 실행
+
+```powershell
+# Node.js 18.18 이상 (현재 개발 환경: v26.13.1)
+npm install
+Copy-Item .env.example .env.local   # 값은 비워둬도 Demo/Mock 모드로 동작
+npm run dev                          # http://localhost:3000
+```
+
+| 명령 | 설명 |
+|---|---|
+| `npm run dev` | 개발 서버 |
+| `npm run build` / `npm start` | 운영 빌드 / 실행 (`SESSION_SECRET` 32자 이상 필수) |
+| `npm run typecheck` · `npm run lint` | 타입 / 린트 검사 |
+
+## 동작 모드
+
+| 환경변수 | 비어 있을 때 | 설정했을 때 |
+|---|---|---|
+| `PI_API_KEY` | 결제 Mock Approval (`mock_*` 결제) | Pi Platform 실결제 승인/완료 |
+| `PI_WALLET_PRIVATE_SEED` | Claim = Mock A2U 정산 | (A2U 연동은 MVP 이후 구현 예정) |
+| `NEXT_PUBLIC_ALLOW_DEMO_MODE` | `true` → 일반 브라우저에서 데모 계정 자동 로그인 | `false` → Pi Browser 로그인만 허용 |
+| `DATA_STORE` | `json` → `.data/verilens.json` | `memory` → 재시작 시 초기화 / `supabase` → 배포용 영구 저장 |
+| `PI_VALIDATION_KEY` | `/validation-key.txt` 404 | Pi Developer Portal 도메인 인증 키 제공 |
+
+PiVerify 는 현재 `MockPiVerifyAdapter` 로 동작합니다. (공식 API 공개 후 `LivePiVerifyAdapter` 로 교체)
+
+> 배포(Vercel + Supabase)와 Pi Developer Portal 연동 절차는 **[DEPLOY.md](./DEPLOY.md)** 를 참고하세요.
+
+## 심사위원 데모 시나리오 (약 2분)
+
+1. **홈** — 일반 브라우저로 접속하면 Demo Pioneer 자동 로그인 (상단 Demo Sandbox Mode 배너)
+2. **인간 판별 세션 시작** — PiVerify 1단계 스캔 → 1시간 세션 토큰
+3. **판별하기** — 5문항 A/B 판별 (숨김 기준 문항 1개 포함). 0.3초 미만으로 연타하면 2단계 매크로 경고 → 재검증
+4. **결과** — 적중률·상위 %, 보상, 문항별 'AI가 남긴 흔적' 해설, 도전장 공유
+5. **의뢰하기** — 텍스트/이미지 A·B 등록 → 1 Test-Pi 결제 → 다음 세트에 즉시 노출 → 내 의뢰 현황에서 실제 응답 집계
+6. **내 지갑** — 0.01 π 이상이면 Claim → PiVerify 3단계 재검증 → 정산 내역 기록
+
+## 폴더 구조
+
+```
+verilens/
+├─ app/
+│  ├─ layout.tsx · globals.css     # AppProvider + Demo 배너 + 하단 탭 바
+│  ├─ page.tsx                     # 홈 & PiVerify 세션 시작
+│  ├─ verify/page.tsx              # 5문항 A/B 판별 + 2단계 행동 감시
+│  ├─ verify/result/page.tsx       # 결과 & AI 흔적 리포트 & 도전장 공유
+│  ├─ submit/page.tsx              # 의뢰자 문항 등록 + U2A 결제 + 내 의뢰 현황
+│  ├─ wallet/page.tsx              # 지갑/정산 + 3단계 Claim 재검증
+│  └─ api/
+│     ├─ auth/{signin,demo,me,signout}
+│     ├─ payments/{approve,complete,cancel,incomplete}
+│     ├─ verify/{session,recheck,claim}
+│     ├─ missions/{set,submit,draft,mine}
+│     └─ wallet/ · wallet/claim
+├─ components/                     # AppProvider, TabBar, DemoBanner, ScanModal, MissionCard, WarningModal, LoginPanel
+├─ lib/
+│  ├─ constants.ts                 # 게임·신뢰도·보안·지갑 규칙 (단일 기준)
+│  ├─ apiClient.ts · piSdk.ts · piVerifyClient.ts · image.ts · resultStore.ts · hooks.ts   # 클라이언트
+│  ├─ behavior.ts · format.ts      # 클라/서버 공용
+│  └─ 🔒 서버 전용: piPlatform.ts · payments.ts · piVerify.ts · auth.ts · users.ts · crypto.ts
+│        http.ts · lock.ts · consensus.ts · missionSets.ts · requests.ts · wallet.ts · repository/
+├─ data/missions.ts                # 시드 미션 28문항 (텍스트 20 + 시각 8, 기준 문항 5)
+├─ public/missions/                # 로컬 SVG 시각 문항 (v01~v08)
+├─ supabase/schema.sql             # Supabase 테이블 + 중복 지급 방지 유니크 인덱스 + RLS
+├─ app/validation-key.txt/         # Pi Developer Portal 도메인 인증 (PI_VALIDATION_KEY)
+└─ types/index.ts                  # 핵심 타입 + window.Pi 타입
+```
+
+## 보안 원칙
+
+- `PI_API_KEY` · `SESSION_SECRET` · `PI_WALLET_PRIVATE_SEED` 는 서버 전용 (`server-only` 로 클라이언트 번들 차단)
+- 정답(`humanSide`)·기준문항 여부(`isGold`)·가상 응답(`priorVotes`)은 클라이언트에 전달하지 않음. 결과 화면에서도 어떤 문항이 기준 문항이었는지는 비공개
+- 결제는 클라이언트 값을 신뢰하지 않고 Pi 서버에서 재조회해 사용자·금액·방향·메타데이터·txid 검증. 동일 결제/Claim 동시 요청은 키 단위 잠금으로 1회만 처리
+- 보상·신뢰도·합의 판정은 모두 서버에서 재계산. 클라이언트 반응시간은 서버 경과시간과 대조
+- Claim 은 2분 유효 1회성 재검증 토큰 필수
+- 매크로 의심·기준 문항 실패 세트, 본인 의뢰 문항 응답은 실제 라벨 집계에서 제외
+
+## 알려진 한계 (MVP)
+
+- 시드 문항 28개 — 반복 플레이 시 정답 암기가 여전히 가능 → 운영 시 공개용/비공개용 문항 분리 필요
+- JSON/메모리 저장소와 프로세스 내 잠금은 단일 서버 기준. Supabase 저장소는 금전 관련 중복(Claim·세트 보상·결제 원장)만 DB 유니크 인덱스로 차단
+- Supabase 저장소는 코드 작성만 완료, **실제 Supabase 연결 테스트는 미실시** (DEPLOY.md 2단계 후 진행)
+- PiVerify·A2U 는 Mock (실제 API 연동 지점은 `lib/piVerify.ts`, `lib/wallet.ts` 의 TODO 참고)

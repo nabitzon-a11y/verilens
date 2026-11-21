@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300" role="img" aria-label="Keyboard">
+<rect width="400" height="300" fill="#CBD5E1"/>
+<rect x="20" y="60" width="360" height="180" rx="14" fill="#1E293B"/>
+<rect x="35" y="78" width="30" height="30" rx="5" fill="#334155"/>
+<text x="50" y="98" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">Q</text>
+<rect x="69" y="78" width="30" height="30" rx="5" fill="#334155"/>
+<text x="84" y="98" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">W</text>
+<rect x="103" y="78" width="30" height="30" rx="5" fill="#334155"/>
+<text x="118" y="98" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">Ǝ</text>
+<rect x="137" y="78" width="30" height="30" rx="5" fill="#334155"/>
+<text x="152" y="98" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">R</text>
+<rect x="171" y="78" width="30" height="30" rx="5" fill="#334155"/>
+<text x="186" y="98" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">T</text>
+<rect x="205" y="78" width="30" height="30" rx="5" fill="#334155"/>
+<text x="220" y="98" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">Y</text>
+<rect x="239" y="78" width="30" height="30" rx="5" fill="#334155"/>
+<text x="254" y="98" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">U</text>
+<rect x="273" y="78" width="30" height="30" rx="5" fill="#334155"/>
+<text x="288" y="98" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">I</text>
+<rect x="307" y="78" width="30" height="30" rx="5" fill="#334155"/>
+<text x="322" y="98" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">I</text>
+<rect x="341" y="78" width="30" height="30" rx="5" fill="#334155"/>
+<text x="356" y="98" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">P</text>
+<rect x="52" y="116" width="30" height="30" rx="5" fill="#334155"/>
+<text x="67" y="136" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">A</text>
+<rect x="86" y="116" width="30" height="30" rx="5" fill="#334155"/>
+<text x="101" y="136" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">S</text>
+<rect x="120" y="116" width="30" height="30" rx="5" fill="#334155"/>
+<text x="135" y="136" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">D</text>
+<rect x="154" y="116" width="30" height="30" rx="5" fill="#334155"/>
+<text x="169" y="136" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">F</text>
+<rect x="188" y="116" width="30" height="30" rx="5" fill="#334155"/>
+<text x="203" y="136" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">G</text>
+<rect x="222" y="116" width="30" height="30" rx="5" fill="#334155"/>
+<text x="237" y="136" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">H</text>
+<rect x="256" y="116" width="30" height="30" rx="5" fill="#334155"/>
+<text x="271" y="136" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">J</text>
+<rect x="290" y="116" width="30" height="30" rx="5" fill="#334155"/>
+<text x="305" y="136" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">K</text>
+<rect x="324" y="116" width="30" height="30" rx="5" fill="#334155"/>
+<text x="339" y="136" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">K</text>
+<rect x="358" y="116" width="30" height="30" rx="5" fill="#334155"/>
+<text x="373" y="136" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">Ł</text>
+<rect x="69" y="154" width="30" height="30" rx="5" fill="#334155"/>
+<text x="84" y="174" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">Z</text>
+<rect x="103" y="154" width="30" height="30" rx="5" fill="#334155"/>
+<text x="118" y="174" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">X</text>
+<rect x="137" y="154" width="30" height="30" rx="5" fill="#334155"/>
+<text x="152" y="174" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">C</text>
+<rect x="171" y="154" width="30" height="30" rx="5" fill="#334155"/>
+<text x="186" y="174" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">V</text>
+<rect x="205" y="154" width="30" height="30" rx="5" fill="#334155"/>
+<text x="220" y="174" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">B</text>
+<rect x="239" y="154" width="30" height="30" rx="5" fill="#334155"/>
+<text x="254" y="174" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">И</text>
+<rect x="273" y="154" width="30" height="30" rx="5" fill="#334155"/>
+<text x="288" y="174" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#F1F5F9">M</text>
+<rect x="120" y="196" width="160" height="28" rx="5" fill="#334155"/>
+</svg>
