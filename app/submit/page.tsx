@@ -705,14 +705,14 @@ function MyMissionRow({
         {m.kind === 'text' ? <FileText className="h-4 w-4 text-slate-400" /> : <ImageIcon className="h-4 w-4 text-slate-400" />}
         <p className="flex-1 truncate text-base font-medium text-slate-900">{m.prompt}</p>
         <span className={clsx('chip', s.cls)}>{s.label}</span>
-        {m.status === 'active' && (
+        {(m.status === 'active' || m.status === 'draft') && (
           <button
             type="button"
             disabled={closing}
             onClick={() => void handleClose()}
             className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-600 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
           >
-            {closing ? '…' : en ? 'Close' : '마감'}
+            {closing ? '…' : m.status === 'draft' ? (en ? 'Cancel' : '취소') : en ? 'Close' : '마감'}
           </button>
         )}
       </div>

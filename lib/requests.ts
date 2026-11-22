@@ -61,11 +61,12 @@ export async function createDraft(uid: string, input: DraftInput): Promise<Draft
   const repo = getRepository();
   const mode = input.mode ?? 'compare';
 
-  const pending = (await repo.listMissions({ origin: 'requester', status: 'draft' })).filter(
-    (m) => m.requesterUid === uid,
-  );
+  const pending = (await repo.listMissions({ origin: 'requester', status: 'draft' }))
+    .filter((m) => m.requesterUid === uid)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   if (pending.length >= MAX_PENDING_DRAFTS) {
-    throw new HttpError(429, `결제 대기 중인 문항이 ${MAX_PENDING_DRAFTS}개를 넘었습니다. 먼저 결제를 완료해 주세요.`, 'TOO_MANY_DRAFTS');
+    const stale = pending.slice(0, pending.length - MAX_PENDING_DRAFTS + 1);
+    await Promise.all(stale.map((m) => repo.saveMission({ ...m, status: 'closed' })));
   }
 
   let a: MissionContent;
