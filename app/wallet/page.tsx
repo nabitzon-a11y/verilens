@@ -134,7 +134,7 @@ export default function WalletPage() {
         ) : (
           <ul className="card divide-y divide-slate-100 p-0">
             {ledger.map((e) => (
-              <LedgerRow key={e.id} e={e} />
+              <LedgerRow key={e.id} e={e} en={lang === 'en'} />
             ))}
           </ul>
         )}
@@ -156,27 +156,27 @@ export default function WalletPage() {
   );
 }
 
-const LEDGER_META: Record<LedgerEntry['type'], { label: string; icon: React.ReactNode; bg: string }> = {
-  reward: { label: '판별 보상', icon: <ArrowDownLeft className="h-4 w-4 text-human-dark" />, bg: 'bg-emerald-50' },
-  claim: { label: '보상 청구', icon: <ArrowUpRight className="h-4 w-4 text-pi-light" />, bg: 'bg-amber-50' },
-  submission_payment: { label: '의뢰 결제', icon: <FilePlus2 className="h-4 w-4 text-brand" />, bg: 'bg-brand-soft' },
+const LEDGER_META: Record<LedgerEntry['type'], { label: string; labelEn: string; icon: React.ReactNode; bg: string }> = {
+  reward: { label: '판별 보상', labelEn: 'Verification Reward', icon: <ArrowDownLeft className="h-4 w-4 text-human-dark" />, bg: 'bg-emerald-50' },
+  claim: { label: '보상 청구', labelEn: 'Reward Claim', icon: <ArrowUpRight className="h-4 w-4 text-pi-light" />, bg: 'bg-amber-50' },
+  submission_payment: { label: '의뢰 결제', labelEn: 'Submission Fee', icon: <FilePlus2 className="h-4 w-4 text-brand" />, bg: 'bg-brand-soft' },
 };
 
-const STATUS_LABEL: Record<LedgerEntry['status'], string> = {
-  pending: '합의 대기',
-  settled: '정산 완료',
-  failed: '실패',
+const STATUS_LABEL: Record<LedgerEntry['status'], { ko: string; en: string }> = {
+  pending: { ko: '합의 대기', en: 'Pending' },
+  settled: { ko: '정산 완료', en: 'Settled' },
+  failed: { ko: '실패', en: 'Failed' },
 };
 
-function LedgerRow({ e }: { e: LedgerEntry }) {
+function LedgerRow({ e, en }: { e: LedgerEntry; en: boolean }) {
   const meta = LEDGER_META[e.type];
   return (
     <li className="flex items-center gap-3 px-4 py-3.5">
       <div className={clsx('flex h-10 w-10 shrink-0 items-center justify-center rounded-full', meta.bg)}>{meta.icon}</div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-base font-medium text-slate-900">{e.memo || meta.label}</p>
+        <p className="truncate text-base font-medium text-slate-900">{e.memo || (en ? meta.labelEn : meta.label)}</p>
         <p className="text-xs text-slate-500">
-          {formatDateTime(e.createdAt)} · {STATUS_LABEL[e.status]}
+          {formatDateTime(e.createdAt)} · {STATUS_LABEL[e.status][en ? 'en' : 'ko']}
           {e.mock && <span className="ml-1 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-600">Mock</span>}
         </p>
       </div>

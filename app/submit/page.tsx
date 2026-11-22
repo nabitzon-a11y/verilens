@@ -28,44 +28,83 @@ import { paySubmissionFee } from '@/lib/piSdk';
 
 type Stage = 'creating' | 'approving' | 'signing' | 'completing';
 
-const STAGE_LABEL: Record<Stage | 'draft', string> = {
-  draft: '문항 저장 중…',
-  creating: '결제 생성 중…',
-  approving: '서버 결제 승인 중…',
-  signing: '지갑 서명 대기 중…',
-  completing: '블록체인 완료 확인 중…',
+const STAGE_LABEL: Record<'ko' | 'en', Record<Stage | 'draft', string>> = {
+  ko: {
+    draft: '문항 저장 중…',
+    creating: '결제 생성 중…',
+    approving: '서버 결제 승인 중…',
+    signing: '지갑 서명 대기 중…',
+    completing: '블록체인 완료 확인 중…',
+  },
+  en: {
+    draft: 'Saving item…',
+    creating: 'Creating payment…',
+    approving: 'Approving payment…',
+    signing: 'Waiting for wallet signature…',
+    completing: 'Confirming on blockchain…',
+  },
 };
 
 const TEXT_MIN = 10;
 const TEXT_MAX = 600;
 
-const PROMPT_PRESETS: Record<MissionMode, Record<MissionKind, readonly string[]>> = {
-  single: {
-    text: [
-      '이 글은 실제 사람이 썼을까요, AI가 썼을까요?',
-      '실제 구매자 후기일까요, AI 생성 리뷰일까요?',
-      '이 글에서 AI 특유의 부자연스러움이 느껴지나요?',
-    ],
-    image: [
-      '이 이미지는 실제 원본일까요, AI 생성물일까요?',
-      '실제 카메라 촬영 사진일까요, 합성 이미지일까요?',
-    ],
+const PROMPT_PRESETS: Record<'ko' | 'en', Record<MissionMode, Record<MissionKind, readonly string[]>>> = {
+  ko: {
+    single: {
+      text: [
+        '이 글은 실제 사람이 썼을까요, AI가 썼을까요?',
+        '실제 구매자 후기일까요, AI 생성 리뷰일까요?',
+        '이 글에서 AI 특유의 부자연스러움이 느껴지나요?',
+      ],
+      image: [
+        '이 이미지는 실제 원본일까요, AI 생성물일까요?',
+        '실제 카메라 촬영 사진일까요, 합성 이미지일까요?',
+      ],
+    },
+    compare: {
+      text: [
+        '어느 쪽이 실제 사람이 직접 쓴 글일까요?',
+        '실제 경험에 기반한 후기는 어느 쪽인가요?',
+        'AI가 지어내지 않은 자연스러운 글은?',
+      ],
+      image: [
+        '어느 쪽이 AI가 만들지 않은 원본 장면일까요?',
+        '실제 카메라로 찍은 사진은 어느 쪽인가요?',
+        '합성 흔적이 없는 자연스러운 이미지는?',
+      ],
+    },
   },
-  compare: {
-    text: [
-      '어느 쪽이 실제 사람이 직접 쓴 글일까요?',
-      '실제 경험에 기반한 후기는 어느 쪽인가요?',
-      'AI가 지어내지 않은 자연스러운 글은?',
-    ],
-    image: [
-      '어느 쪽이 AI가 만들지 않은 원본 장면일까요?',
-      '실제 카메라로 찍은 사진은 어느 쪽인가요?',
-      '합성 흔적이 없는 자연스러운 이미지는?',
-    ],
+  en: {
+    single: {
+      text: [
+        'Was this written by a real human or AI?',
+        'Is this a genuine buyer review or AI-generated?',
+        'Do you notice unnatural AI phrasing here?',
+      ],
+      image: [
+        'Is this an authentic photo or AI-generated?',
+        'Real camera shot or synthetic image?',
+      ],
+    },
+    compare: {
+      text: [
+        'Which one was written by a real human?',
+        'Which review reflects real-world experience?',
+        'Which text sounds naturally human-written?',
+      ],
+      image: [
+        'Which scene is an authentic unedited photo?',
+        'Which image was captured by a real camera?',
+        'Which image looks free of AI artifacts?',
+      ],
+    },
   },
 };
 
-const SOURCE_PRESETS = ['뉴스 기사', '배달앱 리뷰', '쇼핑몰 상품평', 'SNS 게시글', '커뮤니티 답변', '카페/식당 후기'] as const;
+const SOURCE_PRESETS: Record<'ko' | 'en', readonly string[]> = {
+  ko: ['뉴스 기사', '배달앱 리뷰', '쇼핑몰 상품평', 'SNS 게시글', '커뮤니티 답변', '카페/식당 후기'],
+  en: ['News Article', 'Delivery Review', 'Product Review', 'Social Post', 'Forum Reply', 'Cafe Review'],
+};
 
 const TEXT_SAMPLES = {
   ko: {
@@ -249,7 +288,7 @@ export default function SubmitPage() {
       void refresh();
       void loadMine();
     } catch (err) {
-      setError(errorMessage(err, '등록에 실패했습니다.'));
+      setError(errorMessage(err, en ? 'Submission failed.' : '등록에 실패했습니다.'));
     } finally {
       setBusy(null);
     }
@@ -391,11 +430,11 @@ export default function SubmitPage() {
                 setPrompt(e.target.value);
                 touch();
               }}
-              placeholder={PROMPT_PRESETS[mode][kind][0]}
+              placeholder={PROMPT_PRESETS[en ? 'en' : 'ko'][mode][kind][0]}
               className="input"
             />
             <PresetChips
-              options={PROMPT_PRESETS[mode][kind]}
+              options={PROMPT_PRESETS[en ? 'en' : 'ko'][mode][kind]}
               value={prompt}
               onPick={(v) => {
                 setPrompt(v);
@@ -418,7 +457,7 @@ export default function SubmitPage() {
                   className="input"
                 />
                 <PresetChips
-                  options={SOURCE_PRESETS}
+                  options={SOURCE_PRESETS[en ? 'en' : 'ko']}
                   value={sourceLabel}
                   onPick={(v) => {
                     setSourceLabel(v);
@@ -459,6 +498,7 @@ export default function SubmitPage() {
                 <ImageSlot
                   key={side}
                   side={mode === 'single' ? undefined : side}
+                  en={en}
                   value={side === 'A' ? imageA : imageB}
                   onChange={(v) => {
                     (side === 'A' ? setImageA : setImageB)(v);
@@ -532,7 +572,7 @@ export default function SubmitPage() {
           <button type="button" className="btn-amber w-full py-4 text-base" onClick={submit} disabled={!!validation || !!busy}>
             {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Lock className="h-4 w-4" />}
             {busy
-              ? STAGE_LABEL[busy]
+              ? STAGE_LABEL[en ? 'en' : 'ko'][busy]
               : en
                 ? `Pay ${WALLET.SUBMISSION_FEE_PI} Test-Pi & Submit`
                 : `${WALLET.SUBMISSION_FEE_PI} Test-Pi 결제 및 등록`}
@@ -609,11 +649,13 @@ function PresetChips({
 
 function ImageSlot({
   side,
+  en,
   value,
   onChange,
   onError,
 }: {
   side?: 'A' | 'B';
+  en: boolean;
   value: string | null;
   onChange: (v: string | null) => void;
   onError: (msg: string | null) => void;
@@ -648,13 +690,15 @@ function ImageSlot({
       ) : (
         <>
           <ImagePlus className="h-7 w-7" />
-          <span className="mt-1.5 text-xs">{side ? `이미지 ${side} 선택` : '이미지 선택'}</span>
+          <span className="mt-1.5 text-xs">
+            {side ? (en ? `Select Image ${side}` : `이미지 ${side} 선택`) : en ? 'Select Image' : '이미지 선택'}
+          </span>
         </>
       )}
       {value && !loading && (
         <span className="absolute bottom-2 right-2 flex items-center gap-1 rounded-full bg-slate-900/75 px-2.5 py-0.5 text-xs text-white">
           <Upload className="h-3 w-3" />
-          변경
+          {en ? 'Change' : '변경'}
         </span>
       )}
       <input
@@ -670,10 +714,10 @@ function ImageSlot({
   );
 }
 
-const STATUS_STYLE: Record<MyMissionItem['status'], { label: string; cls: string }> = {
-  draft: { label: '결제 대기', cls: 'bg-amber-50 text-pi-light' },
-  active: { label: '판별 중', cls: 'bg-emerald-50 text-human-dark' },
-  closed: { label: '종료', cls: 'bg-slate-100 text-slate-600' },
+const STATUS_STYLE: Record<MyMissionItem['status'], { label: string; labelEn: string; cls: string }> = {
+  draft: { label: '결제 대기', labelEn: 'Pending', cls: 'bg-amber-50 text-pi-light' },
+  active: { label: '판별 중', labelEn: 'Active', cls: 'bg-emerald-50 text-human-dark' },
+  closed: { label: '종료', labelEn: 'Closed', cls: 'bg-slate-100 text-slate-600' },
 };
 
 function MyMissionRow({
@@ -704,7 +748,7 @@ function MyMissionRow({
       <div className="flex items-center gap-2">
         {m.kind === 'text' ? <FileText className="h-4 w-4 text-slate-400" /> : <ImageIcon className="h-4 w-4 text-slate-400" />}
         <p className="flex-1 truncate text-base font-medium text-slate-900">{m.prompt}</p>
-        <span className={clsx('chip', s.cls)}>{s.label}</span>
+        <span className={clsx('chip', s.cls)}>{en ? s.labelEn : s.label}</span>
         {(m.status === 'active' || m.status === 'draft') && (
           <button
             type="button"
