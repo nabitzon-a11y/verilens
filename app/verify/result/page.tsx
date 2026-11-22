@@ -89,7 +89,7 @@ export default function ResultPage() {
         <p className="label">{t.accuracyTitle}</p>
         <p className="mt-2 text-5xl font-black text-slate-900">
           {result.matchedCount}
-          <span className="text-2xl text-slate-400"> / {result.total}</span>
+          <span className="text-2xl text-slate-400"> / {result.total}{lang === 'en' ? ' Qs' : '문항'}</span>
         </p>
         <p className="mt-1 text-sm font-bold text-brand">
           {t.topPrefix}
