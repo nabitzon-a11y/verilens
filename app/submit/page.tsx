@@ -13,6 +13,7 @@ import {
   Loader2,
   Lock,
   ScanFace,
+  Sparkles,
   Upload,
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -65,6 +66,35 @@ const PROMPT_PRESETS: Record<MissionMode, Record<MissionKind, readonly string[]>
 };
 
 const SOURCE_PRESETS = ['뉴스 기사', '배달앱 리뷰', '쇼핑몰 상품평', 'SNS 게시글', '커뮤니티 답변', '카페/식당 후기'] as const;
+
+const TEXT_SAMPLES = {
+  ko: {
+    single: {
+      prompt: '실제 구매자 후기일까요, AI 생성 리뷰일까요?',
+      sourceLabel: '쇼핑몰 상품평',
+      a: '비 오는 날 출근길에 처음 신어봤는데 발목 뒤꿈치가 살짝 쓸리긴 해도 방수는 확실히 되네요. 다만 바닥이 생각보다 미끄러워서 지하철 계단 내려갈 땐 조심해야 할 듯합니다.',
+    },
+    compare: {
+      prompt: '어느 쪽이 실제 사람이 직접 쓴 글일까요?',
+      sourceLabel: '배달앱 리뷰',
+      a: '김치찌개 국물이 진해서 밥 두 공기 뚝딱했어요. 다만 계란말이가 조금 식어서 온 건 아쉽네요. 다음엔 매장 가서 먹어보려고요.',
+      b: '신선한 재료와 정성스러운 조리가 어우러져 최고의 맛을 선사합니다. 깔끔한 포장과 신속한 배달 서비스까지 완벽한 만족감을 경험하실 수 있습니다.',
+    },
+  },
+  en: {
+    single: {
+      prompt: 'Is this a real buyer review or AI-generated?',
+      sourceLabel: 'Product Review',
+      a: 'Wore these on my rainy commute today—waterproofing held up great, though the heel rubbed a bit on the first mile. Watch out on wet subway stairs since the sole feels slightly slick.',
+    },
+    compare: {
+      prompt: 'Which one was written by a real human?',
+      sourceLabel: 'Delivery Review',
+      a: 'Broth was rich enough that I finished two bowls of rice. The rolled omelet arrived a little lukewarm, which was a minor letdown, so I will dine in next time.',
+      b: 'Fresh ingredients and meticulous preparation combine to deliver an extraordinary culinary experience. Clean packaging and prompt delivery ensure complete satisfaction.',
+    },
+  },
+} as const;
 
 /** 두 텍스트의 유사도 (0~1, 2글자 바이그램 Jaccard) */
 function textSimilarity(a: string, b: string): number {
@@ -122,6 +152,17 @@ export default function SubmitPage() {
   const touch = () => {
     setDraftId(null);
     setError(null);
+  };
+
+  const fillSample = () => {
+    const sample = TEXT_SAMPLES[en ? 'en' : 'ko'][mode];
+    setPrompt(sample.prompt);
+    setSourceLabel(sample.sourceLabel);
+    setTextA(sample.a);
+    if (mode === 'compare' && 'b' in sample) {
+      setTextB(sample.b);
+    }
+    touch();
   };
 
   if (!ready) return <Spinner />;
@@ -328,6 +369,19 @@ export default function SubmitPage() {
               </button>
             ))}
           </div>
+
+          {kind === 'text' && (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={fillSample}
+                className="inline-flex items-center gap-1.5 rounded-full border border-brand/25 bg-brand-soft px-3 py-1.5 text-xs font-semibold text-brand transition hover:bg-brand/15"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                {en ? 'Fill Sample Text' : '예시 문장 자동 채우기'}
+              </button>
+            </div>
+          )}
 
           <Field label={en ? 'Question (optional)' : '질문 (선택)'}>
             <input
