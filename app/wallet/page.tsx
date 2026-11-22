@@ -82,13 +82,13 @@ export default function WalletPage() {
 
       {/* 잔액 & 청구 */}
       <section className="card relative space-y-4 overflow-hidden">
-        <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-amber-400/15 blur-3xl" />
+        <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-brand/10 blur-3xl" />
         <div className="flex items-start justify-between">
           <div>
             <p className="label">{t.balanceLabel}</p>
-            <p className="mt-1 text-4xl font-black text-pi-light">{formatPi(p.balance)}</p>
+            <p className="mt-1 text-4xl font-black text-brand">{formatPi(p.balance)}</p>
           </div>
-          <span className="chip bg-slate-100 text-slate-700">{payoutMode === 'mock' ? 'Mock A2U' : 'A2U'}</span>
+          <span className="chip bg-brand-soft text-brand">{payoutMode === 'mock' ? 'Mock A2U' : 'A2U'}</span>
         </div>
 
         <div>
@@ -98,17 +98,17 @@ export default function WalletPage() {
               {formatPi(Math.min(p.balance, minClaim))} / {formatPi(minClaim)}
             </span>
           </div>
-          <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
-            <div className="h-full rounded-full bg-gradient-to-r from-pi-dark to-pi transition-all" style={{ width: `${progress}%` }} />
+          <div className="h-2.5 overflow-hidden rounded-full bg-brand-soft">
+            <div className="h-full rounded-full bg-gradient-to-r from-brand-dark to-brand-light transition-all" style={{ width: `${progress}%` }} />
           </div>
         </div>
 
-        <button type="button" className="btn-amber w-full py-4 text-base" disabled={!canClaim || claiming} onClick={claim}>
+        <button type="button" className="btn-primary w-full py-4 text-base" disabled={!canClaim || claiming} onClick={claim}>
           {claiming ? <Loader2 className="h-5 w-5 animate-spin" /> : <Fingerprint className="h-5 w-5" />}
           {t.claimBtn}
         </button>
         <p className="flex items-center justify-center gap-1.5 text-xs text-slate-500">
-          <ShieldCheck className="h-4 w-4 text-human-dark" />
+          <ShieldCheck className="h-4 w-4 text-brand" />
           {canClaim ? t.claimReadyHint : t.claimMinHint(minClaim)}
         </p>
       </section>
@@ -116,8 +116,8 @@ export default function WalletPage() {
       {/* 누적 통계 */}
       <section className="grid grid-cols-3 gap-2.5 text-center">
         <Stat label={t.earnedLabel} value={formatPi(p.totalEarned)} tone="text-human-dark" />
-        <Stat label={t.claimedLabel} value={formatPi(p.totalClaimed)} tone="text-pi-light" />
-        <Stat label={t.setsLabel} value={`${p.setsCompleted}`} tone="text-brand" />
+        <Stat label={t.claimedLabel} value={formatPi(p.totalClaimed)} tone="text-brand" />
+        <Stat label={t.setsLabel} value={`${p.setsCompleted}`} tone="text-slate-900" />
       </section>
 
       {/* 정산 내역 */}

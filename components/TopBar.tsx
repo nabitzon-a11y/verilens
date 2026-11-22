@@ -25,21 +25,21 @@ export function TopBar() {
 
   return (
     <header className="sticky top-0 z-30 bg-brand text-white shadow-sm">
-      <div className="mx-auto flex max-w-md items-center justify-between gap-2 px-3 py-2.5">
-        <Link href="/" className="flex shrink-0 items-center gap-1.5 text-[15px] font-black tracking-tight text-white">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full border border-pi bg-white/10">
-            <ShieldCheck className="h-4 w-4 text-pi" />
+      <div className="mx-auto flex max-w-md items-center justify-between gap-1.5 px-2.5 py-2.5">
+        <Link href="/" className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-sm font-black tracking-tight text-white">
+          <span className="flex h-5 w-5 items-center justify-center rounded-full border border-pi bg-white/10">
+            <ShieldCheck className="h-3.5 w-3.5 text-pi" />
           </span>
           <span>VeriLens</span>
         </Link>
 
-        <nav aria-label="상단 빠른 이동" className="flex items-center gap-1">
+        <nav aria-label="상단 빠른 이동" className="flex items-center gap-0.5">
           {links.map((l) => (
             <Link
               key={l.href}
               href={l.href}
               className={clsx(
-                'rounded-lg px-2 py-1 text-xs font-semibold transition',
+                'whitespace-nowrap rounded-lg px-1.5 py-1 text-[11px] font-semibold transition',
                 l.active ? 'bg-white/20 text-white' : 'text-white/80 hover:bg-white/10 hover:text-white',
               )}
             >
@@ -52,9 +52,9 @@ export function TopBar() {
           type="button"
           onClick={() => setLang(lang === 'ko' ? 'en' : 'ko')}
           aria-label="언어 전환 (KO/EN)"
-          className="flex shrink-0 items-center gap-1 rounded-full border border-white/25 bg-white/10 px-2.5 py-1 text-xs font-bold text-white transition hover:bg-white/20"
+          className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-white/25 bg-white/10 px-2 py-1 text-[11px] font-bold text-white transition hover:bg-white/20"
         >
-          <Globe className="h-3.5 w-3.5 text-pi" />
+          <Globe className="h-3 w-3 text-pi" />
           {lang === 'ko' ? 'EN' : 'KO'}
         </button>
       </div>
