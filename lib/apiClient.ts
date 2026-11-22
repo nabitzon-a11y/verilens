@@ -58,16 +58,23 @@ export async function api<T>(path: string, opts: ApiOptions = {}): Promise<T> {
   if (token) headers.Authorization = `Bearer ${token}`;
 
   let res: Response;
+  const controller = signal ? null : new AbortController();
+  const timer = controller ? setTimeout(() => controller.abort(), 20_000) : null;
   try {
     res = await fetch(path, {
       method,
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
       cache: 'no-store',
-      signal,
+      signal: signal ?? controller?.signal,
     });
-  } catch {
+  } catch (err) {
+    if ((err as Error)?.name === 'AbortError') {
+      throw new ApiError(408, '요청 시간이 초과되었습니다. 다시 시도해 주세요.', 'TIMEOUT');
+    }
     throw new ApiError(0, '네트워크 연결을 확인해 주세요.', 'NETWORK');
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 
   let json: ApiResponse<T> | null = null;

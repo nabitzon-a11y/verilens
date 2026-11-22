@@ -5,7 +5,7 @@
  * - 재인코딩 과정에서 EXIF(위치정보 등) 메타데이터가 제거되는 효과도 있음
  */
 
-const MAX_DATA_URL_LENGTH = 440_000;
+const MAX_DATA_URL_LENGTH = 180_000;
 const MAX_FILE_BYTES = 15 * 1024 * 1024;
 const ACCEPTED = /^image\/(png|jpeg|webp)$/;
 
@@ -20,7 +20,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-export async function compressImage(file: File, maxSide = 900): Promise<string> {
+export async function compressImage(file: File, maxSide = 720): Promise<string> {
   if (!ACCEPTED.test(file.type)) throw new Error('PNG / JPEG / WEBP 이미지만 올릴 수 있습니다.');
   if (file.size > MAX_FILE_BYTES) throw new Error('15MB 이하 이미지만 올릴 수 있습니다.');
 
@@ -40,7 +40,7 @@ export async function compressImage(file: File, maxSide = 900): Promise<string> 
     ctx.fillRect(0, 0, w, h);
     ctx.drawImage(img, 0, 0, w, h);
 
-    for (let quality = 0.85; quality >= 0.45; quality -= 0.1) {
+    for (let quality = 0.78; quality >= 0.38; quality -= 0.1) {
       const data = canvas.toDataURL('image/jpeg', quality);
       if (data.length <= MAX_DATA_URL_LENGTH) return data;
     }
