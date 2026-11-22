@@ -329,10 +329,13 @@ async function payWithPi(
 /* 공유 (PiNet 딥링크)                                                 */
 /* ------------------------------------------------------------------ */
 
-/** 공유 링크 기본 주소: PiNet 주소 > 앱 URL > 현재 origin */
+const DEFAULT_PINET_URL = 'https://verilens1759.pinet.com';
+
+/** 공유 링크 기본 주소: 환경변수 PiNet 주소 > 기본 PiNet 주소 > 앱 URL */
 export function buildShareUrl(path = '/'): string {
   const base =
     process.env.NEXT_PUBLIC_PINET_URL ||
+    DEFAULT_PINET_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
     (typeof window !== 'undefined' ? window.location.origin : '');
   return `${base.replace(/\/+$/, '')}${path.startsWith('/') ? path : `/${path}`}`;
