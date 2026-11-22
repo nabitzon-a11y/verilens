@@ -3,7 +3,8 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Gift, Loader2, RefreshCw, ScanFace, Timer } from 'lucide-react';
-import type { AnswerInput, Choice, PublicMissionSet, SetResult, VerifySession } from '@/types';
+import type { AnswerInput, Choice, PublicMission, PublicMissionSet, SetResult, VerifySession } from '@/types';
+import { SEED_EN, translatePromptToEn } from '@/data/missions.en';
 import { useApp } from '@/components/AppProvider';
 import { LoginPanel } from '@/components/LoginPanel';
 import { MissionCard } from '@/components/MissionCard';
@@ -255,22 +256,28 @@ function VerifyGame() {
 
           {challenge && index === 0 && <ChallengeChip label={t.challengeChip} />}
 
-          {/* 질문 */}
-          <h1 className="text-lg font-bold leading-snug text-white">{missionSet.missions[index].prompt}</h1>
-
-          {/* A/B 카드 */}
-          <div className="space-y-3" key={missionSet.missions[index].id}>
-            {(['A', 'B'] as const).map((side) => (
-              <MissionCard
-                key={side}
-                side={side}
-                content={side === 'A' ? missionSet.missions[index].a : missionSet.missions[index].b}
-                selected={selected === side}
-                disabled={locked || phase !== 'playing'}
-                onSelect={(c) => void choose(c)}
-              />
-            ))}
-          </div>
+          {/* 질문 & A/B 카드 (영문 모드 시 시드 문항 번역 적용) */}
+          {(() => {
+            const raw = missionSet.missions[index];
+            const m = localizeMission(raw, lang);
+            return (
+              <>
+                <h1 className="text-lg font-bold leading-snug text-white">{m.prompt}</h1>
+                <div className="space-y-3" key={m.id}>
+                  {(['A', 'B'] as const).map((side) => (
+                    <MissionCard
+                      key={side}
+                      side={side}
+                      content={side === 'A' ? m.a : m.b}
+                      selected={selected === side}
+                      disabled={locked || phase !== 'playing'}
+                      onSelect={(c) => void choose(c)}
+                    />
+                  ))}
+                </div>
+              </>
+            );
+          })()}
 
           <p className="text-center text-[11px] text-slate-500">{t.footerHint}</p>
 
@@ -286,6 +293,26 @@ function VerifyGame() {
       )}
     </div>
   );
+}
+
+function localizeMission(m: PublicMission, lang: 'ko' | 'en'): PublicMission {
+  if (lang !== 'en') return m;
+  const tr = SEED_EN[m.id];
+  if (!tr) {
+    return { ...m, prompt: translatePromptToEn(m.prompt) };
+  }
+  return {
+    ...m,
+    prompt: tr.prompt,
+    a:
+      m.a.type === 'text'
+        ? { ...m.a, sourceLabel: tr.sourceLabel ?? m.a.sourceLabel, body: tr.aBody ?? m.a.body }
+        : { ...m.a, placeholderLabel: tr.aPlaceholder ?? m.a.placeholderLabel },
+    b:
+      m.b.type === 'text'
+        ? { ...m.b, sourceLabel: tr.sourceLabel ?? m.b.sourceLabel, body: tr.bBody ?? m.b.body }
+        : { ...m.b, placeholderLabel: tr.bPlaceholder ?? m.b.placeholderLabel },
+  };
 }
 
 function ChallengeChip({ label }: { label: string }) {

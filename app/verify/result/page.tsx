@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import type { MissionResult, SetResult } from '@/types';
+import { SEED_EN } from '@/data/missions.en';
 import { useApp } from '@/components/AppProvider';
 import { formatSignedPi } from '@/lib/format';
 import { RESULT_TEXT } from '@/lib/i18n';
@@ -129,7 +130,7 @@ export default function ResultPage() {
       <section className="space-y-3">
         <p className="label px-1">{t.reportTitle}</p>
         {result.results.map((r, i) => (
-          <ResultItem key={r.missionId} n={i + 1} r={r} t={t} />
+          <ResultItem key={r.missionId} n={i + 1} r={r} t={t} lang={lang} />
         ))}
       </section>
 
@@ -212,8 +213,15 @@ function Banner({
   );
 }
 
-function ResultItem({ n, r, t }: { n: number; r: MissionResult; t: (typeof RESULT_TEXT)['ko'] }) {
+function ResultItem({ n, r, t, lang }: { n: number; r: MissionResult; t: (typeof RESULT_TEXT)['ko']; lang: 'ko' | 'en' }) {
   const total = r.tally.A + r.tally.B;
+  const aiTell =
+    lang === 'en'
+      ? SEED_EN[r.missionId]?.aiTell ??
+        (r.ownMission
+          ? 'This is your submitted item. Your own vote is excluded from rewards and real consensus.'
+          : 'Requester-submitted item. Ground truth is determined by verified 5-human consensus.')
+      : r.aiTell;
   return (
     <article className="card space-y-3">
       <header className="flex items-center gap-2">
@@ -266,7 +274,7 @@ function ResultItem({ n, r, t }: { n: number; r: MissionResult; t: (typeof RESUL
           <Sparkles className="h-3 w-3" />
           {t.aiTellLabel}
         </span>
-        {r.aiTell}
+        {aiTell}
       </p>
     </article>
   );
