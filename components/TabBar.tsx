@@ -31,7 +31,7 @@ export function TabBar() {
   return (
     <nav
       className={clsx(
-        'fixed inset-x-0 bottom-0 z-40 border-t border-white/5 bg-navy/95 backdrop-blur pb-safe',
+        'fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur pb-safe',
         extraBottomPad && 'pb-12',
       )}
     >
@@ -44,8 +44,8 @@ export function TabBar() {
                 href={href}
                 aria-current={active ? 'page' : undefined}
                 className={clsx(
-                  'flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition',
-                  active ? 'text-human' : 'text-slate-500 hover:text-slate-300',
+                  'flex flex-col items-center gap-1 py-2.5 text-xs font-semibold transition',
+                  active ? 'text-brand' : 'text-slate-400 hover:text-slate-700',
                 )}
               >
                 <Icon className="h-5 w-5" strokeWidth={active ? 2.4 : 1.8} />

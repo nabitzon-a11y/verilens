@@ -229,32 +229,32 @@ export default function SubmitPage() {
   return (
     <div className="space-y-4">
       <header className="pt-2">
-        <h1 className="text-xl font-black text-white">{en ? 'Submit for Verification' : '판별 의뢰하기'}</h1>
-        <p className="mt-1 text-xs leading-relaxed text-slate-400">
+        <h1 className="text-2xl font-black text-slate-900">{en ? 'Submit for Verification' : '판별 의뢰하기'}</h1>
+        <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
           {en ? (
             <>
               Submit content and KYC-verified verifiers will determine the label via{' '}
-              <b className="text-human">{GAME.CONSENSUS_PANEL_SIZE}-human consensus</b> (auto-closes at {GAME.REQUESTER_TARGET_VOTES} votes).
+              <b className="text-brand">{GAME.CONSENSUS_PANEL_SIZE}-human consensus</b> (auto-closes at {GAME.REQUESTER_TARGET_VOTES} votes).
             </>
           ) : (
             <>
-              검수가 필요한 콘텐츠를 올리면 KYC 인증된 판별자들의 <b className="text-human">{GAME.CONSENSUS_PANEL_SIZE}인 다수결</b>로 라벨이 확정되며, {GAME.REQUESTER_TARGET_VOTES}표가 모이면 자동 마감됩니다.
+              검수가 필요한 콘텐츠를 올리면 KYC 인증된 판별자들의 <b className="text-brand">{GAME.CONSENSUS_PANEL_SIZE}인 다수결</b>로 라벨이 확정되며, {GAME.REQUESTER_TARGET_VOTES}표가 모이면 자동 마감됩니다.
             </>
           )}
         </p>
       </header>
 
       {/* 출제 기준 가이드 */}
-      <div className="flex gap-2.5 rounded-2xl border border-human/20 bg-human/5 p-3 text-xs leading-relaxed text-slate-300">
-        <Info className="mt-0.5 h-4 w-4 shrink-0 text-human" />
+      <div className="flex gap-2.5 rounded-2xl border border-brand/20 bg-brand-soft/60 p-3.5 text-sm leading-relaxed text-slate-700">
+        <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
         <p>
           {en ? (
             <>
-              <b className="text-white">Submission Tips:</b> Include 2–4 sentences with tone, context, or lived details so human verifiers can judge clearly. Single-line plain facts can split votes.
+              <b className="text-slate-900">Submission Tips:</b> Include 2–4 sentences with tone, context, or lived details so human verifiers can judge clearly. Single-line plain facts can split votes.
             </>
           ) : (
             <>
-              <b className="text-white">좋은 의뢰 기준:</b> 단순 팩트 1줄보다 <b>화법·문맥·디테일 차이</b>가 드러나는 2~4문장을 올리셔야 다수결이 모입니다. 애매한 문항은 아래 현황에서 언제든 <b>마감</b>할 수 있어요.
+              <b className="text-slate-900">좋은 의뢰 기준:</b> 단순 팩트 1줄보다 <b>화법·문맥·디테일 차이</b>가 드러나는 2~4문장을 올리셔야 다수결이 모입니다. 애매한 문항은 아래 현황에서 언제든 <b>마감</b>할 수 있어요.
             </>
           )}
         </p>
@@ -262,16 +262,16 @@ export default function SubmitPage() {
 
       {done ? (
         <section className="card space-y-4 text-center">
-          <CheckCircle2 className="mx-auto h-14 w-14 text-human" strokeWidth={1.5} />
+          <CheckCircle2 className="mx-auto h-14 w-14 text-human-dark" strokeWidth={1.5} />
           <div>
-            <h2 className="text-lg font-bold text-white">{en ? 'Added to Verification Pool' : '판별 풀에 등록되었습니다'}</h2>
-            <p className="mt-1 text-xs text-slate-400">
+            <h2 className="text-xl font-bold text-slate-900">{en ? 'Added to Verification Pool' : '판별 풀에 등록되었습니다'}</h2>
+            <p className="mt-1.5 text-sm text-slate-600">
               {WALLET.SUBMISSION_FEE_PI} Test-Pi {en ? 'payment completed' : '결제 완료'}
               {done.mock ? ' (Mock)' : ''} · {en ? 'Live in the next verification set.' : '다음 판별 세트부터 바로 노출됩니다.'}
             </p>
-            <p className="mt-2 break-all font-mono text-[10px] text-slate-600">{done.paymentId}</p>
+            <p className="mt-2 break-all font-mono text-xs text-slate-400">{done.paymentId}</p>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2.5">
             <Link href="/verify" className="btn-primary">
               <ScanFace className="h-4 w-4" />
               {en ? 'Go Verify' : '판별하러 가기'}
@@ -284,7 +284,7 @@ export default function SubmitPage() {
       ) : (
         <section className="card space-y-4">
           {/* 의뢰 방식: 단일 감별(1개) vs 비교(2개) */}
-          <div className="grid grid-cols-2 gap-1 rounded-xl bg-white/5 p-1">
+          <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-slate-100 p-1">
             {(
               [
                 { id: 'single' as const, ko: '단일 감별 (1개)', en: 'Single Check (1)' },
@@ -299,8 +299,8 @@ export default function SubmitPage() {
                   touch();
                 }}
                 className={clsx(
-                  'rounded-lg py-2 text-xs font-semibold transition',
-                  mode === opt.id ? 'bg-navy-600 text-white shadow' : 'text-slate-400 hover:text-white',
+                  'rounded-lg py-2.5 text-sm font-semibold transition',
+                  mode === opt.id ? 'bg-white text-brand shadow-sm' : 'text-slate-600 hover:text-slate-900',
                 )}
               >
                 {en ? opt.en : opt.ko}
@@ -309,7 +309,7 @@ export default function SubmitPage() {
           </div>
 
           {/* 유형 */}
-          <div className="grid grid-cols-2 gap-1 rounded-xl bg-white/5 p-1">
+          <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-slate-100 p-1">
             {(['text', 'image'] as const).map((k) => (
               <button
                 key={k}
@@ -319,8 +319,8 @@ export default function SubmitPage() {
                   touch();
                 }}
                 className={clsx(
-                  'flex items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-semibold transition',
-                  kind === k ? 'bg-human text-navy' : 'text-slate-400 hover:text-white',
+                  'flex items-center justify-center gap-1.5 rounded-lg py-2.5 text-sm font-semibold transition',
+                  kind === k ? 'bg-brand text-white shadow-sm' : 'text-slate-600 hover:text-slate-900',
                 )}
               >
                 {k === 'text' ? <FileText className="h-4 w-4" /> : <ImageIcon className="h-4 w-4" />}
@@ -417,32 +417,32 @@ export default function SubmitPage() {
           )}
 
           {/* 결제 */}
-          <div className="flex items-center gap-3 rounded-xl border border-pi/20 bg-pi/5 p-3">
-            <Coins className="h-6 w-6 shrink-0 text-pi" />
-            <div className="flex-1 text-xs">
+          <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3.5">
+            <Coins className="h-6 w-6 shrink-0 text-pi-light" />
+            <div className="flex-1 text-sm">
               <p className="font-semibold text-pi-light">
                 {en ? `Submission Fee: ${WALLET.SUBMISSION_FEE_PI} Test-Pi` : `등록 수수료 ${WALLET.SUBMISSION_FEE_PI} Test-Pi`}
               </p>
-              <p className="text-slate-400">{en ? 'Published immediately upon payment.' : '결제 완료 즉시 판별 풀에 등록됩니다.'}</p>
+              <p className="text-xs text-slate-600">{en ? 'Published immediately upon payment.' : '결제 완료 즉시 판별 풀에 등록됩니다.'}</p>
             </div>
-            <span className={clsx('chip', isMockPayment ? 'bg-white/10 text-slate-300' : 'bg-human/15 text-human')}>
+            <span className={clsx('chip', isMockPayment ? 'bg-white text-slate-700' : 'bg-emerald-50 text-human-dark')}>
               {isMockPayment ? 'Mock' : 'Pi Testnet'}
             </span>
           </div>
 
           {/* 저작권·권리 보증 동의 */}
-          <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-white/10 bg-white/[0.02] p-3 text-xs leading-relaxed text-slate-300">
+          <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-sm leading-relaxed text-slate-700">
             <input
               type="checkbox"
               checked={rightsAgreed}
               onChange={(e) => setRightsAgreed(e.target.checked)}
-              className="mt-0.5 h-4 w-4 shrink-0 rounded accent-human"
+              className="mt-1 h-4 w-4 shrink-0 rounded accent-brand"
             />
             <span>
               {en ? (
                 <>
                   I confirm I hold the copyright/license for this content (excerpt only, no infringing material) and accept responsibility under the{' '}
-                  <Link href="/terms" className="text-human underline">
+                  <Link href="/terms" className="font-semibold text-brand underline">
                     Terms
                   </Link>
                   .
@@ -450,7 +450,7 @@ export default function SubmitPage() {
               ) : (
                 <>
                   등록하는 텍스트(발췌본)·이미지의 저작권 및 사용 권한을 보유하고 있으며, 권리 침해 시 책임이 의뢰자에게 있음을 확인합니다. (
-                  <Link href="/terms" className="text-human underline">
+                  <Link href="/terms" className="font-semibold text-brand underline">
                     이용약관
                   </Link>
                   )
@@ -460,8 +460,8 @@ export default function SubmitPage() {
           </label>
 
           {tooSimilar && (
-            <div className="flex items-start gap-2 rounded-xl border border-pi/30 bg-pi/10 p-3 text-xs leading-relaxed text-pi-light">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-sm leading-relaxed text-amber-900">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-pi-light" />
               <p>
                 {en
                   ? 'A and B look very similar and may be ambiguous for verifiers. Consider highlighting clearer differences or using Single Check.'
@@ -470,9 +470,9 @@ export default function SubmitPage() {
             </div>
           )}
 
-          {error && <p className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}
+          {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
           {!error && validation && (textA || textB || imageA || imageB) && (
-            <p className="text-center text-[11px] text-slate-500">{validation}</p>
+            <p className="text-center text-xs text-slate-500">{validation}</p>
           )}
 
           <button type="button" className="btn-amber w-full py-4 text-base" onClick={submit} disabled={!!validation || !!busy}>
@@ -484,7 +484,7 @@ export default function SubmitPage() {
                 : `${WALLET.SUBMISSION_FEE_PI} Test-Pi 결제 및 등록`}
           </button>
           {draftId && !busy && (
-            <p className="text-center text-[11px] text-slate-500">
+            <p className="text-center text-xs text-slate-500">
               {en ? 'Retrying payment with your saved draft.' : '저장된 문항으로 결제를 다시 시도합니다.'}
             </p>
           )}
@@ -492,12 +492,12 @@ export default function SubmitPage() {
       )}
 
       {/* 내 의뢰 현황 */}
-      <section className="space-y-2">
+      <section className="space-y-2.5">
         <p className="label px-1">{en ? 'My Submissions' : '내 의뢰 현황'}</p>
         {mine === null ? (
           <Spinner small />
         ) : mine.length === 0 ? (
-          <p className="card text-center text-xs text-slate-500">
+          <p className="card text-center text-sm text-slate-500">
             {en ? 'No submissions yet.' : '아직 의뢰한 문항이 없습니다.'}
           </p>
         ) : (
@@ -511,9 +511,9 @@ export default function SubmitPage() {
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <div className="flex justify-between text-xs font-medium text-slate-400">
+      <div className="flex justify-between text-sm font-medium text-slate-700">
         <span>{label}</span>
-        {hint && <span className="text-slate-600">{hint}</span>}
+        {hint && <span className="text-xs text-slate-500">{hint}</span>}
       </div>
       {children}
     </div>
@@ -539,10 +539,10 @@ function PresetChips({
             type="button"
             onClick={() => onPick(active ? '' : opt)}
             className={clsx(
-              'rounded-full border px-2.5 py-1 text-[11px] transition',
+              'rounded-full border px-3 py-1 text-xs transition',
               active
-                ? 'border-human bg-human/15 font-semibold text-human'
-                : 'border-white/10 bg-white/[0.03] text-slate-400 hover:border-white/20 hover:text-slate-200',
+                ? 'border-brand bg-brand-soft font-semibold text-brand'
+                : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-brand/40 hover:text-slate-900',
             )}
           >
             {opt}
@@ -580,25 +580,25 @@ function ImageSlot({
   };
 
   return (
-    <label className="relative flex aspect-square cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-white/10 bg-white/[0.03] text-slate-500 transition hover:border-human/40">
+    <label className="relative flex aspect-square cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 text-slate-500 transition hover:border-brand/50">
       {side && (
-        <span className="absolute left-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-xs font-black text-white">
+        <span className="absolute left-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-slate-900/75 text-xs font-black text-white">
           {side}
         </span>
       )}
       {loading ? (
-        <Loader2 className="h-6 w-6 animate-spin" />
+        <Loader2 className="h-6 w-6 animate-spin text-brand" />
       ) : value ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={value} alt={`업로드 이미지 ${side ?? ''}`} className="h-full w-full object-cover" />
       ) : (
         <>
           <ImagePlus className="h-7 w-7" />
-          <span className="mt-1 text-[11px]">{side ? `이미지 ${side} 선택` : '이미지 선택'}</span>
+          <span className="mt-1.5 text-xs">{side ? `이미지 ${side} 선택` : '이미지 선택'}</span>
         </>
       )}
       {value && !loading && (
-        <span className="absolute bottom-2 right-2 flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white">
+        <span className="absolute bottom-2 right-2 flex items-center gap-1 rounded-full bg-slate-900/75 px-2.5 py-0.5 text-xs text-white">
           <Upload className="h-3 w-3" />
           변경
         </span>
@@ -617,9 +617,9 @@ function ImageSlot({
 }
 
 const STATUS_STYLE: Record<MyMissionItem['status'], { label: string; cls: string }> = {
-  draft: { label: '결제 대기', cls: 'bg-pi/15 text-pi-light' },
-  active: { label: '판별 중', cls: 'bg-human/15 text-human' },
-  closed: { label: '종료', cls: 'bg-white/10 text-slate-400' },
+  draft: { label: '결제 대기', cls: 'bg-amber-50 text-pi-light' },
+  active: { label: '판별 중', cls: 'bg-emerald-50 text-human-dark' },
+  closed: { label: '종료', cls: 'bg-slate-100 text-slate-600' },
 };
 
 function MyMissionRow({
@@ -646,29 +646,29 @@ function MyMissionRow({
   };
 
   return (
-    <article className="card space-y-2 py-3">
+    <article className="card space-y-2 py-3.5">
       <div className="flex items-center gap-2">
-        {m.kind === 'text' ? <FileText className="h-4 w-4 text-slate-500" /> : <ImageIcon className="h-4 w-4 text-slate-500" />}
-        <p className="flex-1 truncate text-sm text-slate-200">{m.prompt}</p>
+        {m.kind === 'text' ? <FileText className="h-4 w-4 text-slate-400" /> : <ImageIcon className="h-4 w-4 text-slate-400" />}
+        <p className="flex-1 truncate text-base font-medium text-slate-900">{m.prompt}</p>
         <span className={clsx('chip', s.cls)}>{s.label}</span>
         {m.status === 'active' && (
           <button
             type="button"
             disabled={closing}
             onClick={() => void handleClose()}
-            className="rounded-lg border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-semibold text-slate-300 hover:bg-red-500/15 hover:text-red-300 disabled:opacity-50"
+            className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-600 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
           >
             {closing ? '…' : en ? 'Close' : '마감'}
           </button>
         )}
       </div>
-      <div className="flex items-center justify-between text-[11px] text-slate-500">
+      <div className="flex items-center justify-between text-xs text-slate-500">
         <span>{formatDateTime(m.createdAt)}</span>
         <span>
           {en ? 'Votes' : '실제 응답'} {total}/{GAME.REQUESTER_TARGET_VOTES} (
           {isSingle ? `${en ? 'Human' : '인간'} ${m.votes.A} · AI ${m.votes.B}` : `A ${m.votes.A} · B ${m.votes.B}`})
           {m.consensus && (
-            <b className="ml-1 text-human">
+            <b className="ml-1 text-brand">
               → {isSingle ? (m.consensus === 'A' ? (en ? 'Human' : '인간 원본') : 'AI') : `${en ? 'Original' : '인간 원본'} ${m.consensus}`}
             </b>
           )}
@@ -680,8 +680,8 @@ function MyMissionRow({
 
 function Spinner({ small }: { small?: boolean }) {
   return (
-    <div className={clsx('flex justify-center text-slate-400', small ? 'py-6' : 'py-24')}>
-      <Loader2 className="h-6 w-6 animate-spin text-human" />
+    <div className={clsx('flex justify-center text-slate-500', small ? 'py-6' : 'py-24')}>
+      <Loader2 className="h-6 w-6 animate-spin text-brand" />
     </div>
   );
 }

@@ -9,12 +9,23 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        brand: {
+          DEFAULT: '#6D28D9', // 메인 보라색 (Pi 톤)
+          light: '#7C3AED',
+          dark: '#5B21B6',
+          soft: '#EDE9FE',
+        },
+        surface: {
+          DEFAULT: '#F8FAFC', // 화이트-슬레이트 배경
+          card: '#FFFFFF',
+          muted: '#F1F5F9',
+        },
         navy: {
-          DEFAULT: '#0B1120', // 베이스 배경
-          900: '#0B1120',
-          800: '#111A2E',
-          700: '#1A2540',
-          600: '#26334F',
+          DEFAULT: '#0F172A', // 진한 본문 텍스트
+          900: '#0F172A',
+          800: '#FFFFFF',
+          700: '#F1F5F9',
+          600: '#E2E8F0',
         },
         human: {
           DEFAULT: '#10B981', // Human Verified 강조 (에메랄드)
@@ -23,8 +34,8 @@ const config: Config = {
         },
         pi: {
           DEFAULT: '#F59E0B', // Pi 보상 강조 (앰버)
-          light: '#FBBF24',
-          dark: '#D97706',
+          light: '#D97706', // 라이트 배경에서 가독성 좋은 앰버 텍스트
+          dark: '#B45309',
         },
       },
       fontFamily: {

@@ -12,12 +12,12 @@ export function DemoBanner() {
   if (env !== 'web' && !demoActive) return null;
 
   return (
-    <div className="border-b border-pi/20 bg-pi/10">
-      <div className="mx-auto flex max-w-md items-center gap-2 px-4 py-1.5 text-xs text-pi-light">
-        <FlaskConical className="h-4 w-4 shrink-0" />
+    <div className="border-b border-amber-200 bg-amber-50">
+      <div className="mx-auto flex max-w-md items-center gap-2 px-4 py-2 text-xs text-amber-900">
+        <FlaskConical className="h-4 w-4 shrink-0 text-amber-600" />
         <p className="flex-1 leading-tight">
           <b>Demo Sandbox Mode</b>
-          <span className="block text-[11px] text-pi-light/70">
+          <span className="block text-[11px] text-amber-700">
             {demoActive ? '가상 계정 · Mock 결제/검증으로 체험 중' : 'Pi Browser 로그인 시도 모드'}
           </span>
         </p>
@@ -30,7 +30,7 @@ export function DemoBanner() {
           onClick={() => void setDemoMode(!demoActive)}
           className={clsx(
             'relative h-6 w-11 rounded-full transition disabled:opacity-50',
-            demoActive ? 'bg-pi' : 'bg-white/15',
+            demoActive ? 'bg-pi' : 'bg-slate-300',
           )}
         >
           <span

@@ -9,8 +9,7 @@ import { useApp } from './AppProvider';
 
 /**
  * 상단 고정 내비게이션 + KO/EN 언어 전환 바
- * - Android Pi Browser 등에서 하단 시스템 바가 TabBar 를 가리더라도 모든 탭으로 즉시 이동 가능
- * - 글로벌 심사위원을 위한 한국어/영어 원터치 전환 제공
+ * - 화이트 + 보라색(#6D28D9) 포인트, 넉넉한 폰트
  */
 export function TopBar() {
   const pathname = usePathname() ?? '/';
@@ -25,10 +24,10 @@ export function TopBar() {
   ];
 
   return (
-    <header className="sticky top-0 z-30 border-b border-white/5 bg-navy/95 backdrop-blur">
-      <div className="mx-auto flex max-w-md items-center justify-between gap-2 px-3 py-2">
-        <Link href="/" className="flex shrink-0 items-center gap-1.5 text-sm font-black tracking-tight text-white">
-          <ShieldCheck className="h-4 w-4 text-human" />
+    <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+      <div className="mx-auto flex max-w-md items-center justify-between gap-2 px-3 py-2.5">
+        <Link href="/" className="flex shrink-0 items-center gap-1.5 text-[15px] font-black tracking-tight text-slate-900">
+          <ShieldCheck className="h-5 w-5 text-brand" />
           <span>VeriLens</span>
         </Link>
 
@@ -38,8 +37,8 @@ export function TopBar() {
               key={l.href}
               href={l.href}
               className={clsx(
-                'rounded-lg px-2 py-1 text-[11px] font-semibold transition',
-                l.active ? 'bg-human/15 text-human' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200',
+                'rounded-lg px-2 py-1 text-xs font-semibold transition',
+                l.active ? 'bg-brand-soft text-brand' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
               )}
             >
               {l.label}
@@ -51,9 +50,9 @@ export function TopBar() {
           type="button"
           onClick={() => setLang(lang === 'ko' ? 'en' : 'ko')}
           aria-label="언어 전환 (KO/EN)"
-          className="flex shrink-0 items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[11px] font-bold text-slate-200 transition hover:bg-white/10"
+          className="flex shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-700 transition hover:bg-slate-100"
         >
-          <Globe className="h-3 w-3 text-human" />
+          <Globe className="h-3.5 w-3.5 text-brand" />
           {lang === 'ko' ? 'EN' : 'KO'}
         </button>
       </div>

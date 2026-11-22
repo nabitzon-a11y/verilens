@@ -73,29 +73,29 @@ export function AiHintsModal({ open, onClose, lang }: { open: boolean; onClose: 
   const t = HINTS[lang];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm" role="dialog" aria-modal="true">
-      <div className="max-h-[85dvh] w-full max-w-sm overflow-y-auto rounded-3xl border border-white/10 bg-navy-800 p-5 shadow-2xl">
-        <header className="flex items-start justify-between gap-2 border-b border-white/5 pb-3">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm" role="dialog" aria-modal="true">
+      <div className="max-h-[85dvh] w-full max-w-sm overflow-y-auto rounded-3xl border border-slate-200 bg-white p-5 shadow-2xl">
+        <header className="flex items-start justify-between gap-2 border-b border-slate-100 pb-3">
           <div>
-            <h2 className="flex items-center gap-1.5 text-base font-bold text-white">
-              <Lightbulb className="h-4 w-4 text-pi" />
+            <h2 className="flex items-center gap-1.5 text-lg font-bold text-slate-900">
+              <Lightbulb className="h-5 w-5 text-pi-light" />
               {t.title}
             </h2>
-            <p className="mt-0.5 text-[11px] text-slate-400">{t.subtitle}</p>
+            <p className="mt-0.5 text-xs text-slate-500">{t.subtitle}</p>
           </div>
-          <button type="button" onClick={onClose} aria-label="닫기" className="text-slate-400 hover:text-white">
-            <X className="h-4 w-4" />
+          <button type="button" onClick={onClose} aria-label="닫기" className="text-slate-400 hover:text-slate-700">
+            <X className="h-5 w-5" />
           </button>
         </header>
 
         <ul className="mt-3 space-y-2.5">
           {t.items.map((item) => (
-            <li key={item.title} className="rounded-2xl border border-white/5 bg-white/[0.03] p-3">
+            <li key={item.title} className="rounded-2xl border border-slate-100 bg-slate-50 p-3.5">
               <div className="flex items-center gap-2">
-                <span className="chip bg-human/15 text-human">{item.tag}</span>
-                <p className="text-xs font-bold text-white">{item.title}</p>
+                <span className="chip bg-brand-soft text-brand">{item.tag}</span>
+                <p className="text-[13px] font-bold text-slate-900">{item.title}</p>
               </div>
-              <p className="mt-1.5 text-xs leading-relaxed text-slate-300">{item.desc}</p>
+              <p className="mt-1.5 text-[13px] leading-relaxed text-slate-600">{item.desc}</p>
             </li>
           ))}
         </ul>

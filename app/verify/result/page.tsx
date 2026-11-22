@@ -48,7 +48,7 @@ export default function ResultPage() {
   if (!result) {
     return (
       <section className="card space-y-3 text-center">
-        <p className="text-sm text-slate-300">{t.empty}</p>
+        <p className="text-sm text-slate-600">{t.empty}</p>
         <Link href="/verify" className="btn-primary w-full">
           {t.goVerify}
         </Link>
@@ -85,25 +85,25 @@ export default function ResultPage() {
     <div className="space-y-4">
       {/* 요약 */}
       <section className="card relative overflow-hidden text-center">
-        <div className="pointer-events-none absolute -top-16 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-human/20 blur-3xl" />
+        <div className="pointer-events-none absolute -top-16 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-brand/10 blur-3xl" />
         <p className="label">{t.accuracyTitle}</p>
-        <p className="mt-2 text-5xl font-black text-white">
+        <p className="mt-2 text-5xl font-black text-slate-900">
           {result.matchedCount}
-          <span className="text-2xl text-slate-500"> / {result.total}</span>
+          <span className="text-2xl text-slate-400"> / {result.total}</span>
         </p>
-        <p className="mt-1 text-sm font-semibold text-human">
+        <p className="mt-1 text-sm font-bold text-brand">
           {t.topPrefix}
           {result.topPercent}
           {t.topSuffix}
         </p>
 
-        <div className="mt-4 rounded-2xl bg-pi/10 py-3">
-          <p className="text-xs text-pi-light/80">{t.rewardTitle}</p>
-          <p className={clsx('text-2xl font-black', result.reward > 0 ? 'text-pi' : 'text-slate-500')}>
+        <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 py-3.5">
+          <p className="text-xs font-medium text-amber-800">{t.rewardTitle}</p>
+          <p className={clsx('text-2xl font-black', result.reward > 0 ? 'text-pi-light' : 'text-slate-400')}>
             {formatSignedPi(result.reward)}
           </p>
           {result.reward > 0 && (
-            <p className="text-[11px] text-pi-light/70">
+            <p className="text-xs text-amber-700">
               {result.rewardedCount}
               {t.matchedSuffix}
             </p>
@@ -111,13 +111,18 @@ export default function ResultPage() {
         </div>
 
         <div className="mt-3 flex justify-center gap-2">
-          <span className={clsx('chip', result.trustDelta >= 0 ? 'bg-human/15 text-human' : 'bg-red-500/15 text-red-300')}>
-            {result.trustDelta >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+          <span
+            className={clsx(
+              'chip',
+              result.trustDelta >= 0 ? 'border border-emerald-200 bg-emerald-50 text-human-dark' : 'border border-red-200 bg-red-50 text-red-600',
+            )}
+          >
+            {result.trustDelta >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
             {t.trustLabel} {result.trustDelta >= 0 ? '+' : ''}
             {result.trustDelta} → {result.trustScore}%
           </span>
-          <span className="chip bg-orange-500/15 text-orange-300">
-            <Flame className="h-3 w-3" />
+          <span className="chip border border-orange-200 bg-orange-50 text-orange-700">
+            <Flame className="h-3.5 w-3.5" />
             {result.streak}
             {t.streakSuffix}
           </span>
@@ -135,14 +140,14 @@ export default function ResultPage() {
       </section>
 
       {/* 액션 */}
-      <section className="space-y-2">
+      <section className="space-y-2.5">
         {result.challengeMissionId && (
           <button type="button" className="btn-amber w-full" onClick={share}>
             <Share2 className="h-4 w-4" />
             {t.shareBtn}
           </button>
         )}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2.5">
           <Link href="/verify" className="btn-primary">
             <RotateCcw className="h-4 w-4" />
             {t.nextSetBtn}
@@ -156,7 +161,7 @@ export default function ResultPage() {
 
       {toast && (
         <div className="fixed inset-x-0 bottom-24 z-50 flex justify-center px-4">
-          <p className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-navy shadow-lg">{toast}</p>
+          <p className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-lg">{toast}</p>
         </div>
       )}
     </div>
@@ -198,16 +203,16 @@ function Banner({
   children: React.ReactNode;
 }) {
   const style = {
-    red: 'border-red-500/30 bg-red-500/10 text-red-200',
-    amber: 'border-pi/30 bg-pi/10 text-pi-light',
-    green: 'border-human/30 bg-human/10 text-human-light',
+    red: 'border-red-200 bg-red-50 text-red-900',
+    amber: 'border-amber-200 bg-amber-50 text-amber-900',
+    green: 'border-emerald-200 bg-emerald-50 text-emerald-900',
   }[tone];
   return (
     <section className={clsx('flex gap-3 rounded-2xl border p-4', style)}>
       <div className="shrink-0">{icon}</div>
       <div>
         <p className="text-sm font-bold">{title}</p>
-        <p className="mt-0.5 text-xs leading-relaxed opacity-80">{children}</p>
+        <p className="mt-0.5 text-xs leading-relaxed opacity-85">{children}</p>
       </div>
     </section>
   );
@@ -228,23 +233,23 @@ function ResultItem({ n, r, t, lang }: { n: number; r: MissionResult; t: (typeof
       ? SEED_EN[r.missionId]?.aiTell ??
         (r.ownMission
           ? 'This is your submitted item. Your own vote is excluded from rewards and real consensus.'
-          : 'Requester-submitted item. Ground truth is determined by verified 5-human consensus.')
+          : 'Requester-submitted item. Ground truth is determined by verified 10-human consensus.')
       : r.aiTell;
   return (
     <article className="card space-y-3">
       <header className="flex items-center gap-2">
-        <span className="chip bg-white/5 text-slate-300">
-          {r.kind === 'image' ? <ImageIcon className="h-3 w-3" /> : <Sparkles className="h-3 w-3" />}Q{n} ·{' '}
+        <span className="chip bg-slate-100 text-slate-700">
+          {r.kind === 'image' ? <ImageIcon className="h-3.5 w-3.5 text-brand" /> : <Sparkles className="h-3.5 w-3.5 text-brand" />}Q{n} ·{' '}
           {r.kind === 'image' ? t.imageLabel : t.textLabel}
         </span>
         {r.excludedFast && (
-          <span className="chip bg-pi/15 text-pi-light">
-            <Zap className="h-3 w-3" />
+          <span className="chip bg-amber-50 text-amber-700">
+            <Zap className="h-3.5 w-3.5" />
             {t.fastExcluded}
           </span>
         )}
         <span className="ml-auto">
-          {r.matched ? <CheckCircle2 className="h-5 w-5 text-human" /> : <XCircle className="h-5 w-5 text-red-400" />}
+          {r.matched ? <CheckCircle2 className="h-5 w-5 text-human-dark" /> : <XCircle className="h-5 w-5 text-red-500" />}
         </span>
       </header>
 
@@ -256,11 +261,11 @@ function ResultItem({ n, r, t, lang }: { n: number; r: MissionResult; t: (typeof
 
       {/* 투표 분포 */}
       <div>
-        <div className="flex h-2 overflow-hidden rounded-full bg-white/5">
-          <div className="bg-sky-400" style={{ width: `${(r.tally.A / total) * 100}%` }} />
-          <div className="bg-violet-400" style={{ width: `${(r.tally.B / total) * 100}%` }} />
+        <div className="flex h-2.5 overflow-hidden rounded-full bg-slate-100">
+          <div className="bg-brand" style={{ width: `${(r.tally.A / total) * 100}%` }} />
+          <div className="bg-amber-400" style={{ width: `${(r.tally.B / total) * 100}%` }} />
         </div>
-        <div className="mt-1 flex justify-between text-[10px] text-slate-500">
+        <div className="mt-1.5 flex justify-between text-xs text-slate-500">
           <span>
             {aLabel} {r.tally.A}
             {t.votesUnit}
@@ -277,9 +282,9 @@ function ResultItem({ n, r, t, lang }: { n: number; r: MissionResult; t: (typeof
         </div>
       </div>
 
-      <p className="rounded-xl bg-white/[0.03] p-3 text-xs leading-relaxed text-slate-300">
-        <span className="mb-1 flex items-center gap-1 font-semibold text-human">
-          <Sparkles className="h-3 w-3" />
+      <p className="rounded-xl border border-slate-100 bg-slate-50 p-3.5 text-[13px] leading-relaxed text-slate-700">
+        <span className="mb-1 flex items-center gap-1 font-bold text-brand">
+          <Sparkles className="h-3.5 w-3.5" />
           {t.aiTellLabel}
         </span>
         {aiTell}
@@ -290,9 +295,9 @@ function ResultItem({ n, r, t, lang }: { n: number; r: MissionResult; t: (typeof
 
 function Cell({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
-    <div className="rounded-xl bg-white/[0.03] py-2">
-      <p className="text-[10px] text-slate-500">{label}</p>
-      <p className={clsx('text-base font-black', highlight ? 'text-human' : 'text-white')}>{value}</p>
+    <div className="rounded-xl border border-slate-100 bg-slate-50 py-2">
+      <p className="text-[11px] text-slate-500">{label}</p>
+      <p className={clsx('text-base font-black', highlight ? 'text-human-dark' : 'text-slate-900')}>{value}</p>
     </div>
   );
 }

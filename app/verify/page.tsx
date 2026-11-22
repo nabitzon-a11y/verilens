@@ -240,18 +240,18 @@ function VerifyGame() {
 
       {phase === 'need-session' && (
         <section className="card space-y-4 text-center">
-          <ScanFace className="mx-auto h-12 w-12 text-human" strokeWidth={1.4} />
+          <ScanFace className="mx-auto h-12 w-12 text-brand" strokeWidth={1.5} />
           <div>
-            <h1 className="text-lg font-bold text-white">{t.needSessionTitle}</h1>
-            <p className="mt-1 text-sm text-slate-400">{t.needSessionDesc}</p>
+            <h1 className="text-xl font-bold text-slate-900">{t.needSessionTitle}</h1>
+            <p className="mt-1.5 text-base text-slate-600">{t.needSessionDesc}</p>
           </div>
           {challenge && <ChallengeChip label={t.challengeChip} />}
-          <button type="button" className="btn-primary w-full py-4" onClick={startSession}>
+          <button type="button" className="btn-primary w-full py-4 text-base" onClick={startSession}>
             <ScanFace className="h-5 w-5" />
             {t.startSessionBtn}
           </button>
-          <button type="button" className="btn-ghost w-full text-xs" onClick={() => setHintsOpen(true)}>
-            <Lightbulb className="h-4 w-4 text-pi" />
+          <button type="button" className="btn-ghost w-full text-sm" onClick={() => setHintsOpen(true)}>
+            <Lightbulb className="h-4 w-4 text-pi-light" />
             {lang === 'en' ? 'View AI Detection Hints First' : '판별 전 AI 감별 힌트 보기'}
           </button>
         </section>
@@ -259,7 +259,7 @@ function VerifyGame() {
 
       {phase === 'error' && (
         <section className="card space-y-3 text-center">
-          <p className="text-sm text-red-300">{error}</p>
+          <p className="text-base text-red-600">{error}</p>
           <button
             type="button"
             className="btn-ghost w-full"
@@ -278,28 +278,28 @@ function VerifyGame() {
         <>
           {/* 진행 상태 */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-slate-300">
-                {t.question} <span className="text-human">{index + 1}</span> / {missionSet.missions.length}
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-semibold text-slate-600">
+                {t.question} <span className="text-brand">{index + 1}</span> / {missionSet.missions.length}
               </span>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setHintsOpen(true)}
-                  className="inline-flex items-center gap-1 rounded-full border border-pi/30 bg-pi/10 px-2 py-0.5 text-[11px] font-semibold text-pi-light hover:bg-pi/20"
+                  className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-pi-light hover:bg-amber-100"
                 >
-                  <Lightbulb className="h-3 w-3" />
+                  <Lightbulb className="h-3.5 w-3.5" />
                   {lang === 'en' ? 'Hints' : 'AI 힌트'}
                 </button>
-                <span className="flex items-center gap-1 font-mono text-slate-400">
-                  <Timer className="h-3.5 w-3.5" />
+                <span className="flex items-center gap-1 font-mono text-slate-500">
+                  <Timer className="h-4 w-4" />
                   {t.session} {formatMmSs(remaining)}
                 </span>
               </div>
             </div>
-            <div className="flex gap-1">
+            <div className="flex gap-1.5">
               {missionSet.missions.map((m, i) => (
-                <div key={m.id} className={`h-1.5 flex-1 rounded-full ${i < index ? 'bg-human' : i === index ? 'bg-human/50' : 'bg-white/10'}`} />
+                <div key={m.id} className={`h-2 flex-1 rounded-full ${i < index ? 'bg-brand' : i === index ? 'bg-brand/40' : 'bg-slate-200'}`} />
               ))}
             </div>
           </div>
@@ -313,23 +313,23 @@ function VerifyGame() {
             const isSingle = m.mode === 'single';
             return (
               <>
-                <h1 className="text-lg font-bold leading-snug text-white">{m.prompt}</h1>
+                <h1 className="text-xl font-bold leading-snug text-slate-900">{m.prompt}</h1>
                 {isSingle ? (
                   <div className="space-y-3" key={m.id}>
-                    <div className="overflow-hidden rounded-2xl border border-white/10 bg-navy-800">
+                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                       {m.a.type === 'text' ? (
-                        <div className="p-4">
+                        <div className="p-5">
                           {m.a.sourceLabel && (
-                            <span className="chip mb-2 bg-white/5 text-slate-400">{m.a.sourceLabel}</span>
+                            <span className="chip mb-2.5 bg-brand-soft text-brand">{m.a.sourceLabel}</span>
                           )}
-                          <p className="whitespace-pre-line text-[15px] leading-relaxed text-slate-100">{m.a.body}</p>
+                          <p className="whitespace-pre-line text-base leading-relaxed text-slate-800">{m.a.body}</p>
                         </div>
                       ) : (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={m.a.src} alt={m.a.alt} draggable={false} className="aspect-[4/3] w-full select-none object-cover" />
                       )}
                     </div>
-                    <div className="grid grid-cols-2 gap-2.5">
+                    <div className="grid grid-cols-2 gap-3">
                       {(
                         [
                           { side: 'A' as const, ko: '실제 인간 원본', en: 'Authentic Human' },
@@ -343,8 +343,8 @@ function VerifyGame() {
                           onClick={() => void choose(opt.side)}
                           className={
                             selected === opt.side
-                              ? 'btn border-2 border-human bg-human/15 py-4 text-human'
-                              : 'btn border-2 border-white/10 bg-navy-800 py-4 text-slate-100 hover:border-white/25'
+                              ? 'btn border-2 border-brand bg-brand-soft py-4 text-base text-brand'
+                              : 'btn border-2 border-slate-200 bg-white py-4 text-base text-slate-800 shadow-sm hover:border-brand/50'
                           }
                         >
                           {lang === 'en' ? opt.en : opt.ko}
@@ -370,35 +370,35 @@ function VerifyGame() {
             );
           })()}
 
-          <div className="flex items-center justify-between gap-2 text-[11px] text-slate-500">
+          <div className="flex items-center justify-between gap-2 text-xs text-slate-500">
             <p className="flex-1">{t.footerHint}</p>
             <button
               type="button"
               onClick={() => setReportOpen(true)}
-              className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-slate-400 transition hover:bg-white/5 hover:text-red-300"
+              className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-slate-500 transition hover:bg-red-50 hover:text-red-600"
             >
-              <Flag className="h-3 w-3" />
+              <Flag className="h-3.5 w-3.5" />
               {lang === 'en' ? 'Report' : '신고'}
             </button>
           </div>
 
           {reportOpen && (
             <div
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6 backdrop-blur-sm"
+              className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-6 backdrop-blur-sm"
               role="dialog"
               aria-modal="true"
             >
-              <div className="w-full max-w-xs space-y-3 rounded-3xl border border-white/10 bg-navy-800 p-5 shadow-2xl">
+              <div className="w-full max-w-xs space-y-3 rounded-3xl border border-slate-200 bg-white p-5 shadow-2xl">
                 <div className="flex items-center justify-between">
-                  <h2 className="flex items-center gap-1.5 text-sm font-bold text-white">
-                    <Flag className="h-4 w-4 text-red-400" />
+                  <h2 className="flex items-center gap-1.5 text-base font-bold text-slate-900">
+                    <Flag className="h-4 w-4 text-red-500" />
                     {lang === 'en' ? 'Report Content' : '문항 신고하기'}
                   </h2>
-                  <button type="button" onClick={() => setReportOpen(false)} aria-label="닫기" className="text-slate-400 hover:text-white">
+                  <button type="button" onClick={() => setReportOpen(false)} aria-label="닫기" className="text-slate-400 hover:text-slate-900">
                     <X className="h-4 w-4" />
                   </button>
                 </div>
-                <p className="text-xs text-slate-400">
+                <p className="text-sm text-slate-600">
                   {lang === 'en'
                     ? 'Reported user-submitted items are automatically hidden after 2 reports.'
                     : '신고가 2회 이상 접수된 의뢰 문항은 즉시 비공개 처리됩니다.'}
@@ -416,7 +416,7 @@ function VerifyGame() {
                       type="button"
                       disabled={reporting}
                       onClick={() => void submitReport(item.id)}
-                      className="btn-ghost w-full justify-start text-xs"
+                      className="btn-ghost w-full justify-start text-sm"
                     >
                       {lang === 'en' ? item.en : item.ko}
                     </button>
@@ -428,14 +428,14 @@ function VerifyGame() {
 
           {toast && (
             <div className="fixed inset-x-0 bottom-24 z-50 flex justify-center px-4">
-              <p className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-navy shadow-lg">{toast}</p>
+              <p className="rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-lg">{toast}</p>
             </div>
           )}
 
           {phase === 'submitting' && (
-            <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-              <div className="flex flex-col items-center gap-3 text-sm text-slate-200">
-                <Loader2 className="h-8 w-8 animate-spin text-human" />
+            <div className="fixed inset-0 z-40 flex items-center justify-center bg-white/75 backdrop-blur-sm">
+              <div className="flex flex-col items-center gap-3 text-base font-semibold text-slate-800">
+                <Loader2 className="h-8 w-8 animate-spin text-brand" />
                 {t.submitting}
               </div>
             </div>
@@ -468,8 +468,8 @@ function localizeMission(m: PublicMission, lang: 'ko' | 'en'): PublicMission {
 
 function ChallengeChip({ label }: { label: string }) {
   return (
-    <p className="chip mx-auto bg-pi/15 text-pi-light">
-      <Gift className="h-3.5 w-3.5" />
+    <p className="chip mx-auto border border-amber-200 bg-amber-50 text-pi-light">
+      <Gift className="h-4 w-4" />
       {label}
     </p>
   );
@@ -477,8 +477,8 @@ function ChallengeChip({ label }: { label: string }) {
 
 function CenterSpinner({ label }: { label: string }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 py-24 text-sm text-slate-400">
-      <Loader2 className="h-6 w-6 animate-spin text-human" />
+    <div className="flex flex-col items-center justify-center gap-3 py-24 text-base text-slate-600">
+      <Loader2 className="h-6 w-6 animate-spin text-brand" />
       {label}
     </div>
   );

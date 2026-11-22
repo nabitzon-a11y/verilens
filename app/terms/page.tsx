@@ -11,21 +11,21 @@ export default function TermsPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between pt-1">
-        <Link href="/" className="inline-flex items-center gap-1 text-xs font-semibold text-slate-400 hover:text-white">
+        <Link href="/" className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-900">
           <ArrowLeft className="h-4 w-4" />
           {en ? 'Back' : '돌아가기'}
         </Link>
-        <Link href="/privacy" className="text-xs font-semibold text-human hover:underline">
+        <Link href="/privacy" className="text-xs font-semibold text-brand hover:underline">
           {en ? 'Privacy Policy →' : '개인정보처리방침 →'}
         </Link>
       </div>
 
-      <article className="card space-y-4 text-sm leading-relaxed text-slate-300">
-        <header className="flex items-center gap-2.5 border-b border-white/5 pb-3">
-          <FileText className="h-5 w-5 text-human" />
+      <article className="card space-y-4 text-sm leading-relaxed text-slate-700">
+        <header className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
+          <FileText className="h-5 w-5 text-brand" />
           <div>
-            <h1 className="text-lg font-black text-white">{en ? 'Terms of Service' : 'VeriLens 이용약관'}</h1>
-            <p className="text-[11px] text-slate-500">VeriLens · Last updated: 2026-11-22</p>
+            <h1 className="text-lg font-black text-slate-900">{en ? 'Terms of Service' : 'VeriLens 이용약관'}</h1>
+            <p className="text-xs text-slate-500">VeriLens · Last updated: 2026-11-22</p>
           </div>
         </header>
 
@@ -68,8 +68,8 @@ export default function TermsPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="space-y-1">
-      <h2 className="text-sm font-bold text-white">{title}</h2>
-      <p className="text-xs leading-relaxed text-slate-400">{children}</p>
+      <h2 className="text-[15px] font-bold text-slate-900">{title}</h2>
+      <p className="text-[13px] leading-relaxed text-slate-600">{children}</p>
     </section>
   );
 }
