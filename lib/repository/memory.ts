@@ -49,6 +49,10 @@ export class MemoryRepository implements Repository {
     return clone(user);
   }
 
+  async listUsers(): Promise<PioneerUser[]> {
+    return Object.values(this.data.users).map(clone);
+  }
+
   /* ---------- missions ---------- */
   async listMissions(filter: { status?: MissionStatus; origin?: MissionOrigin } = {}): Promise<Mission[]> {
     return [...SEED_MISSIONS, ...Object.values(this.data.missions)]
@@ -80,6 +84,10 @@ export class MemoryRepository implements Repository {
     return clone(set);
   }
 
+  async listSets(): Promise<MissionSet[]> {
+    return Object.values(this.data.sets).map(clone);
+  }
+
   /* ---------- votes ---------- */
   async addVote(missionId: string, choice: Choice): Promise<Choice[]> {
     const votes = this.data.votes[missionId] ?? [];
@@ -103,6 +111,12 @@ export class MemoryRepository implements Repository {
   async listLedger(uid: string): Promise<LedgerEntry[]> {
     return this.data.ledger
       .filter((e) => e.uid === uid)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .map(clone);
+  }
+
+  async listAllLedger(): Promise<LedgerEntry[]> {
+    return [...this.data.ledger]
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       .map(clone);
   }

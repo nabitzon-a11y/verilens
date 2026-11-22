@@ -126,6 +126,10 @@ export class SupabaseRepository implements Repository {
     return user;
   }
 
+  listUsers() {
+    return this.listDocs<PioneerUser>('users');
+  }
+
   async listMissions(filter: { status?: MissionStatus; origin?: MissionOrigin } = {}) {
     const seeds = SEED_MISSIONS.filter(
       (m) => (!filter.status || m.status === filter.status) && (!filter.origin || m.origin === filter.origin),
@@ -159,6 +163,10 @@ export class SupabaseRepository implements Repository {
     return set;
   }
 
+  listSets() {
+    return this.listDocs<MissionSet>('sets');
+  }
+
   async addVote(missionId: string, choice: Choice) {
     await this.request('/vl_votes', {
       method: 'POST',
@@ -182,6 +190,11 @@ export class SupabaseRepository implements Repository {
 
   async listLedger(uid: string) {
     const entries = await this.listDocs<LedgerEntry>('ledger', `&uid=eq.${this.q(uid)}`);
+    return entries.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+
+  async listAllLedger() {
+    const entries = await this.listDocs<LedgerEntry>('ledger');
     return entries.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 

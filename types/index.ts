@@ -361,6 +361,7 @@ export interface DataSnapshot {
 export interface Repository {
   getUser(uid: string): Promise<PioneerUser | null>;
   upsertUser(user: PioneerUser): Promise<PioneerUser>;
+  listUsers(): Promise<PioneerUser[]>;
 
   listMissions(filter?: { status?: MissionStatus; origin?: MissionOrigin }): Promise<Mission[]>;
   getMission(id: string): Promise<Mission | null>;
@@ -368,15 +369,58 @@ export interface Repository {
 
   getSet(setId: string): Promise<MissionSet | null>;
   saveSet(set: MissionSet): Promise<MissionSet>;
+  listSets(): Promise<MissionSet[]>;
 
   addVote(missionId: string, choice: Choice): Promise<Choice[]>;
   getVotes(missionId: string): Promise<Choice[]>;
 
   addLedgerEntry(entry: LedgerEntry): Promise<LedgerEntry>;
   listLedger(uid: string): Promise<LedgerEntry[]>;
+  listAllLedger(): Promise<LedgerEntry[]>;
 
   getPayment(paymentId: string): Promise<PaymentRecord | null>;
   savePayment(record: PaymentRecord): Promise<PaymentRecord>;
+}
+
+/** 관리자 대시보드(/admin) 통계 응답 */
+export interface AdminOverviewResponse {
+  summary: {
+    totalUsers: number;
+    piUsers: number;
+    demoUsers: number;
+    totalSets: number;
+    completedSets: number;
+    totalMissions: number;
+    activeMissions: number;
+    closedMissions: number;
+    reportedMissions: number;
+    totalVotes: number;
+    u2aRevenuePi: number;
+    a2uRewardedPi: number;
+    a2uClaimedPi: number;
+  };
+  recentUsers: Array<{
+    uid: string;
+    username: string;
+    isDemo: boolean;
+    trustScore: number;
+    setsCompleted: number;
+    balance: number;
+    botFlags: number;
+    updatedAt: ISODateString;
+  }>;
+  requesterMissions: Array<{
+    id: string;
+    prompt: string;
+    kind: MissionKind;
+    mode?: MissionMode;
+    status: MissionStatus;
+    requesterUid?: string;
+    votes: VoteTally;
+    reports: number;
+    consensus: Choice | null;
+    createdAt: ISODateString;
+  }>;
 }
 
 /* =====================================================================
