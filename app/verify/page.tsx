@@ -289,25 +289,66 @@ function VerifyGame() {
 
           {challenge && index === 0 && <ChallengeChip label={t.challengeChip} />}
 
-          {/* 질문 & A/B 카드 (영문 모드 시 시드 문항 번역 적용) */}
+          {/* 질문 & 카드 (단일 감별 vs A/B 비교) */}
           {(() => {
             const raw = missionSet.missions[index];
             const m = localizeMission(raw, lang);
+            const isSingle = m.mode === 'single';
             return (
               <>
                 <h1 className="text-lg font-bold leading-snug text-white">{m.prompt}</h1>
-                <div className="space-y-3" key={m.id}>
-                  {(['A', 'B'] as const).map((side) => (
-                    <MissionCard
-                      key={side}
-                      side={side}
-                      content={side === 'A' ? m.a : m.b}
-                      selected={selected === side}
-                      disabled={locked || phase !== 'playing'}
-                      onSelect={(c) => void choose(c)}
-                    />
-                  ))}
-                </div>
+                {isSingle ? (
+                  <div className="space-y-3" key={m.id}>
+                    <div className="overflow-hidden rounded-2xl border border-white/10 bg-navy-800">
+                      {m.a.type === 'text' ? (
+                        <div className="p-4">
+                          {m.a.sourceLabel && (
+                            <span className="chip mb-2 bg-white/5 text-slate-400">{m.a.sourceLabel}</span>
+                          )}
+                          <p className="whitespace-pre-line text-[15px] leading-relaxed text-slate-100">{m.a.body}</p>
+                        </div>
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={m.a.src} alt={m.a.alt} draggable={false} className="aspect-[4/3] w-full select-none object-cover" />
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      {(
+                        [
+                          { side: 'A' as const, ko: '실제 인간 원본', en: 'Authentic Human' },
+                          { side: 'B' as const, ko: 'AI 생성 · 합성', en: 'AI-Generated' },
+                        ] as const
+                      ).map((opt) => (
+                        <button
+                          key={opt.side}
+                          type="button"
+                          disabled={locked || phase !== 'playing'}
+                          onClick={() => void choose(opt.side)}
+                          className={
+                            selected === opt.side
+                              ? 'btn border-2 border-human bg-human/15 py-4 text-human'
+                              : 'btn border-2 border-white/10 bg-navy-800 py-4 text-slate-100 hover:border-white/25'
+                          }
+                        >
+                          {lang === 'en' ? opt.en : opt.ko}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3" key={m.id}>
+                    {(['A', 'B'] as const).map((side) => (
+                      <MissionCard
+                        key={side}
+                        side={side}
+                        content={side === 'A' ? m.a : m.b}
+                        selected={selected === side}
+                        disabled={locked || phase !== 'playing'}
+                        onSelect={(c) => void choose(c)}
+                      />
+                    ))}
+                  </div>
+                )}
               </>
             );
           })()}

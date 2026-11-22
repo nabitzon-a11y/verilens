@@ -14,7 +14,7 @@ import {
   Upload,
 } from 'lucide-react';
 import clsx from 'clsx';
-import type { DraftResponse, MissionKind, MyMissionItem, PaymentCompleteResponse } from '@/types';
+import type { DraftResponse, MissionKind, MissionMode, MyMissionItem, PaymentCompleteResponse } from '@/types';
 import { useApp } from '@/components/AppProvider';
 import { LoginPanel } from '@/components/LoginPanel';
 import { api } from '@/lib/apiClient';
@@ -36,17 +36,30 @@ const STAGE_LABEL: Record<Stage | 'draft', string> = {
 const TEXT_MIN = 10;
 const TEXT_MAX = 600;
 
-const PROMPT_PRESETS: Record<MissionKind, readonly string[]> = {
-  text: [
-    '어느 쪽이 실제 사람이 직접 쓴 글일까요?',
-    '실제 경험에 기반한 후기는 어느 쪽인가요?',
-    'AI가 지어내지 않은 자연스러운 글은?',
-  ],
-  image: [
-    '어느 쪽이 AI가 만들지 않은 원본 장면일까요?',
-    '실제 카메라로 찍은 사진은 어느 쪽인가요?',
-    '합성 흔적이 없는 자연스러운 이미지는?',
-  ],
+const PROMPT_PRESETS: Record<MissionMode, Record<MissionKind, readonly string[]>> = {
+  single: {
+    text: [
+      '이 글은 실제 사람이 썼을까요, AI가 썼을까요?',
+      '실제 구매자 후기일까요, AI 생성 리뷰일까요?',
+      '이 글에서 AI 특유의 부자연스러움이 느껴지나요?',
+    ],
+    image: [
+      '이 이미지는 실제 원본일까요, AI 생성물일까요?',
+      '실제 카메라 촬영 사진일까요, 합성 이미지일까요?',
+    ],
+  },
+  compare: {
+    text: [
+      '어느 쪽이 실제 사람이 직접 쓴 글일까요?',
+      '실제 경험에 기반한 후기는 어느 쪽인가요?',
+      'AI가 지어내지 않은 자연스러운 글은?',
+    ],
+    image: [
+      '어느 쪽이 AI가 만들지 않은 원본 장면일까요?',
+      '실제 카메라로 찍은 사진은 어느 쪽인가요?',
+      '합성 흔적이 없는 자연스러운 이미지는?',
+    ],
+  },
 };
 
 const SOURCE_PRESETS = ['뉴스 기사', '배달앱 리뷰', '쇼핑몰 상품평', 'SNS 게시글', '커뮤니티 답변', '카페/식당 후기'] as const;
@@ -55,6 +68,7 @@ export default function SubmitPage() {
   const { ready, profile, paymentsMode, refresh, lang } = useApp();
   const en = lang === 'en';
 
+  const [mode, setMode] = useState<MissionMode>('single');
   const [kind, setKind] = useState<MissionKind>('text');
   const [prompt, setPrompt] = useState('');
   const [sourceLabel, setSourceLabel] = useState('');
@@ -95,13 +109,21 @@ export default function SubmitPage() {
 
   const validation = (() => {
     if (kind === 'text') {
-      if (textA.trim().length < TEXT_MIN || textB.trim().length < TEXT_MIN) {
-        return en ? `Both A and B must be at least ${TEXT_MIN} characters.` : `A와 B 모두 ${TEXT_MIN}자 이상 입력하세요.`;
+      if (textA.trim().length < TEXT_MIN) {
+        return en ? `Text must be at least ${TEXT_MIN} characters.` : `텍스트를 ${TEXT_MIN}자 이상 입력하세요.`;
       }
-      if (textA.trim() === textB.trim()) return en ? 'A and B must be different.' : 'A와 B에 서로 다른 내용을 입력하세요.';
+      if (mode === 'compare') {
+        if (textB.trim().length < TEXT_MIN) {
+          return en ? `Both A and B must be at least ${TEXT_MIN} characters.` : `A와 B 모두 ${TEXT_MIN}자 이상 입력하세요.`;
+        }
+        if (textA.trim() === textB.trim()) return en ? 'A and B must be different.' : 'A와 B에 서로 다른 내용을 입력하세요.';
+      }
     } else {
-      if (!imageA || !imageB) return en ? 'Please upload both Image A and B.' : '이미지 A와 B를 모두 올려 주세요.';
-      if (imageA === imageB) return en ? 'Please upload two different images.' : '서로 다른 이미지를 올려 주세요.';
+      if (!imageA) return en ? 'Please upload an image.' : '이미지를 올려 주세요.';
+      if (mode === 'compare') {
+        if (!imageB) return en ? 'Please upload both Image A and B.' : '이미지 A와 B를 모두 올려 주세요.';
+        if (imageA === imageB) return en ? 'Please upload two different images.' : '서로 다른 이미지를 올려 주세요.';
+      }
     }
     if (!rightsAgreed) return en ? 'Please agree to the copyright & rights warranty.' : '저작권 및 사용 권한 동의에 체크해 주세요.';
     return null;
@@ -116,8 +138,21 @@ export default function SubmitPage() {
         setBusy('draft');
         const body =
           kind === 'text'
-            ? { kind, prompt: prompt.trim() || undefined, sourceLabel: sourceLabel.trim() || undefined, a: textA.trim(), b: textB.trim() }
-            : { kind, prompt: prompt.trim() || undefined, a: imageA, b: imageB };
+            ? {
+                kind,
+                mode,
+                prompt: prompt.trim() || undefined,
+                sourceLabel: sourceLabel.trim() || undefined,
+                a: textA.trim(),
+                ...(mode === 'compare' ? { b: textB.trim() } : {}),
+              }
+            : {
+                kind,
+                mode,
+                prompt: prompt.trim() || undefined,
+                a: imageA,
+                ...(mode === 'compare' ? { b: imageB } : {}),
+              };
         const draft = await api<DraftResponse>('/api/missions/draft', { body });
         id = draft.draftId;
         setDraftId(id);
@@ -194,6 +229,31 @@ export default function SubmitPage() {
         </section>
       ) : (
         <section className="card space-y-4">
+          {/* 의뢰 방식: 단일 감별(1개) vs 비교(2개) */}
+          <div className="grid grid-cols-2 gap-1 rounded-xl bg-white/5 p-1">
+            {(
+              [
+                { id: 'single' as const, ko: '단일 감별 (1개)', en: 'Single Check (1)' },
+                { id: 'compare' as const, ko: 'A/B 비교 (2개)', en: 'A/B Compare (2)' },
+              ] as const
+            ).map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => {
+                  setMode(opt.id);
+                  touch();
+                }}
+                className={clsx(
+                  'rounded-lg py-2 text-xs font-semibold transition',
+                  mode === opt.id ? 'bg-navy-600 text-white shadow' : 'text-slate-400 hover:text-white',
+                )}
+              >
+                {en ? opt.en : opt.ko}
+              </button>
+            ))}
+          </div>
+
           {/* 유형 */}
           <div className="grid grid-cols-2 gap-1 rounded-xl bg-white/5 p-1">
             {(['text', 'image'] as const).map((k) => (
@@ -210,12 +270,12 @@ export default function SubmitPage() {
                 )}
               >
                 {k === 'text' ? <FileText className="h-4 w-4" /> : <ImageIcon className="h-4 w-4" />}
-                {k === 'text' ? '텍스트' : '이미지'}
+                {k === 'text' ? (en ? 'Text' : '텍스트') : en ? 'Image' : '이미지'}
               </button>
             ))}
           </div>
 
-          <Field label="질문 (선택)">
+          <Field label={en ? 'Question (optional)' : '질문 (선택)'}>
             <input
               value={prompt}
               maxLength={80}
@@ -223,11 +283,11 @@ export default function SubmitPage() {
                 setPrompt(e.target.value);
                 touch();
               }}
-              placeholder={kind === 'text' ? '어느 쪽이 실제 사람이 직접 쓴 글일까요?' : '어느 쪽이 AI가 만들지 않은 원본 장면일까요?'}
+              placeholder={PROMPT_PRESETS[mode][kind][0]}
               className="input"
             />
             <PresetChips
-              options={PROMPT_PRESETS[kind]}
+              options={PROMPT_PRESETS[mode][kind]}
               value={prompt}
               onPick={(v) => {
                 setPrompt(v);
@@ -238,7 +298,7 @@ export default function SubmitPage() {
 
           {kind === 'text' ? (
             <>
-              <Field label="출처 형식 (선택)">
+              <Field label={en ? 'Source Label (optional)' : '출처 형식 (선택)'}>
                 <input
                   value={sourceLabel}
                   maxLength={30}
@@ -246,7 +306,7 @@ export default function SubmitPage() {
                     setSourceLabel(e.target.value);
                     touch();
                   }}
-                  placeholder="예: 쇼핑몰 상품평, 뉴스 기사"
+                  placeholder={en ? 'e.g. Product Review, News' : '예: 쇼핑몰 상품평, 뉴스 기사'}
                   className="input"
                 />
                 <PresetChips
@@ -258,10 +318,18 @@ export default function SubmitPage() {
                   }}
                 />
               </Field>
-              {(['A', 'B'] as const).map((side) => {
+              {(mode === 'single' ? (['A'] as const) : (['A', 'B'] as const)).map((side) => {
                 const value = side === 'A' ? textA : textB;
+                const label =
+                  mode === 'single'
+                    ? en
+                      ? 'Content to Verify'
+                      : '감별할 텍스트'
+                    : en
+                      ? `Content ${side}`
+                      : `콘텐츠 ${side}`;
                 return (
-                  <Field key={side} label={`콘텐츠 ${side}`} hint={`${value.trim().length} / ${TEXT_MAX}`}>
+                  <Field key={side} label={label} hint={`${value.trim().length} / ${TEXT_MAX}`}>
                     <textarea
                       value={value}
                       maxLength={TEXT_MAX}
@@ -270,7 +338,7 @@ export default function SubmitPage() {
                         (side === 'A' ? setTextA : setTextB)(e.target.value);
                         touch();
                       }}
-                      placeholder={`검수할 텍스트 ${side} (${TEXT_MIN}자 이상)`}
+                      placeholder={en ? `Enter text (${TEXT_MIN}+ chars)` : `검수할 텍스트 (${TEXT_MIN}자 이상)`}
                       className="input resize-none leading-relaxed"
                     />
                   </Field>
@@ -278,11 +346,11 @@ export default function SubmitPage() {
               })}
             </>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
-              {(['A', 'B'] as const).map((side) => (
+            <div className={clsx('grid gap-3', mode === 'single' ? 'grid-cols-1' : 'grid-cols-2')}>
+              {(mode === 'single' ? (['A'] as const) : (['A', 'B'] as const)).map((side) => (
                 <ImageSlot
                   key={side}
-                  side={side}
+                  side={mode === 'single' ? undefined : side}
                   value={side === 'A' ? imageA : imageB}
                   onChange={(v) => {
                     (side === 'A' ? setImageA : setImageB)(v);
@@ -426,7 +494,7 @@ function ImageSlot({
   onChange,
   onError,
 }: {
-  side: 'A' | 'B';
+  side?: 'A' | 'B';
   value: string | null;
   onChange: (v: string | null) => void;
   onError: (msg: string | null) => void;
@@ -448,18 +516,20 @@ function ImageSlot({
 
   return (
     <label className="relative flex aspect-square cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-white/10 bg-white/[0.03] text-slate-500 transition hover:border-human/40">
-      <span className="absolute left-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-xs font-black text-white">
-        {side}
-      </span>
+      {side && (
+        <span className="absolute left-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-xs font-black text-white">
+          {side}
+        </span>
+      )}
       {loading ? (
         <Loader2 className="h-6 w-6 animate-spin" />
       ) : value ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={value} alt={`업로드 이미지 ${side}`} className="h-full w-full object-cover" />
+        <img src={value} alt={`업로드 이미지 ${side ?? ''}`} className="h-full w-full object-cover" />
       ) : (
         <>
           <ImagePlus className="h-7 w-7" />
-          <span className="mt-1 text-[11px]">이미지 {side} 선택</span>
+          <span className="mt-1 text-[11px]">{side ? `이미지 ${side} 선택` : '이미지 선택'}</span>
         </>
       )}
       {value && !loading && (
@@ -490,6 +560,7 @@ const STATUS_STYLE: Record<MyMissionItem['status'], { label: string; cls: string
 function MyMissionRow({ m }: { m: MyMissionItem }) {
   const total = m.votes.A + m.votes.B;
   const s = STATUS_STYLE[m.status];
+  const isSingle = m.mode === 'single';
   return (
     <article className="card space-y-2 py-3">
       <div className="flex items-center gap-2">
@@ -500,8 +571,12 @@ function MyMissionRow({ m }: { m: MyMissionItem }) {
       <div className="flex items-center justify-between text-[11px] text-slate-500">
         <span>{formatDateTime(m.createdAt)}</span>
         <span>
-          실제 응답 {total}건 (A {m.votes.A} · B {m.votes.B})
-          {m.consensus && <b className="ml-1 text-human">→ 인간 원본 {m.consensus}</b>}
+          실제 응답 {total}건 ({isSingle ? `인간 ${m.votes.A} · AI ${m.votes.B}` : `A ${m.votes.A} · B ${m.votes.B}`})
+          {m.consensus && (
+            <b className="ml-1 text-human">
+              → {isSingle ? (m.consensus === 'A' ? '인간 원본' : 'AI 생성') : `인간 원본 ${m.consensus}`}
+            </b>
+          )}
         </span>
       </div>
     </article>

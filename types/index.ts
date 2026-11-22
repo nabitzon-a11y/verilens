@@ -24,6 +24,9 @@ export type Choice = 'A' | 'B';
 
 export type MissionKind = 'text' | 'image';
 
+/** compare: A vs B 2개 비교 / single: 1개 콘텐츠의 인간 vs AI 진위 감별 */
+export type MissionMode = 'compare' | 'single';
+
 export type MissionCategory =
   | 'review' // 상품/식당 후기
   | 'news' // 뉴스 기사
@@ -65,6 +68,8 @@ export interface Mission {
   /** 정답을 유추할 수 없는 중립적 ID */
   id: string;
   kind: MissionKind;
+  /** 생략 시 'compare' (기존 A vs B 비교) */
+  mode?: MissionMode;
   category: MissionCategory;
   /** 질문 문구 */
   prompt: string;
@@ -235,6 +240,7 @@ export interface MissionResult {
   missionId: string;
   prompt: string;
   kind: MissionKind;
+  mode?: MissionMode;
   choice: Choice;
   /** 5인 다수결 확정 라벨 (과반 미달 시 null) */
   consensus: Choice | null;
@@ -421,6 +427,7 @@ export interface DraftResponse {
 export interface MyMissionItem {
   id: string;
   kind: MissionKind;
+  mode?: MissionMode;
   prompt: string;
   status: MissionStatus;
   /** 실제 판별자 응답 집계 (가상 응답 제외) */

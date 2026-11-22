@@ -215,6 +215,14 @@ function Banner({
 
 function ResultItem({ n, r, t, lang }: { n: number; r: MissionResult; t: (typeof RESULT_TEXT)['ko']; lang: 'ko' | 'en' }) {
   const total = r.tally.A + r.tally.B;
+  const isSingle = r.mode === 'single';
+  const labelOf = (c: 'A' | 'B' | null) => {
+    if (!c) return t.undecided;
+    if (!isSingle) return c;
+    return c === 'A' ? (lang === 'en' ? 'Human' : '인간') : 'AI';
+  };
+  const aLabel = isSingle ? (lang === 'en' ? 'Human' : '인간') : 'A';
+  const bLabel = isSingle ? 'AI' : 'B';
   const aiTell =
     lang === 'en'
       ? SEED_EN[r.missionId]?.aiTell ??
@@ -241,9 +249,9 @@ function ResultItem({ n, r, t, lang }: { n: number; r: MissionResult; t: (typeof
       </header>
 
       <div className="grid grid-cols-3 gap-2 text-center text-xs">
-        <Cell label={t.myChoice} value={r.choice} highlight={r.matched} />
-        <Cell label={t.consensusLabel} value={r.consensus ?? t.undecided} />
-        <Cell label={t.actualOrigin} value={r.humanSide ?? '—'} />
+        <Cell label={t.myChoice} value={labelOf(r.choice)} highlight={r.matched} />
+        <Cell label={t.consensusLabel} value={labelOf(r.consensus)} />
+        <Cell label={t.actualOrigin} value={r.humanSide ? labelOf(r.humanSide) : '—'} />
       </div>
 
       {/* 투표 분포 */}
@@ -254,7 +262,7 @@ function ResultItem({ n, r, t, lang }: { n: number; r: MissionResult; t: (typeof
         </div>
         <div className="mt-1 flex justify-between text-[10px] text-slate-500">
           <span>
-            A {r.tally.A}
+            {aLabel} {r.tally.A}
             {t.votesUnit}
           </span>
           <span>
@@ -263,7 +271,7 @@ function ResultItem({ n, r, t, lang }: { n: number; r: MissionResult; t: (typeof
             {t.secUnit}
           </span>
           <span>
-            B {r.tally.B}
+            {bLabel} {r.tally.B}
             {t.votesUnit}
           </span>
         </div>

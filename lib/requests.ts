@@ -24,31 +24,42 @@ const image = z
   .max(MAX_IMAGE_DATA_URL, '이미지 용량이 너무 큽니다.')
   .regex(IMAGE_DATA_URL_RE, 'PNG/JPEG/WEBP 이미지만 등록할 수 있습니다.');
 
+const modeSchema = z.enum(['compare', 'single']).default('compare');
+
 export const draftSchema = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('text'),
+    mode: modeSchema,
     prompt: z.string().trim().max(80).optional(),
     sourceLabel: z.string().trim().max(30).optional(),
     a: text,
-    b: text,
+    b: text.optional(),
   }),
   z.object({
     kind: z.literal('image'),
+    mode: modeSchema,
     prompt: z.string().trim().max(80).optional(),
     a: image,
-    b: image,
+    b: image.optional(),
   }),
 ]);
 
 export type DraftInput = z.infer<typeof draftSchema>;
 
 const DEFAULT_PROMPT = {
-  text: '어느 쪽이 실제 사람이 직접 쓴 글일까요?',
-  image: '어느 쪽이 AI가 만들지 않은 원본 장면일까요?',
+  compare: {
+    text: '어느 쪽이 실제 사람이 직접 쓴 글일까요?',
+    image: '어느 쪽이 AI가 만들지 않은 원본 장면일까요?',
+  },
+  single: {
+    text: '이 글은 실제 사람이 썼을까요, AI가 썼을까요?',
+    image: '이 이미지는 실제 원본일까요, AI 생성물일까요?',
+  },
 } as const;
 
 export async function createDraft(uid: string, input: DraftInput): Promise<DraftResponse> {
   const repo = getRepository();
+  const mode = input.mode ?? 'compare';
 
   const pending = (await repo.listMissions({ origin: 'requester', status: 'draft' })).filter(
     (m) => m.requesterUid === uid,
@@ -60,20 +71,31 @@ export async function createDraft(uid: string, input: DraftInput): Promise<Draft
   let a: MissionContent;
   let b: MissionContent;
   if (input.kind === 'text') {
-    if (input.a === input.b) throw new HttpError(400, 'A와 B에 서로 다른 내용을 입력하세요.', 'SAME_CONTENT');
     a = { type: 'text', body: input.a, sourceLabel: input.sourceLabel || undefined };
-    b = { type: 'text', body: input.b, sourceLabel: input.sourceLabel || undefined };
+    if (mode === 'single') {
+      b = { type: 'text', body: 'AI 생성 · 합성' };
+    } else {
+      if (!input.b) throw new HttpError(400, '비교할 B 텍스트를 입력하세요.', 'VALIDATION');
+      if (input.a === input.b) throw new HttpError(400, 'A와 B에 서로 다른 내용을 입력하세요.', 'SAME_CONTENT');
+      b = { type: 'text', body: input.b, sourceLabel: input.sourceLabel || undefined };
+    }
   } else {
-    if (input.a === input.b) throw new HttpError(400, 'A와 B에 서로 다른 이미지를 올려 주세요.', 'SAME_CONTENT');
-    a = { type: 'image', src: input.a, alt: '의뢰 이미지 A', placeholderLabel: '의뢰 이미지 A' };
-    b = { type: 'image', src: input.b, alt: '의뢰 이미지 B', placeholderLabel: '의뢰 이미지 B' };
+    a = { type: 'image', src: input.a, alt: '의뢰 이미지', placeholderLabel: '의뢰 이미지' };
+    if (mode === 'single') {
+      b = { type: 'text', body: 'AI 생성 · 합성' };
+    } else {
+      if (!input.b) throw new HttpError(400, '비교할 B 이미지를 올려 주세요.', 'VALIDATION');
+      if (input.a === input.b) throw new HttpError(400, 'A와 B에 서로 다른 이미지를 올려 주세요.', 'SAME_CONTENT');
+      b = { type: 'image', src: input.b, alt: '의뢰 이미지 B', placeholderLabel: '의뢰 이미지 B' };
+    }
   }
 
   const mission: Mission = {
     id: `req-${randomUUID()}`,
     kind: input.kind,
+    mode,
     category: 'custom',
-    prompt: input.prompt || DEFAULT_PROMPT[input.kind],
+    prompt: input.prompt || DEFAULT_PROMPT[mode][input.kind],
     a,
     b,
     isGold: false,
@@ -103,6 +125,7 @@ export async function listMyMissions(uid: string): Promise<MyMissionItem[]> {
       return {
         id: m.id,
         kind: m.kind,
+        mode: m.mode,
         prompt: m.prompt,
         status: m.status,
         votes,

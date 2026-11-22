@@ -190,6 +190,7 @@ export async function submitMissionSet(
         missionId: id,
         prompt: mission.prompt,
         kind: mission.kind,
+        mode: mission.mode,
         choice: answer.choice,
         consensus,
         tally,
