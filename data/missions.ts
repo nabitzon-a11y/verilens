@@ -1,8 +1,8 @@
 /**
- * VeriLens 시연용 시드 미션 데이터셋 (총 28문항)
- *  - 텍스트 진위 판별 20문항 + 시각 패턴 비교 8문항
- *  - 외부 이미지 URL을 쓰지 않습니다. 이미지는 /public/missions/ 의 로컬 SVG만 사용합니다.
- *  - ID와 파일명은 정답을 유추할 수 없도록 중립적으로 지었습니다. (예: v01-a.svg)
+ * VeriLens 시연용 시드 미션 데이터셋 (총 30문항)
+ *  - 텍스트 진위 판별 20문항 + 시각 패턴 비교 10문항 (SVG 8 + 실사형 데모 2)
+ *  - 외부 이미지 URL을 쓰지 않습니다. 이미지는 /public/missions/ 의 로컬 파일만 사용합니다.
+ *  - ID와 파일명은 정답을 유추할 수 없도록 중립적으로 지었습니다. (예: v01-a.svg, v09-a.jpg)
  *  - 문항 5개(t01, t04, t09, v01, v06)는 정답이 명확한 '숨김 기준 문항(Gold Standard)'입니다.
  *
  * ⚠️ 데이터 안내
@@ -397,6 +397,14 @@ export const SEED_MISSIONS: Mission[] = [
     human: 'A', votes: ['A', 'A', 'B', 'A'], difficulty: 2,
     tell: 'B의 달력은 철자가 NOVEMEBR로 틀렸고, 토요일 자리에 F가 있으며 17일이 두 번 나오고 18일이 빠졌고 31·32일까지 있습니다.',
   }),
+  imageMission('seed-v09', 'typography', '카페 테이블', {
+    human: 'B', votes: ['B', 'B', 'A', 'B'], difficulty: 2, ext: 'jpg',
+    tell: 'A의 메뉴판에는 "CΦFFΞE", "LATTƎ", "Psəstry"처럼 깨진 문자가 있고, 스푼 손잡이 끝이 나무 결 속으로 휘어지며 녹아 있습니다.',
+  }),
+  imageMission('seed-v10', 'object', '과일 노점', {
+    human: 'A', votes: ['A', 'A', 'B', 'A'], difficulty: 2, ext: 'jpg',
+    tell: 'B의 칠판 글자("FRE5H OЯANG")가 깨져 있고, 가운데 나무 상자 판자가 물결치듯 서로 녹아 붙어 있으며 과일 광택이 지나치게 균일합니다.',
+  }),
 ];
 
 /* ------------------------------------------------------------------
@@ -430,15 +438,16 @@ function textMission(id: string, category: MissionCategory, sourceLabel: string,
   };
 }
 
-function imageMission(id: string, category: MissionCategory, label: string, spec: SeedSpec): Mission {
+function imageMission(id: string, category: MissionCategory, label: string, spec: SeedSpec & { ext?: 'svg' | 'jpg' }): Mission {
   const n = id.replace('seed-', '');
+  const ext = spec.ext ?? 'svg';
   return {
     id,
     kind: 'image',
     category,
     prompt: IMAGE_PROMPT,
-    a: { type: 'image', src: `/missions/${n}-a.svg`, alt: `${label} 이미지 A`, placeholderLabel: `${label} A` },
-    b: { type: 'image', src: `/missions/${n}-b.svg`, alt: `${label} 이미지 B`, placeholderLabel: `${label} B` },
+    a: { type: 'image', src: `/missions/${n}-a.${ext}`, alt: `${label} 이미지 A`, placeholderLabel: `${label} A` },
+    b: { type: 'image', src: `/missions/${n}-b.${ext}`, alt: `${label} 이미지 B`, placeholderLabel: `${label} B` },
     humanSide: spec.human,
     isGold: spec.gold ?? false,
     priorVotes: spec.votes,

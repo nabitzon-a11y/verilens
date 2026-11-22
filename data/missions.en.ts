@@ -273,4 +273,16 @@ export const SEED_EN: Record<string, SeedEnTranslation> = {
     bPlaceholder: 'Calendar B',
     aiTell: 'Calendar B misspells NOVEMEBR, puts F for Saturday, repeats 17, skips 18, and goes up to 32.',
   },
+  'seed-v09': {
+    prompt: EN_IMAGE_PROMPT,
+    aPlaceholder: 'Cafe Table A',
+    bPlaceholder: 'Cafe Table B',
+    aiTell: 'Image A has garbled menu text ("CΦFFΞE", "LATTƎ", "Psəstry") and the spoon handle warps and blends into the wood grain.',
+  },
+  'seed-v10': {
+    prompt: EN_IMAGE_PROMPT,
+    aPlaceholder: 'Fruit Stall A',
+    bPlaceholder: 'Fruit Stall B',
+    aiTell: 'Image B has garbled chalk text ("FRE5H OЯANG"), waxy-uniform fruit, and crate slats warping into each other at the center seam.',
+  },
 };
