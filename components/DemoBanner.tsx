@@ -12,8 +12,8 @@ export function DemoBanner() {
   if (env !== 'web' && !demoActive) return null;
 
   return (
-    <div className="sticky top-0 z-30 border-b border-pi/20 bg-pi/10 backdrop-blur">
-      <div className="mx-auto flex max-w-md items-center gap-2 px-4 py-2 text-xs text-pi-light">
+    <div className="border-b border-pi/20 bg-pi/10">
+      <div className="mx-auto flex max-w-md items-center gap-2 px-4 py-1.5 text-xs text-pi-light">
         <FlaskConical className="h-4 w-4 shrink-0" />
         <p className="flex-1 leading-tight">
           <b>Demo Sandbox Mode</b>

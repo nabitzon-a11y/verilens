@@ -52,7 +52,8 @@ const PROMPT_PRESETS: Record<MissionKind, readonly string[]> = {
 const SOURCE_PRESETS = ['뉴스 기사', '배달앱 리뷰', '쇼핑몰 상품평', 'SNS 게시글', '커뮤니티 답변', '카페/식당 후기'] as const;
 
 export default function SubmitPage() {
-  const { ready, profile, paymentsMode, refresh } = useApp();
+  const { ready, profile, paymentsMode, refresh, lang } = useApp();
+  const en = lang === 'en';
 
   const [kind, setKind] = useState<MissionKind>('text');
   const [prompt, setPrompt] = useState('');
@@ -61,6 +62,7 @@ export default function SubmitPage() {
   const [textB, setTextB] = useState('');
   const [imageA, setImageA] = useState<string | null>(null);
   const [imageB, setImageB] = useState<string | null>(null);
+  const [rightsAgreed, setRightsAgreed] = useState(false);
 
   /** 결제 실패/취소 시 같은 draft 로 재시도 (내용이 바뀌면 초기화) */
   const [draftId, setDraftId] = useState<string | null>(null);
@@ -87,18 +89,21 @@ export default function SubmitPage() {
   };
 
   if (!ready) return <Spinner />;
-  if (!profile) return <LoginPanel title="문항을 의뢰하려면 로그인하세요" />;
+  if (!profile) return <LoginPanel title={en ? 'Sign in to submit an item' : '문항을 의뢰하려면 로그인하세요'} />;
 
   const isMockPayment = paymentsMode === 'mock' || profile.isDemo;
 
   const validation = (() => {
     if (kind === 'text') {
-      if (textA.trim().length < TEXT_MIN || textB.trim().length < TEXT_MIN) return `A와 B 모두 ${TEXT_MIN}자 이상 입력하세요.`;
-      if (textA.trim() === textB.trim()) return 'A와 B에 서로 다른 내용을 입력하세요.';
+      if (textA.trim().length < TEXT_MIN || textB.trim().length < TEXT_MIN) {
+        return en ? `Both A and B must be at least ${TEXT_MIN} characters.` : `A와 B 모두 ${TEXT_MIN}자 이상 입력하세요.`;
+      }
+      if (textA.trim() === textB.trim()) return en ? 'A and B must be different.' : 'A와 B에 서로 다른 내용을 입력하세요.';
     } else {
-      if (!imageA || !imageB) return '이미지 A와 B를 모두 올려 주세요.';
-      if (imageA === imageB) return '서로 다른 이미지를 올려 주세요.';
+      if (!imageA || !imageB) return en ? 'Please upload both Image A and B.' : '이미지 A와 B를 모두 올려 주세요.';
+      if (imageA === imageB) return en ? 'Please upload two different images.' : '서로 다른 이미지를 올려 주세요.';
     }
+    if (!rightsAgreed) return en ? 'Please agree to the copyright & rights warranty.' : '저작권 및 사용 권한 동의에 체크해 주세요.';
     return null;
   })();
 
@@ -144,15 +149,25 @@ export default function SubmitPage() {
     setTextB('');
     setImageA(null);
     setImageB(null);
+    setRightsAgreed(false);
     setDraftId(null);
   };
 
   return (
     <div className="space-y-4">
       <header className="pt-2">
-        <h1 className="text-xl font-black text-white">판별 의뢰하기</h1>
+        <h1 className="text-xl font-black text-white">{en ? 'Submit for Verification' : '판별 의뢰하기'}</h1>
         <p className="mt-1 text-xs leading-relaxed text-slate-400">
-          검수가 필요한 콘텐츠 A/B를 올리면 KYC 인증된 인간 판별자들의 <b className="text-human">5인 다수결</b>로 &lsquo;인간 원본&rsquo; 라벨이 확정됩니다.
+          {en ? (
+            <>
+              Submit content A/B and KYC-verified human verifiers will determine the authentic human original via{' '}
+              <b className="text-human">5-human consensus</b>.
+            </>
+          ) : (
+            <>
+              검수가 필요한 콘텐츠 A/B를 올리면 KYC 인증된 인간 판별자들의 <b className="text-human">5인 다수결</b>로 &lsquo;인간 원본&rsquo; 라벨이 확정됩니다.
+            </>
+          )}
         </p>
       </header>
 
@@ -160,19 +175,20 @@ export default function SubmitPage() {
         <section className="card space-y-4 text-center">
           <CheckCircle2 className="mx-auto h-14 w-14 text-human" strokeWidth={1.5} />
           <div>
-            <h2 className="text-lg font-bold text-white">판별 풀에 등록되었습니다</h2>
+            <h2 className="text-lg font-bold text-white">{en ? 'Added to Verification Pool' : '판별 풀에 등록되었습니다'}</h2>
             <p className="mt-1 text-xs text-slate-400">
-              {WALLET.SUBMISSION_FEE_PI} Test-Pi 결제 완료{done.mock ? ' (Mock)' : ''} · 다음 판별 세트부터 바로 노출됩니다.
+              {WALLET.SUBMISSION_FEE_PI} Test-Pi {en ? 'payment completed' : '결제 완료'}
+              {done.mock ? ' (Mock)' : ''} · {en ? 'Live in the next verification set.' : '다음 판별 세트부터 바로 노출됩니다.'}
             </p>
             <p className="mt-2 break-all font-mono text-[10px] text-slate-600">{done.paymentId}</p>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <Link href="/verify" className="btn-primary">
               <ScanFace className="h-4 w-4" />
-              판별하러 가기
+              {en ? 'Go Verify' : '판별하러 가기'}
             </Link>
             <button type="button" className="btn-ghost" onClick={reset}>
-              새 문항 등록
+              {en ? 'Submit Another' : '새 문항 등록'}
             </button>
           </div>
         </section>
@@ -282,13 +298,44 @@ export default function SubmitPage() {
           <div className="flex items-center gap-3 rounded-xl border border-pi/20 bg-pi/5 p-3">
             <Coins className="h-6 w-6 shrink-0 text-pi" />
             <div className="flex-1 text-xs">
-              <p className="font-semibold text-pi-light">등록 수수료 {WALLET.SUBMISSION_FEE_PI} Test-Pi</p>
-              <p className="text-slate-400">결제 완료 즉시 판별 풀에 등록됩니다.</p>
+              <p className="font-semibold text-pi-light">
+                {en ? `Submission Fee: ${WALLET.SUBMISSION_FEE_PI} Test-Pi` : `등록 수수료 ${WALLET.SUBMISSION_FEE_PI} Test-Pi`}
+              </p>
+              <p className="text-slate-400">{en ? 'Published immediately upon payment.' : '결제 완료 즉시 판별 풀에 등록됩니다.'}</p>
             </div>
             <span className={clsx('chip', isMockPayment ? 'bg-white/10 text-slate-300' : 'bg-human/15 text-human')}>
-              {isMockPayment ? 'Mock 결제' : 'Pi Testnet'}
+              {isMockPayment ? 'Mock' : 'Pi Testnet'}
             </span>
           </div>
+
+          {/* 저작권·권리 보증 동의 */}
+          <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-white/10 bg-white/[0.02] p-3 text-xs leading-relaxed text-slate-300">
+            <input
+              type="checkbox"
+              checked={rightsAgreed}
+              onChange={(e) => setRightsAgreed(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded accent-human"
+            />
+            <span>
+              {en ? (
+                <>
+                  I confirm I hold the copyright/license for this content (excerpt only, no infringing material) and accept responsibility under the{' '}
+                  <Link href="/terms" className="text-human underline">
+                    Terms
+                  </Link>
+                  .
+                </>
+              ) : (
+                <>
+                  등록하는 텍스트(발췌본)·이미지의 저작권 및 사용 권한을 보유하고 있으며, 권리 침해 시 책임이 의뢰자에게 있음을 확인합니다. (
+                  <Link href="/terms" className="text-human underline">
+                    이용약관
+                  </Link>
+                  )
+                </>
+              )}
+            </span>
+          </label>
 
           {error && <p className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}
           {!error && validation && (textA || textB || imageA || imageB) && (
@@ -297,19 +344,29 @@ export default function SubmitPage() {
 
           <button type="button" className="btn-amber w-full py-4 text-base" onClick={submit} disabled={!!validation || !!busy}>
             {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Lock className="h-4 w-4" />}
-            {busy ? STAGE_LABEL[busy] : `${WALLET.SUBMISSION_FEE_PI} Test-Pi 결제 및 등록`}
+            {busy
+              ? STAGE_LABEL[busy]
+              : en
+                ? `Pay ${WALLET.SUBMISSION_FEE_PI} Test-Pi & Submit`
+                : `${WALLET.SUBMISSION_FEE_PI} Test-Pi 결제 및 등록`}
           </button>
-          {draftId && !busy && <p className="text-center text-[11px] text-slate-500">저장된 문항으로 결제를 다시 시도합니다.</p>}
+          {draftId && !busy && (
+            <p className="text-center text-[11px] text-slate-500">
+              {en ? 'Retrying payment with your saved draft.' : '저장된 문항으로 결제를 다시 시도합니다.'}
+            </p>
+          )}
         </section>
       )}
 
       {/* 내 의뢰 현황 */}
       <section className="space-y-2">
-        <p className="label px-1">내 의뢰 현황</p>
+        <p className="label px-1">{en ? 'My Submissions' : '내 의뢰 현황'}</p>
         {mine === null ? (
           <Spinner small />
         ) : mine.length === 0 ? (
-          <p className="card text-center text-xs text-slate-500">아직 의뢰한 문항이 없습니다.</p>
+          <p className="card text-center text-xs text-slate-500">
+            {en ? 'No submissions yet.' : '아직 의뢰한 문항이 없습니다.'}
+          </p>
         ) : (
           mine.map((m) => <MyMissionRow key={m.id} m={m} />)
         )}

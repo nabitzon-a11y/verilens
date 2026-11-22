@@ -5,6 +5,7 @@ import type { MeResponse, PaymentsMode, PioneerProfile } from '@/types';
 import { UNAUTHORIZED_EVENT, api } from '@/lib/apiClient';
 import { DEMO_MODE_ALLOWED } from '@/lib/constants';
 import { errorMessage } from '@/lib/format';
+import { LANG_STORAGE_KEY, type Lang } from '@/lib/i18n';
 import {
   type PiEnvironment,
   detectEnvironment,
@@ -28,6 +29,8 @@ interface AppState {
   demoActive: boolean;
   signingIn: boolean;
   error: string | null;
+  lang: Lang;
+  setLang: (lang: Lang) => void;
   signIn: (opts?: { forceDemo?: boolean }) => Promise<void>;
   signOut: () => void;
   setDemoMode: (on: boolean) => Promise<void>;
@@ -46,6 +49,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [demoActive, setDemoActive] = useState(false);
   const [signingIn, setSigningIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lang, setLangState] = useState<Lang>('ko');
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(LANG_STORAGE_KEY);
+      if (saved === 'ko' || saved === 'en') setLangState(saved);
+    } catch {
+      /* 무시 */
+    }
+  }, []);
+
+  const setLang = useCallback((next: Lang) => {
+    setLangState(next);
+    try {
+      window.localStorage.setItem(LANG_STORAGE_KEY, next);
+    } catch {
+      /* 무시 */
+    }
+  }, []);
 
   const applyMe = useCallback((me: MeResponse) => {
     setPaymentsMode(me.paymentsMode);
@@ -161,12 +183,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       demoActive,
       signingIn,
       error,
+      lang,
+      setLang,
       signIn,
       signOut,
       setDemoMode,
       refresh,
     }),
-    [ready, profile, paymentsMode, verifyMode, demoAllowed, env, demoActive, signingIn, error, signIn, signOut, setDemoMode, refresh],
+    [ready, profile, paymentsMode, verifyMode, demoAllowed, env, demoActive, signingIn, error, lang, setLang, signIn, signOut, setDemoMode, refresh],
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

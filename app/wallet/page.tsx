@@ -10,10 +10,12 @@ import { LoginPanel } from '@/components/LoginPanel';
 import { useScanModal } from '@/components/ScanModal';
 import { ApiError, api } from '@/lib/apiClient';
 import { errorMessage, formatDateTime, formatPi, formatSignedPi } from '@/lib/format';
+import { WALLET_TEXT } from '@/lib/i18n';
 import { reverifyForClaim } from '@/lib/piVerifyClient';
 
 export default function WalletPage() {
-  const { ready, profile, verifyMode, refresh } = useApp();
+  const { ready, profile, verifyMode, refresh, lang } = useApp();
+  const t = WALLET_TEXT[lang];
   const { modal, run } = useScanModal(verifyMode === 'mock');
 
   const [wallet, setWallet] = useState<WalletResponse | null>(null);
@@ -41,7 +43,7 @@ export default function WalletPage() {
   }, [toast]);
 
   if (!ready) return <Spinner />;
-  if (!profile) return <LoginPanel title="지갑을 보려면 로그인하세요" />;
+  if (!profile) return <LoginPanel title={t.loginTitle} />;
   if (loadError) return <p className="card text-center text-sm text-red-300">{loadError}</p>;
   if (!wallet) return <Spinner />;
 
@@ -53,11 +55,11 @@ export default function WalletPage() {
     setClaiming(true);
     try {
       const session = await run(() => reverifyForClaim(), {
-        title: '3단계 출금 재검증',
-        subtitle: '보상 청구 전 마지막으로 본인을 확인합니다…',
+        title: t.reverifyTitle,
+        subtitle: t.reverifySubtitle,
       });
       const res = await api<ClaimResponse>('/api/wallet/claim', { body: { claimToken: session.token } });
-      setToast({ tone: 'ok', msg: `${formatPi(res.amount)} 청구 완료${res.mock ? ' (Mock 정산)' : ''}` });
+      setToast({ tone: 'ok', msg: `${formatPi(res.amount)} ${lang === 'en' ? 'claimed' : '청구 완료'}${res.mock ? ' (Mock)' : ''}` });
       await Promise.all([load(), refresh()]);
     } catch (err) {
       // 스캔 단계 실패는 모달에서 이미 표시됨
@@ -72,8 +74,10 @@ export default function WalletPage() {
       {modal}
 
       <header className="pt-2">
-        <h1 className="text-xl font-black text-white">내 지갑</h1>
-        <p className="mt-1 text-xs text-slate-400">@{p.username} · 신뢰도 {p.trustScore}% ({p.tierLabel})</p>
+        <h1 className="text-xl font-black text-white">{t.title}</h1>
+        <p className="mt-1 text-xs text-slate-400">
+          @{p.username} · {t.trustLabel} {p.trustScore}% ({p.tierLabel})
+        </p>
       </header>
 
       {/* 잔액 & 청구 */}
@@ -81,15 +85,15 @@ export default function WalletPage() {
         <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-pi/20 blur-3xl" />
         <div className="flex items-start justify-between">
           <div>
-            <p className="label">출금 가능 잔액</p>
+            <p className="label">{t.balanceLabel}</p>
             <p className="mt-1 text-4xl font-black text-pi">{formatPi(p.balance)}</p>
           </div>
-          <span className="chip bg-white/10 text-slate-300">{payoutMode === 'mock' ? 'Mock A2U 정산' : 'A2U 출금'}</span>
+          <span className="chip bg-white/10 text-slate-300">{payoutMode === 'mock' ? 'Mock A2U' : 'A2U'}</span>
         </div>
 
         <div>
           <div className="mb-1 flex justify-between text-[11px] text-slate-500">
-            <span>최소 청구 기준</span>
+            <span>{t.minClaimLabel}</span>
             <span>
               {formatPi(Math.min(p.balance, minClaim))} / {formatPi(minClaim)}
             </span>
@@ -101,30 +105,30 @@ export default function WalletPage() {
 
         <button type="button" className="btn-amber w-full py-4 text-base" disabled={!canClaim || claiming} onClick={claim}>
           {claiming ? <Loader2 className="h-5 w-5 animate-spin" /> : <Fingerprint className="h-5 w-5" />}
-          보상 청구 (Claim)
+          {t.claimBtn}
         </button>
         <p className="flex items-center justify-center gap-1 text-[11px] text-slate-500">
           <ShieldCheck className="h-3.5 w-3.5 text-human" />
-          {canClaim ? '청구 시 1초 생체 재검증(PiVerify 3단계)을 거칩니다.' : `잔액이 ${minClaim} π 이상이면 청구할 수 있어요.`}
+          {canClaim ? t.claimReadyHint : t.claimMinHint(minClaim)}
         </p>
       </section>
 
       {/* 누적 통계 */}
       <section className="grid grid-cols-3 gap-2 text-center">
-        <Stat label="누적 획득" value={formatPi(p.totalEarned)} tone="text-human" />
-        <Stat label="누적 청구" value={formatPi(p.totalClaimed)} tone="text-pi" />
-        <Stat label="완료 세트" value={`${p.setsCompleted}`} tone="text-white" />
+        <Stat label={t.earnedLabel} value={formatPi(p.totalEarned)} tone="text-human" />
+        <Stat label={t.claimedLabel} value={formatPi(p.totalClaimed)} tone="text-pi" />
+        <Stat label={t.setsLabel} value={`${p.setsCompleted}`} tone="text-white" />
       </section>
 
       {/* 정산 내역 */}
       <section className="space-y-2">
-        <p className="label px-1">정산 내역</p>
+        <p className="label px-1">{t.ledgerTitle}</p>
         {ledger.length === 0 ? (
           <div className="card space-y-3 text-center">
-            <p className="text-xs text-slate-500">아직 정산 내역이 없습니다. 판별에 참여해 첫 보상을 받아 보세요.</p>
+            <p className="text-xs text-slate-500">{t.emptyLedger}</p>
             <Link href="/verify" className="btn-primary w-full">
               <ScanFace className="h-4 w-4" />
-              판별하러 가기
+              {t.goVerifyBtn}
             </Link>
           </div>
         ) : (

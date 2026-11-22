@@ -13,6 +13,7 @@ import { ApiError, api } from '@/lib/apiClient';
 import { BehaviorMonitor } from '@/lib/behavior';
 import { errorMessage, formatMmSs } from '@/lib/format';
 import { useNow } from '@/lib/hooks';
+import { VERIFY_TEXT } from '@/lib/i18n';
 import { clearVerifySession, getActiveSession, recheckHuman, startHumanSession } from '@/lib/piVerifyClient';
 import { saveLastResult } from '@/lib/resultStore';
 
@@ -30,7 +31,8 @@ export default function VerifyPage() {
 }
 
 function VerifyGame() {
-  const { ready, profile, verifyMode, refresh } = useApp();
+  const { ready, profile, verifyMode, refresh, lang } = useApp();
+  const t = VERIFY_TEXT[lang];
   const router = useRouter();
   const challenge = useSearchParams().get('challenge') ?? undefined;
   const now = useNow(1000);
@@ -99,8 +101,8 @@ function VerifyGame() {
   const startSession = async () => {
     try {
       const s = await run(() => startHumanSession(), {
-        title: 'PiVerify 인간 검증',
-        subtitle: '얼굴 생존성·고유성을 확인하는 중…',
+        title: t.scanTitle,
+        subtitle: t.scanSubtitle,
       });
       setSession(s);
       await loadSet(s);
@@ -127,8 +129,8 @@ function VerifyGame() {
       if (err instanceof ApiError && err.code === 'VERIFY_REQUIRED' && allowRetry) {
         try {
           const s = await run(() => startHumanSession(), {
-            title: '세션 만료 · 인간 재검증',
-            subtitle: '제출 전에 사람임을 다시 확인합니다…',
+            title: t.expiredTitle,
+            subtitle: t.expiredSubtitle,
           });
           setSession(s);
           return submit(false);
@@ -175,20 +177,20 @@ function VerifyGame() {
     setWarning(null);
     try {
       const s = await run(() => recheckHuman(), {
-        title: '2단계 인간 재검증',
-        subtitle: '비정상 패턴이 감지되어 사람임을 다시 확인합니다…',
+        title: t.recheckTitle,
+        subtitle: t.recheckSubtitle,
       });
       setSession(s);
       monitor.current.clearStreak();
       advance();
     } catch {
-      setWarning('재검증에 실패했습니다. 다시 시도해 주세요.');
+      setWarning(t.recheckFailed);
     }
   };
 
   /* ---------------- 렌더 ---------------- */
-  if (!ready) return <CenterSpinner label="불러오는 중…" />;
-  if (!profile) return <LoginPanel title="판별하려면 로그인하세요" />;
+  if (!ready) return <CenterSpinner label={t.loading} />;
+  if (!profile) return <LoginPanel title={t.loginTitle} />;
 
   const remaining = session ? Math.max(0, session.expiresAt - now) : 0;
 
@@ -197,19 +199,19 @@ function VerifyGame() {
       {modal}
       <WarningModal open={warning !== null} message={warning ?? ''} onRecheck={onRecheck} />
 
-      {(phase === 'idle' || phase === 'loading') && <CenterSpinner label="판별 세트를 준비하는 중…" />}
+      {(phase === 'idle' || phase === 'loading') && <CenterSpinner label={t.preparing} />}
 
       {phase === 'need-session' && (
         <section className="card space-y-4 text-center">
           <ScanFace className="mx-auto h-12 w-12 text-human" strokeWidth={1.4} />
           <div>
-            <h1 className="text-lg font-bold text-white">인간 검증이 필요합니다</h1>
-            <p className="mt-1 text-sm text-slate-400">1회 검증으로 1시간 동안 판별할 수 있습니다.</p>
+            <h1 className="text-lg font-bold text-white">{t.needSessionTitle}</h1>
+            <p className="mt-1 text-sm text-slate-400">{t.needSessionDesc}</p>
           </div>
-          {challenge && <ChallengeChip />}
+          {challenge && <ChallengeChip label={t.challengeChip} />}
           <button type="button" className="btn-primary w-full py-4" onClick={startSession}>
             <ScanFace className="h-5 w-5" />
-            인간 판별 세션 시작
+            {t.startSessionBtn}
           </button>
         </section>
       )}
@@ -226,7 +228,7 @@ function VerifyGame() {
               else setPhase('need-session');
             }}
           >
-            <RefreshCw className="h-4 w-4" />새 세트 받기
+            <RefreshCw className="h-4 w-4" />{t.retryBtn}
           </button>
         </section>
       )}
@@ -237,11 +239,11 @@ function VerifyGame() {
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-slate-300">
-                문항 <span className="text-human">{index + 1}</span> / {missionSet.missions.length}
+                {t.question} <span className="text-human">{index + 1}</span> / {missionSet.missions.length}
               </span>
               <span className="flex items-center gap-1 font-mono text-slate-400">
                 <Timer className="h-3.5 w-3.5" />
-                세션 {formatMmSs(remaining)}
+                {t.session} {formatMmSs(remaining)}
               </span>
             </div>
             <div className="flex gap-1">
@@ -251,7 +253,7 @@ function VerifyGame() {
             </div>
           </div>
 
-          {challenge && index === 0 && <ChallengeChip />}
+          {challenge && index === 0 && <ChallengeChip label={t.challengeChip} />}
 
           {/* 질문 */}
           <h1 className="text-lg font-bold leading-snug text-white">{missionSet.missions[index].prompt}</h1>
@@ -270,13 +272,13 @@ function VerifyGame() {
             ))}
           </div>
 
-          <p className="text-center text-[11px] text-slate-500">직관을 믿으세요 · 평균 5초 · 너무 빠른 응답은 보상에서 제외됩니다</p>
+          <p className="text-center text-[11px] text-slate-500">{t.footerHint}</p>
 
           {phase === 'submitting' && (
             <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm">
               <div className="flex flex-col items-center gap-3 text-sm text-slate-200">
                 <Loader2 className="h-8 w-8 animate-spin text-human" />
-                5인 다수결 합의 집계 중…
+                {t.submitting}
               </div>
             </div>
           )}
@@ -286,11 +288,11 @@ function VerifyGame() {
   );
 }
 
-function ChallengeChip() {
+function ChallengeChip({ label }: { label: string }) {
   return (
     <p className="chip mx-auto bg-pi/15 text-pi-light">
       <Gift className="h-3.5 w-3.5" />
-      친구의 도전장 문항이 포함되어 있어요
+      {label}
     </p>
   );
 }

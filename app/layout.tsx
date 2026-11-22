@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { AppProvider } from '@/components/AppProvider';
 import { DemoBanner } from '@/components/DemoBanner';
 import { TabBar } from '@/components/TabBar';
+import { TopBar } from '@/components/TopBar';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -26,7 +27,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-sans antialiased">
         <AppProvider>
           <DemoBanner />
-          <main className="mx-auto max-w-md px-4 pb-28 pt-4">{children}</main>
+          <TopBar />
+          <main className="mx-auto max-w-md px-4 pb-32 pt-4">{children}</main>
           <TabBar />
         </AppProvider>
       </body>

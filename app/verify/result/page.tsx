@@ -20,11 +20,15 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import type { MissionResult, SetResult } from '@/types';
+import { useApp } from '@/components/AppProvider';
 import { formatSignedPi } from '@/lib/format';
+import { RESULT_TEXT } from '@/lib/i18n';
 import { buildShareUrl, shareLink } from '@/lib/piSdk';
 import { loadLastResult } from '@/lib/resultStore';
 
 export default function ResultPage() {
+  const { lang } = useApp();
+  const t = RESULT_TEXT[lang];
   const [result, setResult] = useState<SetResult | null | undefined>(undefined);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -43,9 +47,9 @@ export default function ResultPage() {
   if (!result) {
     return (
       <section className="card space-y-3 text-center">
-        <p className="text-sm text-slate-300">표시할 판별 결과가 없습니다.</p>
+        <p className="text-sm text-slate-300">{t.empty}</p>
         <Link href="/verify" className="btn-primary w-full">
-          판별하러 가기
+          {t.goVerify}
         </Link>
       </section>
     );
@@ -55,16 +59,24 @@ export default function ResultPage() {
     if (!result.challengeMissionId) return;
     const url = buildShareUrl(`/verify?challenge=${encodeURIComponent(result.challengeMissionId)}`);
     const outcome = await shareLink(
-      'VeriLens 도전장',
-      `AI 가짜일까, 진짜 사람일까? 나는 ${result.matchedCount}/${result.total} 맞혔어. 너의 인간 직관을 증명해 봐!`,
+      lang === 'en' ? 'VeriLens Challenge' : 'VeriLens 도전장',
+      lang === 'en'
+        ? `Human or AI? I scored ${result.matchedCount}/${result.total}. Can you beat my intuition?`
+        : `AI 가짜일까, 진짜 사람일까? 나는 ${result.matchedCount}/${result.total} 맞혔어. 너의 인간 직관을 증명해 봐!`,
       url,
     );
     setToast(
       outcome === 'clipboard'
-        ? '도전장 링크를 복사했어요'
+        ? lang === 'en'
+          ? 'Challenge link copied'
+          : '도전장 링크를 복사했어요'
         : outcome === 'failed'
-          ? '공유에 실패했습니다'
-          : '도전장을 보냈어요',
+          ? lang === 'en'
+            ? 'Failed to share'
+            : '공유에 실패했습니다'
+          : lang === 'en'
+            ? 'Challenge sent'
+            : '도전장을 보냈어요',
     );
   };
 
@@ -73,41 +85,51 @@ export default function ResultPage() {
       {/* 요약 */}
       <section className="card relative overflow-hidden text-center">
         <div className="pointer-events-none absolute -top-16 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-human/20 blur-3xl" />
-        <p className="label">당신의 인간 직관 적중률</p>
+        <p className="label">{t.accuracyTitle}</p>
         <p className="mt-2 text-5xl font-black text-white">
           {result.matchedCount}
           <span className="text-2xl text-slate-500"> / {result.total}</span>
         </p>
-        <p className="mt-1 text-sm font-semibold text-human">상위 {result.topPercent}%</p>
+        <p className="mt-1 text-sm font-semibold text-human">
+          {t.topPrefix}
+          {result.topPercent}
+          {t.topSuffix}
+        </p>
 
         <div className="mt-4 rounded-2xl bg-pi/10 py-3">
-          <p className="text-xs text-pi-light/80">이번 세트 보상</p>
+          <p className="text-xs text-pi-light/80">{t.rewardTitle}</p>
           <p className={clsx('text-2xl font-black', result.reward > 0 ? 'text-pi' : 'text-slate-500')}>
             {formatSignedPi(result.reward)}
           </p>
-          {result.reward > 0 && <p className="text-[11px] text-pi-light/70">{result.rewardedCount}문항 다수결 일치</p>}
+          {result.reward > 0 && (
+            <p className="text-[11px] text-pi-light/70">
+              {result.rewardedCount}
+              {t.matchedSuffix}
+            </p>
+          )}
         </div>
 
         <div className="mt-3 flex justify-center gap-2">
           <span className={clsx('chip', result.trustDelta >= 0 ? 'bg-human/15 text-human' : 'bg-red-500/15 text-red-300')}>
             {result.trustDelta >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-            신뢰도 {result.trustDelta >= 0 ? '+' : ''}
+            {t.trustLabel} {result.trustDelta >= 0 ? '+' : ''}
             {result.trustDelta} → {result.trustScore}%
           </span>
           <span className="chip bg-orange-500/15 text-orange-300">
             <Flame className="h-3 w-3" />
-            {result.streak}일 연속
+            {result.streak}
+            {t.streakSuffix}
           </span>
         </div>
       </section>
 
-      <StatusBanner result={result} />
+      <StatusBanner result={result} t={t} />
 
       {/* 문항별 리포트 */}
       <section className="space-y-3">
-        <p className="label px-1">AI가 남긴 어색한 흔적 리포트</p>
+        <p className="label px-1">{t.reportTitle}</p>
         {result.results.map((r, i) => (
-          <ResultItem key={r.missionId} n={i + 1} r={r} />
+          <ResultItem key={r.missionId} n={i + 1} r={r} t={t} />
         ))}
       </section>
 
@@ -116,16 +138,17 @@ export default function ResultPage() {
         {result.challengeMissionId && (
           <button type="button" className="btn-amber w-full" onClick={share}>
             <Share2 className="h-4 w-4" />
-            친구에게 도전장 보내기 (PiNet 링크)
+            {t.shareBtn}
           </button>
         )}
         <div className="grid grid-cols-2 gap-2">
           <Link href="/verify" className="btn-primary">
             <RotateCcw className="h-4 w-4" />
-            다음 세트
+            {t.nextSetBtn}
           </Link>
           <Link href="/" className="btn-ghost">
-            <Home className="h-4 w-4" />홈
+            <Home className="h-4 w-4" />
+            {t.homeBtn}
           </Link>
         </div>
       </section>
@@ -139,26 +162,25 @@ export default function ResultPage() {
   );
 }
 
-function StatusBanner({ result }: { result: SetResult }) {
+function StatusBanner({ result, t }: { result: SetResult; t: (typeof RESULT_TEXT)['ko'] }) {
   if (result.flagged) {
     return (
-      <Banner tone="red" icon={<ShieldAlert className="h-5 w-5" />} title="매크로 의심 — 이번 세트 보상 미지급">
-        {result.flagReason ?? '비정상적인 응답 패턴이 감지되었습니다.'} 반복되면 신뢰도가 크게 하락합니다.
+      <Banner tone="red" icon={<ShieldAlert className="h-5 w-5" />} title={t.flaggedTitle}>
+        {result.flagReason ? `${result.flagReason} ` : ''}
+        {t.flaggedBody}
       </Banner>
     );
   }
   if (!result.goldPassed) {
     return (
-      <Banner tone="amber" icon={<AlertOctagon className="h-5 w-5" />} title="숨김 기준 문항을 놓쳤어요">
-        정답이 확정된 기준 문항을 틀려 이번 세트 보상이 지급되지 않았고 신뢰도가 하락했습니다. 무작위 선택을 막기 위한 장치예요.
+      <Banner tone="amber" icon={<AlertOctagon className="h-5 w-5" />} title={t.goldFailTitle}>
+        {t.goldFailBody}
       </Banner>
     );
   }
   return (
-    <Banner tone="green" icon={<ShieldCheck className="h-5 w-5" />} title="기준 문항 통과 · Human Verified">
-      {result.rechecked
-        ? '세트 도중 2단계 재검증을 통과했습니다. 초고속 응답 문항만 보상에서 제외됩니다.'
-        : '정답이 확정된 숨김 기준 문항을 통과해 다수결 일치 문항에 보상이 지급되었습니다.'}
+    <Banner tone="green" icon={<ShieldCheck className="h-5 w-5" />} title={t.goldPassTitle}>
+      {result.rechecked ? t.goldPassRecheck : t.goldPassBody}
     </Banner>
   );
 }
@@ -190,18 +212,19 @@ function Banner({
   );
 }
 
-function ResultItem({ n, r }: { n: number; r: MissionResult }) {
+function ResultItem({ n, r, t }: { n: number; r: MissionResult; t: (typeof RESULT_TEXT)['ko'] }) {
   const total = r.tally.A + r.tally.B;
   return (
     <article className="card space-y-3">
       <header className="flex items-center gap-2">
         <span className="chip bg-white/5 text-slate-300">
-          {r.kind === 'image' ? <ImageIcon className="h-3 w-3" /> : <Sparkles className="h-3 w-3" />}Q{n} · {r.kind === 'image' ? '이미지' : '텍스트'}
+          {r.kind === 'image' ? <ImageIcon className="h-3 w-3" /> : <Sparkles className="h-3 w-3" />}Q{n} ·{' '}
+          {r.kind === 'image' ? t.imageLabel : t.textLabel}
         </span>
         {r.excludedFast && (
           <span className="chip bg-pi/15 text-pi-light">
             <Zap className="h-3 w-3" />
-            초고속 · 보상 제외
+            {t.fastExcluded}
           </span>
         )}
         <span className="ml-auto">
@@ -210,9 +233,9 @@ function ResultItem({ n, r }: { n: number; r: MissionResult }) {
       </header>
 
       <div className="grid grid-cols-3 gap-2 text-center text-xs">
-        <Cell label="내 선택" value={r.choice} highlight={r.matched} />
-        <Cell label="5인 다수결" value={r.consensus ?? '미확정'} />
-        <Cell label="실제 원본" value={r.humanSide ?? '—'} />
+        <Cell label={t.myChoice} value={r.choice} highlight={r.matched} />
+        <Cell label={t.consensusLabel} value={r.consensus ?? t.undecided} />
+        <Cell label={t.actualOrigin} value={r.humanSide ?? '—'} />
       </div>
 
       {/* 투표 분포 */}
@@ -222,16 +245,26 @@ function ResultItem({ n, r }: { n: number; r: MissionResult }) {
           <div className="bg-violet-400" style={{ width: `${(r.tally.B / total) * 100}%` }} />
         </div>
         <div className="mt-1 flex justify-between text-[10px] text-slate-500">
-          <span>A {r.tally.A}표</span>
-          <span>반응 {(r.reactionMs / 1000).toFixed(1)}초</span>
-          <span>B {r.tally.B}표</span>
+          <span>
+            A {r.tally.A}
+            {t.votesUnit}
+          </span>
+          <span>
+            {t.reactionLabel}
+            {(r.reactionMs / 1000).toFixed(1)}
+            {t.secUnit}
+          </span>
+          <span>
+            B {r.tally.B}
+            {t.votesUnit}
+          </span>
         </div>
       </div>
 
       <p className="rounded-xl bg-white/[0.03] p-3 text-xs leading-relaxed text-slate-300">
         <span className="mb-1 flex items-center gap-1 font-semibold text-human">
           <Sparkles className="h-3 w-3" />
-          AI가 남긴 흔적
+          {t.aiTellLabel}
         </span>
         {r.aiTell}
       </p>
