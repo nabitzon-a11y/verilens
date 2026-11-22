@@ -47,27 +47,15 @@ export function TopBar() {
           ))}
         </nav>
 
-        <div
-          role="group"
+        <button
+          type="button"
+          onClick={() => setLang(lang === 'ko' ? 'en' : 'ko')}
           aria-label="언어 전환 (KO/EN)"
-          className="flex shrink-0 items-center rounded-full border border-white/10 bg-white/5 p-0.5 text-[10px] font-bold"
+          className="flex shrink-0 items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[11px] font-bold text-slate-200 transition hover:bg-white/10"
         >
-          <Globe className="mx-1 h-3 w-3 text-slate-400" />
-          {(['ko', 'en'] as const).map((code) => (
-            <button
-              key={code}
-              type="button"
-              onClick={() => setLang(code)}
-              aria-pressed={lang === code}
-              className={clsx(
-                'rounded-full px-1.5 py-0.5 uppercase transition',
-                lang === code ? 'bg-human text-navy' : 'text-slate-400 hover:text-white',
-              )}
-            >
-              {code}
-            </button>
-          ))}
-        </div>
+          <Globe className="h-3 w-3 text-human" />
+          {lang === 'ko' ? 'EN' : 'KO'}
+        </button>
       </div>
     </header>
   );
