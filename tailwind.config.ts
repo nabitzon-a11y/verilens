@@ -10,22 +10,22 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          DEFAULT: '#6D28D9', // 메인 보라색 (Pi 톤)
-          light: '#7C3AED',
-          dark: '#5B21B6',
-          soft: '#EDE9FE',
+          DEFAULT: '#703C90', // Pi Browser 메인 플럼 퍼플
+          light: '#864EA8',
+          dark: '#592B75',
+          soft: '#F3ECF8',
         },
         surface: {
-          DEFAULT: '#F8FAFC', // 화이트-슬레이트 배경
+          DEFAULT: '#FFFFFF', // Pi Browser 클린 화이트 배경
           card: '#FFFFFF',
-          muted: '#F1F5F9',
+          muted: '#F8F6FA',
         },
         navy: {
-          DEFAULT: '#0F172A', // 진한 본문 텍스트
-          900: '#0F172A',
+          DEFAULT: '#1E1B2E', // 진한 본문 텍스트
+          900: '#1E1B2E',
           800: '#FFFFFF',
-          700: '#F1F5F9',
-          600: '#E2E8F0',
+          700: '#F8F6FA',
+          600: '#E5DFEC',
         },
         human: {
           DEFAULT: '#10B981', // Human Verified 강조 (에메랄드)
@@ -33,9 +33,9 @@ const config: Config = {
           dark: '#059669',
         },
         pi: {
-          DEFAULT: '#F59E0B', // Pi 보상 강조 (앰버)
-          light: '#D97706', // 라이트 배경에서 가독성 좋은 앰버 텍스트
-          dark: '#B45309',
+          DEFAULT: '#E0A842', // Pi 골드
+          light: '#C68B20', // 화이트 배경 가독성 좋은 Pi 골드
+          dark: '#A67114',
         },
       },
       fontFamily: {
