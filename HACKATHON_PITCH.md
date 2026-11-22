@@ -26,7 +26,7 @@ As AI-generated text, deepfakes, and synthetic images flood the internet, AI mod
 #### Key Features & Pi Infrastructure Integration
 1. **Pi Sign-In & Live Testnet Payments (`Pi SDK v2.0`)**:
    - Seamless authentication inside Pi Browser (`Pi.authenticate`) with automatic incomplete-payment recovery (`onIncompletePaymentFound`).
-   - **B2B / Requester Portal (`/submit`)**: Requesters submit text or compressed, EXIF-stripped image pairs, confirm copyright warranty, and pay **1 Test-Pi** on Pi Testnet (`Pi.createPayment`) to publish directly into the live verification pool.
+   - **B2C & B2B Requester Portal (`/submit`)**: Supports both **Single Check (1 item)**—where everyday users ask *"Human or AI?"*—and **A/B Compare (2 items)** for B2B evaluation. Requesters submit text or compressed, EXIF-stripped images, confirm copyright warranty, and pay **1 Test-Pi** on Pi Testnet (`Pi.createPayment`) to publish directly into the live verification pool.
    - **Demo Sandbox Mode**: Automatically enabled in regular web browsers so judges without Pi Browser can test the full end-to-end flow immediately.
 2. **3-Stage Session-Based Human Proof (`PiVerifyAdapter` Architecture)**:
    - **Stage 1 (Session Entry)**: Quick human liveness/uniqueness check issuing a signed 1-hour session token.
@@ -51,6 +51,7 @@ As AI-generated text, deepfakes, and synthetic images flood the internet, AI mod
 **VeriLens**는 AI 합성물과 가짜 콘텐츠가 넘쳐나는 시대에 **Pi Network의 실명 인증(KYC) 인간 네트워크**를 활용해 '진짜 인간 원본 데이터'를 판별·생산하는 크라우드 검증 플랫폼입니다.
 
 - **Pi Testnet 실연동**: Pi Browser 로그인(`Pi.authenticate`), 1.0 Test-Pi 의뢰 결제(`Pi.createPayment`), PiNet(`verilens1759.pinet.com`) 및 도메인 인증 완료
+- **B2C + B2B 양방향 의뢰**: 개인용 **단일 감별(1개)**과 기업용 **A/B 비교(2개)**를 모두 지원하며, KO/EN 원터치 전환 및 30종(텍스트 20 + 실사형·시각 10) 데이터셋 내장
 - **이중 품질 방어**: 3단계 PiVerify 세션 보안(모의 어댑터 + 실서명 토큰·행동 감시) + 숨김 기준 문항(Gold Standard) + 5인 다수결 합의
 - **콘텐츠 안전장치**: 의뢰 시 저작권 보증 동의, 이미지 자동 압축·EXIF 제거, 판별 중 신고 2회 누적 시 즉시 비공개
 
@@ -62,8 +63,8 @@ As AI-generated text, deepfakes, and synthetic images flood the internet, AI mod
 
 | 시간 | 화면 조작 | 내레이션 (영어 자막/음성용) |
 |---|---|---|
-| **0:00 ~ 0:12** | **홈 (`/`)** 화면 보여주기 (`EN` 모드) | "Hi, this is VeriLens—a human-intuition verification platform on Pi Network built to fight AI fakes and Model Collapse." |
-| **0:12 ~ 0:25** | **`Start Human Session (1h)`** 클릭 → PiVerify 스캔 모달 통과 | "To block bots, verifiers pass a quick Stage-1 PiVerify check, unlocking a signed 1-hour session token." |
-| **0:25 ~ 0:50** | **판별하기 (`/verify`)**: 실사 이미지(카페/과일) 포함 5문항을 1.5~2초씩 보며 선택 → **결과 화면 (`/verify/result`)** 스크롤 | "Users compare A vs B in seconds—including real-world style scenes and text. Hidden Gold Standard checks stop random clicking, and every set ends with an AI Tell Report showing why AI failed." |
-| **0:50 ~ 1:15** | **의뢰하기 (`/submit`)**: 텍스트 입력 + 저작권 동의 체크 → **`Pay 1 Test-Pi & Submit`** → Pi Testnet 지갑 서명 → 결제 성공 | "Requesters can submit their own text or EXIF-stripped images, confirm copyright rights, and pay 1 Test-Pi on Pi Testnet to publish directly into the live pool." |
+| **0:00 ~ 0:12** | **홈 (`/`)** 화면 보여주기 (`EN` 모드, `@psk7522` 로그인 상태) | "Hi, this is VeriLens—a human-intuition verification platform on Pi Network built to fight AI fakes and Model Collapse." |
+| **0:12 ~ 0:22** | **`Start Human Session (1h)`** 클릭 → PiVerify 스캔 모달 통과 | "To block bots, verifiers pass a quick Stage-1 PiVerify check, unlocking a signed 1-hour session token." |
+| **0:22 ~ 0:48** | **판별하기 (`/verify`)**: 실사 이미지(카페/과일) 포함 5문항을 1.5~2초씩 보며 선택(하단 `Report` 버튼 한 번 비추기) → **결과 화면 (`/verify/result`)** 스크롤 | "Users verify real-world scenes and text in seconds—with an in-game Report button for safety. Hidden Gold Standard checks stop random clicking, and every set ends with an AI Tell Report." |
+| **0:48 ~ 1:15** | **의뢰하기 (`/submit`)**: `Single Check (1)` / `A/B Compare (2)` 전환 잠깐 보여주고, `Single Check`에 텍스트 1개 입력 + 저작권 동의 체크 → **`Pay 1 Test-Pi & Submit`** → Pi Testnet 지갑 서명 → 결제 성공 | "In Submit, anyone can ask 'Human or AI?' with a single item—or run A/B comparisons—confirm copyright rights, and pay 1 Test-Pi on Pi Testnet to publish live." |
 | **1:15 ~ 1:30** | **내 지갑 (`/wallet`)**: 잔액·정산 내역 확인 → **`Claim Rewards`** 클릭 → 3단계 재검증 후 청구 완료 | "Once rewards reach 0.01 Pi, users pass a final Stage-3 check to claim. Built live with Next.js, Supabase, and Pi Testnet—thank you!" |
