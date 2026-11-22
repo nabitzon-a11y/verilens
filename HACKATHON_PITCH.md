@@ -13,7 +13,7 @@
 - **PiNet URL**: `https://verilens1759.pinet.com`
 
 ### One-Liner (한 줄 요약)
-> A human-intuition verification platform powered by Pi Network, enabling KYC-verified Pioneers to spot AI-generated fakes, prevent Model Collapse, and earn Pi via 5-human consensus.
+> A human-intuition verification platform powered by Pi Network, enabling KYC-verified Pioneers to spot AI-generated fakes, prevent Model Collapse, and earn Pi via 10-human consensus.
 
 ### Project Description (Full)
 
@@ -21,7 +21,7 @@
 As AI-generated text, deepfakes, and synthetic images flood the internet, AI models increasingly retrain on synthetic outputs—causing **Model Collapse**. Traditional crowdsourcing platforms struggle with automated bots and click-farms that poison human-labeled datasets.
 
 #### The Solution: VeriLens
-**VeriLens** leverages Pi Network's verified human community to create a bot-resistant **Human Reality Filter**. In fast, 5-second A/B comparisons, verified Pioneers distinguish authentic human-created content from AI fakes and earn Pi rewards when their intuition aligns with a 5-human consensus.
+**VeriLens** leverages Pi Network's verified human community to create a bot-resistant **Human Reality Filter**. In fast, 5-second comparisons, verified Pioneers distinguish authentic human-created content from AI fakes and earn Pi rewards when their intuition aligns with a 10-human consensus.
 
 #### Key Features & Pi Infrastructure Integration
 1. **Pi Sign-In & Live Testnet Payments (`Pi SDK v2.0`)**:
@@ -35,7 +35,7 @@ As AI-generated text, deepfakes, and synthetic images flood the internet, AI mod
    - *(Note: Built with a clean `PiVerifyAdapter` interface; currently running `MockPiVerifyAdapter` for hackathon demo until official PiVerify API endpoints are released, while token signing & server timing integrity checks are live.)*
 3. **Dual Quality Assurance (Hidden Gold Standard + 5-Human Consensus)**:
    - Every 5-item set hides 1 ground-truth **Gold Standard** anchor item. Failing the anchor withholds set rewards and lowers the user's Trust Score, stopping random clicking.
-   - Remaining items use 5-human majority consensus, followed by an engaging **AI Tell Report** explaining the subtle AI artifacts—driving high retention alongside **PiNet challenge link sharing**.
+   - Remaining items use 10-human majority consensus (6+ votes), followed by an engaging **AI Tell Report** explaining the subtle AI artifacts—driving high retention alongside **PiNet challenge link sharing**.
 4. **Content Risk & Copyright Safeguards**:
    - Mandatory copyright & excerpt warranty on submission, automatic client-side image resizing & EXIF metadata removal, and an in-game **Report** button that automatically hides user-submitted items after 2 reports.
 
@@ -52,7 +52,7 @@ As AI-generated text, deepfakes, and synthetic images flood the internet, AI mod
 
 - **Pi Testnet 실연동**: Pi Browser 로그인(`Pi.authenticate`), 1.0 Test-Pi 의뢰 결제(`Pi.createPayment`), PiNet(`verilens1759.pinet.com`) 및 도메인 인증 완료
 - **B2C + B2B 양방향 의뢰**: 개인용 **단일 감별(1개)**과 기업용 **A/B 비교(2개)**를 모두 지원하며, KO/EN 원터치 전환 및 30종(텍스트 20 + 실사형·시각 10) 데이터셋 내장
-- **이중 품질 방어**: 3단계 PiVerify 세션 보안(모의 어댑터 + 실서명 토큰·행동 감시) + 숨김 기준 문항(Gold Standard) + 5인 다수결 합의
+- **이중 품질 방어**: 3단계 PiVerify 세션 보안(모의 어댑터 + 실서명 토큰·행동 감시) + 숨김 기준 문항(Gold Standard) + 10인 다수결 합의(10표 도달 시 자동 마감)
 - **콘텐츠 안전장치**: 의뢰 시 저작권 보증 동의, 이미지 자동 압축·EXIF 제거, 판별 중 신고 2회 누적 시 즉시 비공개
 
 ---

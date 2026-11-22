@@ -12,10 +12,12 @@ export const GAME = {
   QUESTIONS_PER_SET: 5,
   /** 세트당 숨김 기준 문항(Gold Standard) 수 */
   GOLD_PER_SET: 1,
-  /** 다수결 합의 패널 인원 (본인 1 + 기존 응답 4) */
-  CONSENSUS_PANEL_SIZE: 5,
-  /** 합의 확정에 필요한 최소 동일 응답 수 (5명 중 3명 이상) */
-  CONSENSUS_MAJORITY: 3,
+  /** 다수결 합의 패널 인원 (본인 1 + 기존 응답 9 = 10인) */
+  CONSENSUS_PANEL_SIZE: 10,
+  /** 합의 확정에 필요한 최소 동일 응답 수 (10명 중 6명 이상, 5:5 동률 시 미확정) */
+  CONSENSUS_MAJORITY: 6,
+  /** 의뢰자 문항 자동 마감 목표 실제 응답 수 */
+  REQUESTER_TARGET_VOTES: 10,
   /** 다수결 일치 1문항당 보상 (Pi) */
   REWARD_PER_MATCH_PI: 0.005,
 } as const;

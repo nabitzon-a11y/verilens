@@ -212,7 +212,15 @@ export async function submitMissionSet(
 
     // 데이터 품질 보호: 매크로 의심 또는 기준 문항 실패 세트의 응답은 버림
     if (!flagged && goldPassed) {
-      for (const v of pendingVotes) await repo.addVote(v.missionId, v.choice);
+      for (const v of pendingVotes) {
+        const allVotes = await repo.addVote(v.missionId, v.choice);
+        if (allVotes.length >= GAME.REQUESTER_TARGET_VOTES) {
+          const m = await repo.getMission(v.missionId);
+          if (m && m.origin === 'requester' && m.status === 'active') {
+            await repo.saveMission({ ...m, status: 'closed' });
+          }
+        }
+      }
     }
 
     // 보상 & 신뢰도

@@ -2,9 +2,10 @@
 
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Flag, Gift, Loader2, RefreshCw, ScanFace, Timer, X } from 'lucide-react';
+import { Flag, Gift, Lightbulb, Loader2, RefreshCw, ScanFace, Timer, X } from 'lucide-react';
 import type { AnswerInput, Choice, PublicMission, PublicMissionSet, SetResult, VerifySession } from '@/types';
 import { SEED_EN, translatePromptToEn } from '@/data/missions.en';
+import { AiHintsModal } from '@/components/AiHintsModal';
 import { useApp } from '@/components/AppProvider';
 import { LoginPanel } from '@/components/LoginPanel';
 import { MissionCard } from '@/components/MissionCard';
@@ -48,6 +49,7 @@ function VerifyGame() {
   const [warning, setWarning] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
+  const [hintsOpen, setHintsOpen] = useState(false);
   const [reporting, setReporting] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -231,6 +233,7 @@ function VerifyGame() {
   return (
     <div className="space-y-4">
       {modal}
+      <AiHintsModal open={hintsOpen} onClose={() => setHintsOpen(false)} lang={lang} />
       <WarningModal open={warning !== null} message={warning ?? ''} onRecheck={onRecheck} />
 
       {(phase === 'idle' || phase === 'loading') && <CenterSpinner label={t.preparing} />}
@@ -246,6 +249,10 @@ function VerifyGame() {
           <button type="button" className="btn-primary w-full py-4" onClick={startSession}>
             <ScanFace className="h-5 w-5" />
             {t.startSessionBtn}
+          </button>
+          <button type="button" className="btn-ghost w-full text-xs" onClick={() => setHintsOpen(true)}>
+            <Lightbulb className="h-4 w-4 text-pi" />
+            {lang === 'en' ? 'View AI Detection Hints First' : '판별 전 AI 감별 힌트 보기'}
           </button>
         </section>
       )}
@@ -275,10 +282,20 @@ function VerifyGame() {
               <span className="font-semibold text-slate-300">
                 {t.question} <span className="text-human">{index + 1}</span> / {missionSet.missions.length}
               </span>
-              <span className="flex items-center gap-1 font-mono text-slate-400">
-                <Timer className="h-3.5 w-3.5" />
-                {t.session} {formatMmSs(remaining)}
-              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setHintsOpen(true)}
+                  className="inline-flex items-center gap-1 rounded-full border border-pi/30 bg-pi/10 px-2 py-0.5 text-[11px] font-semibold text-pi-light hover:bg-pi/20"
+                >
+                  <Lightbulb className="h-3 w-3" />
+                  {lang === 'en' ? 'Hints' : 'AI 힌트'}
+                </button>
+                <span className="flex items-center gap-1 font-mono text-slate-400">
+                  <Timer className="h-3.5 w-3.5" />
+                  {t.session} {formatMmSs(remaining)}
+                </span>
+              </div>
             </div>
             <div className="flex gap-1">
               {missionSet.missions.map((m, i) => (

@@ -175,3 +175,21 @@ export async function reportMission(
     return { reported: true, hidden: shouldHide };
   });
 }
+
+/** 의뢰자가 본인의 문항을 직접 마감(중단) */
+export async function closeMyMission(uid: string, missionId: string): Promise<{ closed: boolean }> {
+  const repo = getRepository();
+  return withLock(`mission:${missionId}`, async () => {
+    const mission = await repo.getMission(missionId);
+    if (!mission || mission.origin !== 'requester') {
+      throw new HttpError(404, '문항을 찾을 수 없습니다.', 'MISSION_NOT_FOUND');
+    }
+    if (mission.requesterUid !== uid) {
+      throw new HttpError(403, '본인이 의뢰한 문항만 마감할 수 있습니다.', 'FORBIDDEN');
+    }
+    if (mission.status !== 'closed') {
+      await repo.saveMission({ ...mission, status: 'closed' });
+    }
+    return { closed: true };
+  });
+}

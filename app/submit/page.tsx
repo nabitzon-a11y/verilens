@@ -3,11 +3,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
+  AlertTriangle,
   CheckCircle2,
   Coins,
   FileText,
   ImagePlus,
   Image as ImageIcon,
+  Info,
   Loader2,
   Lock,
   ScanFace,
@@ -18,7 +20,7 @@ import type { DraftResponse, MissionKind, MissionMode, MyMissionItem, PaymentCom
 import { useApp } from '@/components/AppProvider';
 import { LoginPanel } from '@/components/LoginPanel';
 import { api } from '@/lib/apiClient';
-import { WALLET } from '@/lib/constants';
+import { GAME, WALLET } from '@/lib/constants';
 import { errorMessage, formatDateTime } from '@/lib/format';
 import { ACCEPTED_IMAGE_TYPES, compressImage } from '@/lib/image';
 import { paySubmissionFee } from '@/lib/piSdk';
@@ -64,6 +66,26 @@ const PROMPT_PRESETS: Record<MissionMode, Record<MissionKind, readonly string[]>
 
 const SOURCE_PRESETS = ['뉴스 기사', '배달앱 리뷰', '쇼핑몰 상품평', 'SNS 게시글', '커뮤니티 답변', '카페/식당 후기'] as const;
 
+/** 두 텍스트의 유사도 (0~1, 2글자 바이그램 Jaccard) */
+function textSimilarity(a: string, b: string): number {
+  const norm = (s: string) => s.toLowerCase().replace(/\s+/g, '');
+  const s1 = norm(a);
+  const s2 = norm(b);
+  if (s1.length < 4 || s2.length < 4) return 0;
+  const bigrams = (s: string) => {
+    const set = new Set<string>();
+    for (let i = 0; i < s.length - 1; i++) set.add(s.slice(i, i + 2));
+    return set;
+  };
+  const b1 = bigrams(s1);
+  const b2 = bigrams(s2);
+  let inter = 0;
+  b1.forEach((g) => {
+    if (b2.has(g)) inter++;
+  });
+  return inter / (b1.size + b2.size - inter);
+}
+
 export default function SubmitPage() {
   const { ready, profile, paymentsMode, refresh, lang } = useApp();
   const en = lang === 'en';
@@ -106,6 +128,22 @@ export default function SubmitPage() {
   if (!profile) return <LoginPanel title={en ? 'Sign in to submit an item' : '문항을 의뢰하려면 로그인하세요'} />;
 
   const isMockPayment = paymentsMode === 'mock' || profile.isDemo;
+  const tooSimilar =
+    mode === 'compare' &&
+    kind === 'text' &&
+    textA.trim().length >= TEXT_MIN &&
+    textB.trim().length >= TEXT_MIN &&
+    textA.trim() !== textB.trim() &&
+    textSimilarity(textA, textB) >= 0.68;
+
+  const closeMission = async (missionId: string) => {
+    try {
+      await api('/api/missions/close', { body: { missionId } });
+      await loadMine();
+    } catch (err) {
+      setError(errorMessage(err));
+    }
+  };
 
   const validation = (() => {
     if (kind === 'text') {
@@ -195,16 +233,32 @@ export default function SubmitPage() {
         <p className="mt-1 text-xs leading-relaxed text-slate-400">
           {en ? (
             <>
-              Submit content A/B and KYC-verified human verifiers will determine the authentic human original via{' '}
-              <b className="text-human">5-human consensus</b>.
+              Submit content and KYC-verified verifiers will determine the label via{' '}
+              <b className="text-human">{GAME.CONSENSUS_PANEL_SIZE}-human consensus</b> (auto-closes at {GAME.REQUESTER_TARGET_VOTES} votes).
             </>
           ) : (
             <>
-              검수가 필요한 콘텐츠 A/B를 올리면 KYC 인증된 인간 판별자들의 <b className="text-human">5인 다수결</b>로 &lsquo;인간 원본&rsquo; 라벨이 확정됩니다.
+              검수가 필요한 콘텐츠를 올리면 KYC 인증된 판별자들의 <b className="text-human">{GAME.CONSENSUS_PANEL_SIZE}인 다수결</b>로 라벨이 확정되며, {GAME.REQUESTER_TARGET_VOTES}표가 모이면 자동 마감됩니다.
             </>
           )}
         </p>
       </header>
+
+      {/* 출제 기준 가이드 */}
+      <div className="flex gap-2.5 rounded-2xl border border-human/20 bg-human/5 p-3 text-xs leading-relaxed text-slate-300">
+        <Info className="mt-0.5 h-4 w-4 shrink-0 text-human" />
+        <p>
+          {en ? (
+            <>
+              <b className="text-white">Submission Tips:</b> Include 2–4 sentences with tone, context, or lived details so human verifiers can judge clearly. Single-line plain facts can split votes.
+            </>
+          ) : (
+            <>
+              <b className="text-white">좋은 의뢰 기준:</b> 단순 팩트 1줄보다 <b>화법·문맥·디테일 차이</b>가 드러나는 2~4문장을 올리셔야 다수결이 모입니다. 애매한 문항은 아래 현황에서 언제든 <b>마감</b>할 수 있어요.
+            </>
+          )}
+        </p>
+      </div>
 
       {done ? (
         <section className="card space-y-4 text-center">
@@ -405,6 +459,17 @@ export default function SubmitPage() {
             </span>
           </label>
 
+          {tooSimilar && (
+            <div className="flex items-start gap-2 rounded-xl border border-pi/30 bg-pi/10 p-3 text-xs leading-relaxed text-pi-light">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <p>
+                {en
+                  ? 'A and B look very similar and may be ambiguous for verifiers. Consider highlighting clearer differences or using Single Check.'
+                  : 'A와 B 문장이 너무 비슷해 판별자들이 헷갈릴 수 있습니다. 차이를 조금 더 분명히 적거나 [단일 감별]을 이용해 보세요.'}
+              </p>
+            </div>
+          )}
+
           {error && <p className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}
           {!error && validation && (textA || textB || imageA || imageB) && (
             <p className="text-center text-[11px] text-slate-500">{validation}</p>
@@ -436,7 +501,7 @@ export default function SubmitPage() {
             {en ? 'No submissions yet.' : '아직 의뢰한 문항이 없습니다.'}
           </p>
         ) : (
-          mine.map((m) => <MyMissionRow key={m.id} m={m} />)
+          mine.map((m) => <MyMissionRow key={m.id} m={m} en={en} onClose={closeMission} />)
         )}
       </section>
     </div>
@@ -557,24 +622,54 @@ const STATUS_STYLE: Record<MyMissionItem['status'], { label: string; cls: string
   closed: { label: '종료', cls: 'bg-white/10 text-slate-400' },
 };
 
-function MyMissionRow({ m }: { m: MyMissionItem }) {
+function MyMissionRow({
+  m,
+  en,
+  onClose,
+}: {
+  m: MyMissionItem;
+  en: boolean;
+  onClose: (id: string) => Promise<void>;
+}) {
+  const [closing, setClosing] = useState(false);
   const total = m.votes.A + m.votes.B;
   const s = STATUS_STYLE[m.status];
   const isSingle = m.mode === 'single';
+
+  const handleClose = async () => {
+    setClosing(true);
+    try {
+      await onClose(m.id);
+    } finally {
+      setClosing(false);
+    }
+  };
+
   return (
     <article className="card space-y-2 py-3">
       <div className="flex items-center gap-2">
         {m.kind === 'text' ? <FileText className="h-4 w-4 text-slate-500" /> : <ImageIcon className="h-4 w-4 text-slate-500" />}
         <p className="flex-1 truncate text-sm text-slate-200">{m.prompt}</p>
         <span className={clsx('chip', s.cls)}>{s.label}</span>
+        {m.status === 'active' && (
+          <button
+            type="button"
+            disabled={closing}
+            onClick={() => void handleClose()}
+            className="rounded-lg border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-semibold text-slate-300 hover:bg-red-500/15 hover:text-red-300 disabled:opacity-50"
+          >
+            {closing ? '…' : en ? 'Close' : '마감'}
+          </button>
+        )}
       </div>
       <div className="flex items-center justify-between text-[11px] text-slate-500">
         <span>{formatDateTime(m.createdAt)}</span>
         <span>
-          실제 응답 {total}건 ({isSingle ? `인간 ${m.votes.A} · AI ${m.votes.B}` : `A ${m.votes.A} · B ${m.votes.B}`})
+          {en ? 'Votes' : '실제 응답'} {total}/{GAME.REQUESTER_TARGET_VOTES} (
+          {isSingle ? `${en ? 'Human' : '인간'} ${m.votes.A} · AI ${m.votes.B}` : `A ${m.votes.A} · B ${m.votes.B}`})
           {m.consensus && (
             <b className="ml-1 text-human">
-              → {isSingle ? (m.consensus === 'A' ? '인간 원본' : 'AI 생성') : `인간 원본 ${m.consensus}`}
+              → {isSingle ? (m.consensus === 'A' ? (en ? 'Human' : '인간 원본') : 'AI') : `${en ? 'Original' : '인간 원본'} ${m.consensus}`}
             </b>
           )}
         </span>

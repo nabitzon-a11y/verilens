@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, Coins, FilePlus2, Flame, Layers, Loader2, ScanFace, ShieldCheck, Timer, Users, Wallet } from 'lucide-react';
+import { ChevronRight, Coins, FilePlus2, Flame, Layers, Lightbulb, Loader2, ScanFace, ShieldCheck, Timer, Users, Wallet } from 'lucide-react';
 import clsx from 'clsx';
 import type { VerifySession } from '@/types';
+import { AiHintsModal } from '@/components/AiHintsModal';
 import { useApp } from '@/components/AppProvider';
 import { LoginPanel } from '@/components/LoginPanel';
 import { useScanModal } from '@/components/ScanModal';
@@ -29,6 +30,7 @@ export default function HomePage() {
   const { modal, run } = useScanModal(verifyMode === 'mock');
   const [session, setSession] = useState<VerifySession | null>(null);
   const [starting, setStarting] = useState(false);
+  const [hintsOpen, setHintsOpen] = useState(false);
 
   const t = HOME_TEXT[lang];
   const nav = NAV_LABELS[lang];
@@ -60,6 +62,7 @@ export default function HomePage() {
   return (
     <div className="space-y-4">
       {modal}
+      <AiHintsModal open={hintsOpen} onClose={() => setHintsOpen(false)} lang={lang} />
 
       {/* Hero */}
       <header className="flex items-center gap-3 pt-1">
@@ -162,7 +165,17 @@ export default function HomePage() {
 
       {/* 작동 방식 */}
       <section className="card space-y-3">
-        <p className="label">{t.howItWorks}</p>
+        <div className="flex items-center justify-between">
+          <p className="label">{t.howItWorks}</p>
+          <button
+            type="button"
+            onClick={() => setHintsOpen(true)}
+            className="inline-flex items-center gap-1 rounded-full border border-pi/30 bg-pi/10 px-2.5 py-1 text-[11px] font-semibold text-pi-light hover:bg-pi/20"
+          >
+            <Lightbulb className="h-3 w-3" />
+            {lang === 'en' ? 'AI Hints' : 'AI 감별 힌트'}
+          </button>
+        </div>
         <Step n={1} icon={<ScanFace className="h-4 w-4" />} title={t.step1Title}>
           {t.step1Body}
         </Step>
