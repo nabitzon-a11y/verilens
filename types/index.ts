@@ -87,11 +87,18 @@ export interface Mission {
   requesterUid?: string;
   /** 의뢰자 문항인 경우 연결된 결제 ID */
   paymentId?: string;
+  /** [서버 전용] 신고 누적 횟수 (2회 이상 시 자동 비공개) */
+  reportCount?: number;
+  /** [서버 전용] 중복 신고 방지용 신고자 uid 목록 */
+  reportedBy?: string[];
   createdAt: ISODateString;
 }
 
-/** 클라이언트에 노출되는 미션 (정답·기준문항·가상응답·해설 제거) */
-export type PublicMission = Omit<Mission, 'humanSide' | 'isGold' | 'priorVotes' | 'aiTell' | 'paymentId'>;
+/** 클라이언트에 노출되는 미션 (정답·기준문항·가상응답·해설·신고정보 제거) */
+export type PublicMission = Omit<
+  Mission,
+  'humanSide' | 'isGold' | 'priorVotes' | 'aiTell' | 'paymentId' | 'reportCount' | 'reportedBy'
+>;
 
 /* =====================================================================
  * 사용자 / 인증

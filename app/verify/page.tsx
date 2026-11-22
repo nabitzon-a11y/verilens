@@ -2,7 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Gift, Loader2, RefreshCw, ScanFace, Timer } from 'lucide-react';
+import { Flag, Gift, Loader2, RefreshCw, ScanFace, Timer, X } from 'lucide-react';
 import type { AnswerInput, Choice, PublicMission, PublicMissionSet, SetResult, VerifySession } from '@/types';
 import { SEED_EN, translatePromptToEn } from '@/data/missions.en';
 import { useApp } from '@/components/AppProvider';
@@ -47,6 +47,15 @@ function VerifyGame() {
   const [locked, setLocked] = useState(false);
   const [warning, setWarning] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reporting, setReporting] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const id = setTimeout(() => setToast(null), 2500);
+    return () => clearTimeout(id);
+  }, [toast]);
 
   const monitor = useRef(new BehaviorMonitor());
   const answers = useRef<AnswerInput[]>([]);
@@ -189,6 +198,30 @@ function VerifyGame() {
     }
   };
 
+  const submitReport = async (reason: 'copyright' | 'harmful' | 'spam') => {
+    if (!missionSet || reporting) return;
+    setReporting(true);
+    try {
+      const res = await api<{ reported: boolean; hidden: boolean }>('/api/missions/report', {
+        body: { missionId: missionSet.missions[index].id, reason },
+      });
+      setReportOpen(false);
+      setToast(
+        res.hidden
+          ? lang === 'en'
+            ? 'Report received. Item hidden from pool.'
+            : '신고가 누적되어 문항이 비공개 처리되었습니다.'
+          : lang === 'en'
+            ? 'Report submitted. Thank you.'
+            : '신고가 접수되었습니다. 감사합니다.',
+      );
+    } catch (err) {
+      setToast(errorMessage(err));
+    } finally {
+      setReporting(false);
+    }
+  };
+
   /* ---------------- 렌더 ---------------- */
   if (!ready) return <CenterSpinner label={t.loading} />;
   if (!profile) return <LoginPanel title={t.loginTitle} />;
@@ -279,7 +312,67 @@ function VerifyGame() {
             );
           })()}
 
-          <p className="text-center text-[11px] text-slate-500">{t.footerHint}</p>
+          <div className="flex items-center justify-between gap-2 text-[11px] text-slate-500">
+            <p className="flex-1">{t.footerHint}</p>
+            <button
+              type="button"
+              onClick={() => setReportOpen(true)}
+              className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-slate-400 transition hover:bg-white/5 hover:text-red-300"
+            >
+              <Flag className="h-3 w-3" />
+              {lang === 'en' ? 'Report' : '신고'}
+            </button>
+          </div>
+
+          {reportOpen && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6 backdrop-blur-sm"
+              role="dialog"
+              aria-modal="true"
+            >
+              <div className="w-full max-w-xs space-y-3 rounded-3xl border border-white/10 bg-navy-800 p-5 shadow-2xl">
+                <div className="flex items-center justify-between">
+                  <h2 className="flex items-center gap-1.5 text-sm font-bold text-white">
+                    <Flag className="h-4 w-4 text-red-400" />
+                    {lang === 'en' ? 'Report Content' : '문항 신고하기'}
+                  </h2>
+                  <button type="button" onClick={() => setReportOpen(false)} aria-label="닫기" className="text-slate-400 hover:text-white">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <p className="text-xs text-slate-400">
+                  {lang === 'en'
+                    ? 'Reported user-submitted items are automatically hidden after 2 reports.'
+                    : '신고가 2회 이상 접수된 의뢰 문항은 즉시 비공개 처리됩니다.'}
+                </p>
+                <div className="space-y-2">
+                  {(
+                    [
+                      { id: 'copyright', ko: '저작권 · 초상권 침해', en: 'Copyright / Portrait Infringement' },
+                      { id: 'harmful', ko: '유해 · 불법 콘텐츠', en: 'Harmful or Illegal Content' },
+                      { id: 'spam', ko: '스팸 · 비교 불가 오류', en: 'Spam / Broken Comparison' },
+                    ] as const
+                  ).map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      disabled={reporting}
+                      onClick={() => void submitReport(item.id)}
+                      className="btn-ghost w-full justify-start text-xs"
+                    >
+                      {lang === 'en' ? item.en : item.ko}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {toast && (
+            <div className="fixed inset-x-0 bottom-24 z-50 flex justify-center px-4">
+              <p className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-navy shadow-lg">{toast}</p>
+            </div>
+          )}
 
           {phase === 'submitting' && (
             <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm">

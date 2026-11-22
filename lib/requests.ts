@@ -5,6 +5,7 @@ import type { DraftResponse, Mission, MissionContent, MyMissionItem } from '@/ty
 import { decideConsensus, tallyVotes } from './consensus';
 import { WALLET } from './constants';
 import { HttpError } from './http';
+import { withLock } from './lock';
 import { getRepository } from './repository';
 
 /**
@@ -110,4 +111,44 @@ export async function listMyMissions(uid: string): Promise<MyMissionItem[]> {
       };
     }),
   );
+}
+
+const REPORT_AUTO_HIDE_THRESHOLD = 2;
+
+export type ReportReason = 'copyright' | 'harmful' | 'spam';
+
+/**
+ * 문항 신고 (저작권 침해 / 유해 콘텐츠 / 스팸)
+ * - 의뢰자 문항에 서로 다른 인증 사용자 2명 이상이 신고하면 즉시 비공개(closed) 처리
+ */
+export async function reportMission(
+  uid: string,
+  missionId: string,
+  _reason: ReportReason,
+): Promise<{ reported: boolean; hidden: boolean }> {
+  const repo = getRepository();
+  const mission = await repo.getMission(missionId);
+  if (!mission) throw new HttpError(404, '문항을 찾을 수 없습니다.', 'MISSION_NOT_FOUND');
+  if (mission.origin === 'seed') return { reported: true, hidden: false };
+
+  return withLock(`mission:${missionId}`, async () => {
+    const latest = await repo.getMission(missionId);
+    if (!latest) throw new HttpError(404, '문항을 찾을 수 없습니다.', 'MISSION_NOT_FOUND');
+
+    const reporters = new Set(latest.reportedBy ?? []);
+    if (reporters.has(uid)) {
+      return { reported: true, hidden: latest.status === 'closed' };
+    }
+    reporters.add(uid);
+    const count = reporters.size;
+    const shouldHide = count >= REPORT_AUTO_HIDE_THRESHOLD;
+
+    await repo.saveMission({
+      ...latest,
+      reportCount: count,
+      reportedBy: [...reporters],
+      status: shouldHide ? 'closed' : latest.status,
+    });
+    return { reported: true, hidden: shouldHide };
+  });
 }

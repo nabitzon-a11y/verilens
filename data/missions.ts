@@ -467,6 +467,8 @@ export function toPublicMission(mission: Mission): PublicMission {
     priorVotes: _priorVotes,
     aiTell: _aiTell,
     paymentId: _paymentId,
+    reportCount: _reportCount,
+    reportedBy: _reportedBy,
     ...publicFields
   } = mission;
   return publicFields;
