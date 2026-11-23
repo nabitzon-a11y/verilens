@@ -16,9 +16,9 @@ const config: Config = {
           soft: '#F3ECF8',
         },
         surface: {
-          DEFAULT: '#FFFFFF', // Pi Browser 클린 화이트 배경
+          DEFAULT: '#FAF8FC', // 미세 라벤더 화이트 배경 (화이트 카드 입체감 강조)
           card: '#FFFFFF',
-          muted: '#F8F6FA',
+          muted: '#F3EFF8',
         },
         navy: {
           DEFAULT: '#1E1B2E', // 진한 본문 텍스트
