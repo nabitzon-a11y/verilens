@@ -159,6 +159,7 @@ export default function SubmitPage() {
   const { ready, profile, paymentsMode, refresh, lang } = useApp();
   const en = lang === 'en';
 
+  const [submitTier, setSubmitTier] = useState<'paid' | 'community'>('paid');
   const [mode, setMode] = useState<MissionMode>('single');
   const [kind, setKind] = useState<MissionKind>('text');
   const [prompt, setPrompt] = useState('');
@@ -251,26 +252,36 @@ export default function SubmitPage() {
     if (validation || busy) return;
     setError(null);
     try {
+      const body =
+        kind === 'text'
+          ? {
+              kind,
+              mode,
+              prompt: prompt.trim() || undefined,
+              sourceLabel: sourceLabel.trim() || undefined,
+              a: textA.trim(),
+              ...(mode === 'compare' ? { b: textB.trim() } : {}),
+            }
+          : {
+              kind,
+              mode,
+              prompt: prompt.trim() || undefined,
+              a: imageA,
+              ...(mode === 'compare' ? { b: imageB } : {}),
+            };
+
+      if (submitTier === 'community') {
+        setBusy('draft');
+        const res = await api<{ missionId: string }>('/api/missions/community', { body });
+        setDone({ paymentId: `community:${res.missionId}`, status: 'completed', missionId: res.missionId, mock: true });
+        setDraftId(null);
+        void loadMine();
+        return;
+      }
+
       let id = draftId;
       if (!id) {
         setBusy('draft');
-        const body =
-          kind === 'text'
-            ? {
-                kind,
-                mode,
-                prompt: prompt.trim() || undefined,
-                sourceLabel: sourceLabel.trim() || undefined,
-                a: textA.trim(),
-                ...(mode === 'compare' ? { b: textB.trim() } : {}),
-              }
-            : {
-                kind,
-                mode,
-                prompt: prompt.trim() || undefined,
-                a: imageA,
-                ...(mode === 'compare' ? { b: imageB } : {}),
-              };
         const draft = await api<DraftResponse>('/api/missions/draft', { body });
         id = draft.draftId;
         setDraftId(id);
@@ -346,8 +357,12 @@ export default function SubmitPage() {
           <div>
             <h2 className="text-xl font-bold text-slate-900">{en ? 'Added to Verification Pool' : '판별 풀에 등록되었습니다'}</h2>
             <p className="mt-1.5 text-sm text-slate-600">
-              {WALLET.SUBMISSION_FEE_PI} Test-Pi {en ? 'payment completed' : '결제 완료'}
-              {done.mock ? ' (Mock)' : ''} · {en ? 'Live in the next verification set.' : '다음 판별 세트부터 바로 노출됩니다.'}
+              {done.paymentId.startsWith('community:')
+                ? en
+                  ? 'Free community quiz'
+                  : '무료 커뮤니티 퀴즈'
+                : `${WALLET.SUBMISSION_FEE_PI} Test-Pi ${en ? 'payment completed' : '결제 완료'}${done.mock ? ' (Mock)' : ''}`}{' '}
+              · {en ? 'Live in the next verification set.' : '다음 판별 세트부터 바로 노출됩니다.'}
             </p>
             <p className="mt-2 break-all font-mono text-xs text-slate-400">{done.paymentId}</p>
           </div>
@@ -363,6 +378,36 @@ export default function SubmitPage() {
         </section>
       ) : (
         <section className="card space-y-4">
+          {/* 유료 의뢰 vs 커뮤니티 무료 출제 */}
+          <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-brand-soft/70 p-1">
+            <button
+              type="button"
+              onClick={() => {
+                setSubmitTier('paid');
+                touch();
+              }}
+              className={clsx(
+                'rounded-lg py-2 text-xs font-bold transition',
+                submitTier === 'paid' ? 'bg-brand text-white shadow-sm' : 'text-brand hover:bg-white/60',
+              )}
+            >
+              {en ? `Paid Verify (${WALLET.SUBMISSION_FEE_PI} Pi)` : `유료 의뢰 (${WALLET.SUBMISSION_FEE_PI} Pi)`}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSubmitTier('community');
+                touch();
+              }}
+              className={clsx(
+                'rounded-lg py-2 text-xs font-bold transition',
+                submitTier === 'community' ? 'bg-human-dark text-white shadow-sm' : 'text-human-dark hover:bg-white/60',
+              )}
+            >
+              {en ? 'Free Quiz (1/day)' : '무료 퀴즈 출제 (1일 1회)'}
+            </button>
+          </div>
+
           {/* 의뢰 방식: 단일 감별(1개) vs 비교(2개) */}
           <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-slate-100 p-1">
             {(
@@ -510,19 +555,40 @@ export default function SubmitPage() {
             </div>
           )}
 
-          {/* 결제 */}
-          <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3.5">
-            <Coins className="h-6 w-6 shrink-0 text-pi-light" />
-            <div className="flex-1 text-sm">
-              <p className="font-semibold text-pi-light">
-                {en ? `Submission Fee: ${WALLET.SUBMISSION_FEE_PI} Test-Pi` : `등록 수수료 ${WALLET.SUBMISSION_FEE_PI} Test-Pi`}
-              </p>
-              <p className="text-xs text-slate-600">{en ? 'Published immediately upon payment.' : '결제 완료 즉시 판별 풀에 등록됩니다.'}</p>
+          {/* 결제 또는 무료 출제 안내 */}
+          {submitTier === 'community' ? (
+            <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5">
+              <Sparkles className="h-6 w-6 shrink-0 text-human-dark" />
+              <div className="flex-1 text-sm">
+                <p className="font-semibold text-human-dark">
+                  {en ? 'Free Community Quiz (1 per day)' : '커뮤니티 무료 퀴즈 출제 (1일 1회)'}
+                </p>
+                <p className="text-xs text-slate-600">
+                  {profile.setsCompleted >= 1
+                    ? en
+                      ? 'Unlocked! Published immediately to the verification pool.'
+                      : '판별 1세트 이상 완료 확인! 등록 즉시 출제됩니다.'
+                    : en
+                      ? 'Complete at least 1 verification set first to unlock.'
+                      : '판별하기를 1세트 이상 완료하면 무료 출제가 열립니다.'}
+                </p>
+              </div>
+              <span className="chip bg-white text-human-dark">{en ? 'Free' : '무료'}</span>
             </div>
-            <span className={clsx('chip', isMockPayment ? 'bg-white text-slate-700' : 'bg-emerald-50 text-human-dark')}>
-              {isMockPayment ? 'Mock' : 'Pi Testnet'}
-            </span>
-          </div>
+          ) : (
+            <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3.5">
+              <Coins className="h-6 w-6 shrink-0 text-pi-light" />
+              <div className="flex-1 text-sm">
+                <p className="font-semibold text-pi-light">
+                  {en ? `Submission Fee: ${WALLET.SUBMISSION_FEE_PI} Test-Pi` : `등록 수수료 ${WALLET.SUBMISSION_FEE_PI} Test-Pi`}
+                </p>
+                <p className="text-xs text-slate-600">{en ? 'Published immediately upon payment.' : '결제 완료 즉시 판별 풀에 등록됩니다.'}</p>
+              </div>
+              <span className={clsx('chip', isMockPayment ? 'bg-white text-slate-700' : 'bg-emerald-50 text-human-dark')}>
+                {isMockPayment ? 'Mock' : 'Pi Testnet'}
+              </span>
+            </div>
+          )}
 
           {/* 저작권·권리 보증 동의 */}
           <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-sm leading-relaxed text-slate-700">
@@ -569,13 +635,22 @@ export default function SubmitPage() {
             <p className="text-center text-xs text-slate-500">{validation}</p>
           )}
 
-          <button type="button" className="btn-amber w-full py-4 text-base" onClick={submit} disabled={!!validation || !!busy}>
-            {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Lock className="h-4 w-4" />}
+          <button
+            type="button"
+            className={clsx('w-full py-4 text-base', submitTier === 'community' ? 'btn-primary' : 'btn-amber')}
+            onClick={submit}
+            disabled={!!validation || !!busy || (submitTier === 'community' && profile.setsCompleted < 1)}
+          >
+            {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : submitTier === 'community' ? <Sparkles className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
             {busy
               ? STAGE_LABEL[en ? 'en' : 'ko'][busy]
-              : en
-                ? `Pay ${WALLET.SUBMISSION_FEE_PI} Test-Pi & Submit`
-                : `${WALLET.SUBMISSION_FEE_PI} Test-Pi 결제 및 등록`}
+              : submitTier === 'community'
+                ? en
+                  ? 'Publish Free Community Quiz'
+                  : '무료 퀴즈 출제하기'
+                : en
+                  ? `Pay ${WALLET.SUBMISSION_FEE_PI} Test-Pi & Submit`
+                  : `${WALLET.SUBMISSION_FEE_PI} Test-Pi 결제 및 등록`}
           </button>
           {draftId && !busy && (
             <p className="text-center text-xs text-slate-500">

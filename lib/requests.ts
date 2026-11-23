@@ -57,6 +57,26 @@ const DEFAULT_PROMPT = {
   },
 } as const;
 
+function buildMissionContents(mode: 'compare' | 'single', input: DraftInput): { a: MissionContent; b: MissionContent } {
+  if (input.kind === 'text') {
+    const a: MissionContent = { type: 'text', body: input.a, sourceLabel: input.sourceLabel || undefined };
+    if (mode === 'single') {
+      return { a, b: { type: 'text', body: 'AI 생성 · 합성' } };
+    }
+    if (!input.b) throw new HttpError(400, '비교할 B 텍스트를 입력하세요.', 'VALIDATION');
+    if (input.a === input.b) throw new HttpError(400, 'A와 B에 서로 다른 내용을 입력하세요.', 'SAME_CONTENT');
+    return { a, b: { type: 'text', body: input.b, sourceLabel: input.sourceLabel || undefined } };
+  }
+
+  const a: MissionContent = { type: 'image', src: input.a, alt: '의뢰 이미지', placeholderLabel: '의뢰 이미지' };
+  if (mode === 'single') {
+    return { a, b: { type: 'text', body: 'AI 생성 · 합성' } };
+  }
+  if (!input.b) throw new HttpError(400, '비교할 B 이미지를 올려 주세요.', 'VALIDATION');
+  if (input.a === input.b) throw new HttpError(400, 'A와 B에 서로 다른 이미지를 올려 주세요.', 'SAME_CONTENT');
+  return { a, b: { type: 'image', src: input.b, alt: '의뢰 이미지 B', placeholderLabel: '의뢰 이미지 B' } };
+}
+
 export async function createDraft(uid: string, input: DraftInput): Promise<DraftResponse> {
   const repo = getRepository();
   const mode = input.mode ?? 'compare';
@@ -69,27 +89,7 @@ export async function createDraft(uid: string, input: DraftInput): Promise<Draft
     await Promise.all(stale.map((m) => repo.saveMission({ ...m, status: 'closed' })));
   }
 
-  let a: MissionContent;
-  let b: MissionContent;
-  if (input.kind === 'text') {
-    a = { type: 'text', body: input.a, sourceLabel: input.sourceLabel || undefined };
-    if (mode === 'single') {
-      b = { type: 'text', body: 'AI 생성 · 합성' };
-    } else {
-      if (!input.b) throw new HttpError(400, '비교할 B 텍스트를 입력하세요.', 'VALIDATION');
-      if (input.a === input.b) throw new HttpError(400, 'A와 B에 서로 다른 내용을 입력하세요.', 'SAME_CONTENT');
-      b = { type: 'text', body: input.b, sourceLabel: input.sourceLabel || undefined };
-    }
-  } else {
-    a = { type: 'image', src: input.a, alt: '의뢰 이미지', placeholderLabel: '의뢰 이미지' };
-    if (mode === 'single') {
-      b = { type: 'text', body: 'AI 생성 · 합성' };
-    } else {
-      if (!input.b) throw new HttpError(400, '비교할 B 이미지를 올려 주세요.', 'VALIDATION');
-      if (input.a === input.b) throw new HttpError(400, 'A와 B에 서로 다른 이미지를 올려 주세요.', 'SAME_CONTENT');
-      b = { type: 'image', src: input.b, alt: '의뢰 이미지 B', placeholderLabel: '의뢰 이미지 B' };
-    }
-  }
+  const { a, b } = buildMissionContents(mode, input);
 
   const mission: Mission = {
     id: `req-${randomUUID()}`,
@@ -111,6 +111,51 @@ export async function createDraft(uid: string, input: DraftInput): Promise<Draft
   await repo.saveMission(mission);
 
   return { draftId: mission.id, fee: WALLET.SUBMISSION_FEE_PI };
+}
+
+const COMMUNITY_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+
+/** 커뮤니티 무료 퀴즈 출제 (판별 1세트 이상 완료 유저 · 24시간 1회) */
+export async function createCommunityMission(uid: string, input: DraftInput): Promise<{ missionId: string }> {
+  const repo = getRepository();
+  const user = await repo.getUser(uid);
+  if (!user || user.setsCompleted < 1) {
+    throw new HttpError(403, '판별하기를 1세트 이상 완료해야 무료 퀴즈 출제가 가능합니다.', 'SETS_REQUIRED');
+  }
+
+  const recentUgc = (await repo.listMissions({ origin: 'requester' })).find(
+    (m) =>
+      m.requesterUid === uid &&
+      m.id.startsWith('ugc-') &&
+      Date.now() - Date.parse(m.createdAt) < COMMUNITY_COOLDOWN_MS,
+  );
+  if (recentUgc) {
+    throw new HttpError(429, '무료 퀴즈 출제는 하루 1회만 가능합니다. 추가 등록은 유료 의뢰를 이용해 주세요.', 'DAILY_LIMIT');
+  }
+
+  const mode = input.mode ?? 'compare';
+  const { a, b } = buildMissionContents(mode, input);
+
+  const mission: Mission = {
+    id: `ugc-${randomUUID()}`,
+    kind: input.kind,
+    mode,
+    category: 'community',
+    prompt: input.prompt || DEFAULT_PROMPT[mode][input.kind],
+    a,
+    b,
+    isGold: false,
+    priorVotes: [],
+    aiTell: '',
+    difficulty: 2,
+    origin: 'requester',
+    status: 'active',
+    requesterUid: uid,
+    createdAt: new Date().toISOString(),
+  };
+  await repo.saveMission(mission);
+
+  return { missionId: mission.id };
 }
 
 /** 내가 의뢰한 문항 + 실제 응답 집계 */
