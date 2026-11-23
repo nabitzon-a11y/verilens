@@ -62,6 +62,15 @@ function requireVerifySession(token: string, uid: string) {
 /* 세트 발급                                                           */
 /* ------------------------------------------------------------------ */
 
+function hasHangul(m: Mission): boolean {
+  const texts = [
+    m.prompt,
+    m.a.type === 'text' ? m.a.body : '',
+    m.b.type === 'text' ? m.b.body : '',
+  ];
+  return texts.some((t) => /[가-힣]/.test(t));
+}
+
 /**
  * 5문항 세트 구성
  *  - 기준 문항(Gold) 1개를 무작위 위치에 숨김 배치
@@ -72,6 +81,7 @@ export async function issueMissionSet(
   user: PioneerUser,
   verifyToken: string,
   challengeId?: string,
+  lang: 'ko' | 'en' = 'ko',
 ): Promise<PublicMissionSet> {
   requireVerifySession(verifyToken, user.uid);
   const repo = getRepository();
@@ -91,10 +101,15 @@ export async function issueMissionSet(
   const challenge = challengeId ? regular.find((m) => m.id === challengeId) : undefined;
   if (challenge) picked.push(challenge);
 
-  const requesterFirst = shuffle(regular.filter((m) => m.origin === 'requester' && !picked.includes(m))).slice(0, 2);
+  // 영문(EN) 모드에서는 한글로 작성된 의뢰자 문항을 제외해 100% 영문 세트를 보장
+  const langEligible = (m: Mission) => lang !== 'en' || m.origin === 'seed' || !hasHangul(m);
+
+  const requesterFirst = shuffle(
+    regular.filter((m) => m.origin === 'requester' && langEligible(m) && !picked.includes(m)),
+  ).slice(0, 2);
   picked.push(...requesterFirst);
 
-  for (const m of shuffle(regular.filter((m) => !picked.includes(m)))) {
+  for (const m of shuffle(regular.filter((m) => langEligible(m) && !picked.includes(m)))) {
     if (picked.length >= need) break;
     picked.push(m);
   }

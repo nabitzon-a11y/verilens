@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { FileText, ImageOff } from 'lucide-react';
 import clsx from 'clsx';
 import type { Choice, MissionContent } from '@/types';
+import { useApp } from './AppProvider';
 
 interface MissionCardProps {
   side: Choice;
@@ -57,6 +58,7 @@ function TextBody({ content }: { content: Extract<MissionContent, { type: 'text'
 }
 
 function ImageBody({ content }: { content: Extract<MissionContent, { type: 'image' }> }) {
+  const { lang } = useApp();
   const [failed, setFailed] = useState(false);
 
   if (failed) {
@@ -64,7 +66,7 @@ function ImageBody({ content }: { content: Extract<MissionContent, { type: 'imag
       <div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-2 bg-slate-100 text-slate-500">
         <ImageOff className="h-8 w-8" />
         <span className="text-sm font-medium">{content.placeholderLabel}</span>
-        <span className="text-xs text-slate-400">이미지를 불러오지 못했습니다</span>
+        <span className="text-xs text-slate-400">{lang === 'en' ? 'Failed to load image' : '이미지를 불러오지 못했습니다'}</span>
       </div>
     );
   }

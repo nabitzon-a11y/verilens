@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { CheckCircle2, ScanFace, XCircle } from 'lucide-react';
 import clsx from 'clsx';
 import { errorMessage } from '@/lib/format';
+import { useApp } from './AppProvider';
 
 type ScanStatus = 'scanning' | 'success' | 'error';
 
@@ -18,6 +19,8 @@ interface ScanModalProps {
 
 /** PiVerify 생체·고유성 스캔 연출 모달 */
 export function ScanModal({ open, status, title, subtitle, error, mock = true }: ScanModalProps) {
+  const { lang } = useApp();
+  const en = lang === 'en';
   if (!open) return null;
 
   return (
@@ -43,12 +46,16 @@ export function ScanModal({ open, status, title, subtitle, error, mock = true }:
         </div>
 
         <h2 className="text-lg font-bold text-slate-900">
-          {status === 'success' ? '인간 검증 완료' : status === 'error' ? '검증 실패' : title}
+          {status === 'success' ? (en ? 'Human Verified' : '인간 검증 완료') : status === 'error' ? (en ? 'Verification Failed' : '검증 실패') : title}
         </h2>
         <p className="mt-1 text-sm text-slate-600">
           {status === 'error' ? error : status === 'success' ? 'Human Verified ✓' : subtitle}
         </p>
-        {mock && <p className="mt-4 text-xs text-slate-400">PiVerify Mock Adapter · 해커톤 시연용</p>}
+        {mock && (
+          <p className="mt-4 text-xs text-slate-400">
+            {en ? 'PiVerify Mock Adapter · Hackathon Demo' : 'PiVerify Mock Adapter · 해커톤 시연용'}
+          </p>
+        )}
       </div>
     </div>
   );

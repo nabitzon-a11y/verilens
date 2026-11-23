@@ -1,6 +1,7 @@
 'use client';
 
 import { AlertTriangle } from 'lucide-react';
+import { useApp } from './AppProvider';
 
 interface WarningModalProps {
   open: boolean;
@@ -11,6 +12,8 @@ interface WarningModalProps {
 
 /** PiVerify 2단계 — 비정상 매크로 패턴 감지 경고 */
 export function WarningModal({ open, message, onRecheck, busy }: WarningModalProps) {
+  const { lang } = useApp();
+  const en = lang === 'en';
   if (!open) return null;
 
   return (
@@ -19,13 +22,17 @@ export function WarningModal({ open, message, onRecheck, busy }: WarningModalPro
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100">
           <AlertTriangle className="h-7 w-7 text-pi-light" />
         </div>
-        <h2 className="text-lg font-bold text-slate-900">비정상 매크로 패턴 감지</h2>
+        <h2 className="text-lg font-bold text-slate-900">
+          {en ? 'Unusual Bot-Like Pattern Detected' : '비정상 매크로 패턴 감지'}
+        </h2>
         <p className="mt-2 text-sm leading-relaxed text-slate-600">{message}</p>
         <p className="mt-2 text-xs text-slate-500">
-          너무 빠른 응답은 보상에서 제외됩니다. 사람임을 다시 확인한 뒤 이어서 진행하세요.
+          {en
+            ? 'Ultra-fast clicks are excluded from rewards. Please re-verify you are human to continue.'
+            : '너무 빠른 응답은 보상에서 제외됩니다. 사람임을 다시 확인한 뒤 이어서 진행하세요.'}
         </p>
         <button type="button" className="btn-amber mt-5 w-full" onClick={onRecheck} disabled={busy}>
-          인간 재검증 시작
+          {en ? 'Re-verify Human' : '인간 재검증 시작'}
         </button>
       </div>
     </div>

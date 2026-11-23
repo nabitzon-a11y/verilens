@@ -6,7 +6,7 @@ import { useApp } from './AppProvider';
 
 /** Pi Browser 밖(일반 웹) 또는 데모 계정일 때 상단에 표시되는 Demo Sandbox Mode 배너 + 토글 */
 export function DemoBanner() {
-  const { ready, env, demoActive, demoAllowed, setDemoMode, signingIn } = useApp();
+  const { ready, env, demoActive, demoAllowed, setDemoMode, signingIn, lang } = useApp();
 
   if (!ready || !demoAllowed) return null;
   if (env !== 'web' && !demoActive) return null;
@@ -18,7 +18,13 @@ export function DemoBanner() {
         <p className="flex-1 leading-tight">
           <b>Demo Sandbox Mode</b>
           <span className="block text-[11px] text-amber-700">
-            {demoActive ? '가상 계정 · Mock 결제/검증으로 체험 중' : 'Pi Browser 로그인 시도 모드'}
+            {demoActive
+              ? lang === 'en'
+                ? 'Virtual account · Mock payments & verification'
+                : '가상 계정 · Mock 결제/검증으로 체험 중'
+              : lang === 'en'
+                ? 'Pi Browser Sign-In Mode'
+                : 'Pi Browser 로그인 시도 모드'}
           </span>
         </p>
         <button

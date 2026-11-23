@@ -72,7 +72,7 @@ function VerifyGame() {
       setError(null);
       try {
         const data = await api<PublicMissionSet>('/api/missions/set', {
-          body: { verifyToken: s.token, challenge },
+          body: { verifyToken: s.token, challenge, lang },
         });
         monitor.current.reset();
         answers.current = [];
@@ -92,7 +92,7 @@ function VerifyGame() {
         setPhase('error');
       }
     },
-    [challenge],
+    [challenge, lang],
   );
 
   useEffect(() => {
