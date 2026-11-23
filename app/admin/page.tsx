@@ -44,6 +44,7 @@ export default function AdminPage() {
   const [topic, setTopic] = useState('');
   const [generating, setGenerating] = useState(false);
   const [draftSource, setDraftSource] = useState<'gemini' | 'template' | null>(null);
+  const [draftReason, setDraftReason] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<GeneratedDraft[]>([]);
   const [publishingIdx, setPublishingIdx] = useState<number | null>(null);
 
@@ -82,11 +83,13 @@ export default function AdminPage() {
   const generateDrafts = async () => {
     setGenerating(true);
     setError(null);
+    setDraftReason(null);
     try {
-      const res = await api<{ source: 'gemini' | 'template'; drafts: GeneratedDraft[] }>('/api/admin/generate', {
+      const res = await api<{ source: 'gemini' | 'template'; reason?: string; drafts: GeneratedDraft[] }>('/api/admin/generate', {
         body: { topic: topic.trim() || undefined },
       });
       setDraftSource(res.source);
+      setDraftReason(res.reason ?? null);
       setDrafts(res.drafts);
     } catch (err) {
       setError(errorMessage(err));
@@ -200,7 +203,7 @@ export default function AdminPage() {
               </div>
               {draftSource && (
                 <span className="chip bg-brand-soft text-brand">
-                  {draftSource === 'gemini' ? 'Gemini 실시간 생성' : '내장 템플릿 (GEMINI_API_KEY 미설정)'}
+                  {draftSource === 'gemini' ? 'Gemini 실시간 생성' : `예비 템플릿 (${draftReason ?? '미설정'})`}
                 </span>
               )}
             </div>

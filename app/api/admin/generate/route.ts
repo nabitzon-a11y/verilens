@@ -45,7 +45,10 @@ const FALLBACK_DRAFTS: GeneratedDraft[] = [
   },
 ];
 
-async function generateWithGemini(apiKey: string, topic?: string): Promise<GeneratedDraft[] | null> {
+async function generateWithGemini(
+  apiKey: string,
+  topic?: string,
+): Promise<{ drafts: GeneratedDraft[] } | { error: string }> {
   const focus = topic || '쇼핑몰 리뷰, 중고거래, 배달 후기, 직장/학교 커뮤니티, 여행 후기';
   const promptText = `You are generating 3 Korean A/B comparison items for VeriLens (human vs AI text detection).
 Topic focus: ${focus}.
@@ -62,19 +65,26 @@ prompt (string), sourceLabel (string), aBody (string), bBody (string), humanSide
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: promptText }] }],
-          generationConfig: { responseMimeType: 'application/json', temperature: 0.9 },
+          generationConfig: {
+            responseMimeType: 'application/json',
+            temperature: 0.9,
+            thinkingConfig: { thinkingBudget: 0 },
+          },
         }),
-        signal: AbortSignal.timeout(12_000),
+        signal: AbortSignal.timeout(15_000),
       },
     );
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      return { error: `Gemini HTTP ${res.status}: ${errText.slice(0, 120)}` };
+    }
     const json = (await res.json()) as {
       candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
     };
     const raw = json.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!raw) return null;
+    if (!raw) return { error: 'Gemini 응답이 비어 있습니다.' };
     const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return null;
+    if (!Array.isArray(parsed)) return { error: 'Gemini JSON 형식이 배열이 아닙니다.' };
 
     const valid: GeneratedDraft[] = [];
     for (const item of parsed) {
@@ -91,9 +101,10 @@ prompt (string), sourceLabel (string), aBody (string), bBody (string), humanSide
         valid.push(item as GeneratedDraft);
       }
     }
-    return valid.length > 0 ? valid.slice(0, 3) : null;
-  } catch {
-    return null;
+    if (valid.length === 0) return { error: 'Gemini 응답 필드가 맞지 않습니다.' };
+    return { drafts: valid.slice(0, 3) };
+  } catch (err) {
+    return { error: `Gemini 호출 실패: ${(err as Error).message}` };
   }
 }
 
@@ -103,12 +114,14 @@ export const POST = withErrorHandling(async (req) => {
   const { topic } = await parseBody(req, schema);
 
   const apiKey = process.env.GEMINI_API_KEY?.trim();
-  if (apiKey) {
-    const generated = await generateWithGemini(apiKey, topic);
-    if (generated) {
-      return ok({ source: 'gemini' as const, drafts: generated });
-    }
+  if (!apiKey) {
+    return ok({ source: 'template' as const, reason: 'GEMINI_API_KEY 미설정', drafts: FALLBACK_DRAFTS });
   }
 
-  return ok({ source: 'template' as const, drafts: FALLBACK_DRAFTS });
+  const result = await generateWithGemini(apiKey, topic);
+  if ('drafts' in result) {
+    return ok({ source: 'gemini' as const, drafts: result.drafts });
+  }
+
+  return ok({ source: 'template' as const, reason: result.error, drafts: FALLBACK_DRAFTS });
 });
