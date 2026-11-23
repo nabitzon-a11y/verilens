@@ -26,7 +26,7 @@ export function TopBar() {
   return (
     <header className="sticky top-0 z-30 bg-brand text-white shadow-sm">
       <div className="mx-auto flex max-w-md items-center justify-between gap-1.5 px-2.5 py-2.5">
-        <Link href="/" className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-[15px] font-black tracking-[0.03em] text-white">
+        <Link href="/" className="flex shrink-0 items-center gap-1 whitespace-nowrap text-[15px] font-black tracking-tight text-white">
           <span className="flex h-5 w-5 items-center justify-center rounded-full border border-pi/90 bg-white/10 shadow-inner">
             <ShieldCheck className="h-3.5 w-3.5 text-pi" />
           </span>

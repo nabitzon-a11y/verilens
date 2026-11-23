@@ -65,13 +65,13 @@ export default function HomePage() {
       <AiHintsModal open={hintsOpen} onClose={() => setHintsOpen(false)} lang={lang} />
 
       {/* Hero */}
-      <header className="flex items-center gap-3.5 pt-1">
+      <header className="flex items-center gap-2.5 pt-1">
         <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#E2D9EE] bg-gradient-to-br from-white to-brand-soft shadow-[0_2px_10px_rgba(112,60,144,0.1)]">
           <ShieldCheck className="h-7 w-7 text-brand" />
         </div>
         <div>
-          <h1 className="text-[26px] font-black leading-none tracking-[0.04em] text-slate-900">VeriLens</h1>
-          <p className="mt-1 text-[13px] font-semibold tracking-[0.01em] text-pi-light">{t.tagline}</p>
+          <h1 className="text-[28px] font-black leading-none tracking-tight text-slate-900">VeriLens</h1>
+          <p className="mt-1 text-[13px] font-semibold tracking-tight text-pi-light">{t.tagline}</p>
         </div>
       </header>
 
@@ -128,10 +128,10 @@ export default function HomePage() {
                     {formatMmSs(remaining)}
                   </span>
                 </div>
-                <Link href="/verify" className="btn-primary w-full">
+                <Link href="/verify" className="btn-primary w-full py-4 text-[17px] font-bold">
                   <ScanFace className="h-5 w-5" />
                   {t.continueVerify}
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="h-5 w-5" />
                 </Link>
               </>
             ) : (
@@ -141,7 +141,7 @@ export default function HomePage() {
                   <b className="text-slate-900">{t.sessionDescHighlight}</b>
                   {t.sessionDesc2}
                 </p>
-                <button type="button" className="btn-primary w-full py-4 text-base" onClick={startSession} disabled={starting}>
+                <button type="button" className="btn-primary w-full py-4 text-[17px] font-bold" onClick={startSession} disabled={starting}>
                   {starting ? <Loader2 className="h-5 w-5 animate-spin" /> : <ScanFace className="h-5 w-5" />}
                   {t.startSession}
                 </button>
@@ -221,10 +221,10 @@ function TrustBar({ label, score }: { label: string; score: number }) {
 
 function Stat({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string; accent?: boolean }) {
   return (
-    <div className="rounded-xl border border-slate-100 bg-slate-50 px-2 py-3">
-      <div className="mb-1 flex justify-center">{icon}</div>
-      <p className={clsx('text-[15px] font-bold', accent ? 'text-pi-light' : 'text-slate-900')}>{value}</p>
-      <p className="text-[11px] font-medium text-slate-500">{label}</p>
+    <div className="rounded-xl border border-slate-100 bg-slate-50 px-2 py-3.5">
+      <div className="mb-1.5 flex justify-center">{icon}</div>
+      <p className={clsx('text-lg font-extrabold leading-tight', accent ? 'text-pi-light' : 'text-slate-900')}>{value}</p>
+      <p className="mt-0.5 text-[13px] font-semibold text-slate-600">{label}</p>
     </div>
   );
 }
