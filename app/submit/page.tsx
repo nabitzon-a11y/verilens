@@ -289,6 +289,7 @@ export default function SubmitPage() {
 
       const result = await paySubmissionFee({
         draftId: id,
+        lang: en ? 'en' : 'ko',
         paymentsMode,
         isDemoUser: profile.isDemo,
         onStage: setBusy,
@@ -836,7 +837,7 @@ function MyMissionRow({
         )}
       </div>
       <div className="flex items-center justify-between text-xs text-slate-500">
-        <span>{formatDateTime(m.createdAt)}</span>
+        <span>{formatDateTime(m.createdAt, en ? 'en' : 'ko')}</span>
         <span>
           {en ? 'Votes' : '실제 응답'} {total}/{GAME.REQUESTER_TARGET_VOTES} (
           {isSingle ? `${en ? 'Human' : '인간'} ${m.votes.A} · AI ${m.votes.B}` : `A ${m.votes.A} · B ${m.votes.B}`})

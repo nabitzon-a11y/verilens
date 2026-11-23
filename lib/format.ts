@@ -16,9 +16,14 @@ export function formatMmSs(ms: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-export function formatDateTime(iso: string): string {
+export function formatDateTime(iso: string, lang: 'ko' | 'en' = 'ko'): string {
   const d = new Date(iso);
-  return d.toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleString(lang === 'en' ? 'en-US' : 'ko-KR', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 export function errorMessage(err: unknown, fallback = '알 수 없는 오류가 발생했습니다.'): string {

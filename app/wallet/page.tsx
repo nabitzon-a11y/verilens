@@ -168,15 +168,28 @@ const STATUS_LABEL: Record<LedgerEntry['status'], { ko: string; en: string }> = 
   failed: { ko: '실패', en: 'Failed' },
 };
 
+function localizeLedgerMemo(memo: string | undefined, fallbackEn: string, fallbackKo: string, en: boolean): string {
+  if (!memo) return en ? fallbackEn : fallbackKo;
+  if (!en) return memo;
+  if (memo === '판별 문항 등록 결제') return 'Verification Submission Fee';
+  if (memo.startsWith('보상 청구')) {
+    return memo.includes('Mock') ? 'Reward Claim (Mock A2U)' : 'Reward Claim (A2U)';
+  }
+  const rewardMatch = memo.match(/판별 보상\s*\((\d+)문항\s*일치\)/);
+  if (rewardMatch) return `Verification Reward (${rewardMatch[1]} matched)`;
+  return /[가-힣]/.test(memo) ? fallbackEn : memo;
+}
+
 function LedgerRow({ e, en }: { e: LedgerEntry; en: boolean }) {
   const meta = LEDGER_META[e.type];
+  const title = localizeLedgerMemo(e.memo, meta.labelEn, meta.label, en);
   return (
     <li className="flex items-center gap-3 px-4 py-3.5">
       <div className={clsx('flex h-10 w-10 shrink-0 items-center justify-center rounded-full', meta.bg)}>{meta.icon}</div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-base font-medium text-slate-900">{e.memo || (en ? meta.labelEn : meta.label)}</p>
+        <p className="truncate text-base font-medium text-slate-900">{title}</p>
         <p className="text-xs text-slate-500">
-          {formatDateTime(e.createdAt)} · {STATUS_LABEL[e.status][en ? 'en' : 'ko']}
+          {formatDateTime(e.createdAt, en ? 'en' : 'ko')} · {STATUS_LABEL[e.status][en ? 'en' : 'ko']}
           {e.mock && <span className="ml-1 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-600">Mock</span>}
         </p>
       </div>

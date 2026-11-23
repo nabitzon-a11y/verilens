@@ -240,6 +240,7 @@ export function signOut(): void {
 export interface SubmissionPaymentParams {
   draftId: string;
   memo?: string;
+  lang?: 'ko' | 'en';
   /** /api/auth/me 의 paymentsMode */
   paymentsMode: PaymentsMode;
   /** 현재 로그인이 데모 계정인지 */
@@ -249,9 +250,12 @@ export interface SubmissionPaymentParams {
 }
 
 export async function paySubmissionFee(params: SubmissionPaymentParams): Promise<PaymentCompleteResponse> {
-  const memo = params.memo ?? 'VeriLens 판별 문항 등록';
+  const en = params.lang === 'en';
+  const memo = params.memo ?? (en ? 'VeriLens Verification Submission' : 'VeriLens 판별 문항 등록');
   const useMock = params.paymentsMode === 'mock' || params.isDemoUser;
-  return useMock ? payWithMock(params.draftId, memo, params.onStage) : payWithPi(params.draftId, memo, params.onStage);
+  return useMock
+    ? payWithMock(params.draftId, memo, params.onStage)
+    : payWithPi(params.draftId, memo, params.onStage, en);
 }
 
 /** Mock 결제: 실제 Pi 흐름과 동일하게 approve → (지갑 서명 연출) → complete 서버 라우트를 탑니다 */
@@ -281,6 +285,7 @@ async function payWithPi(
   draftId: string,
   memo: string,
   onStage?: SubmissionPaymentParams['onStage'],
+  en = false,
 ): Promise<PaymentCompleteResponse> {
   const Pi = await getInitializedPi();
   // 페이지를 새로고침해 localStorage 로그인만 복원된 경우에도 SDK 에 payments 권한을 다시 연결
@@ -312,13 +317,13 @@ async function payWithPi(
         },
         onCancel: (paymentId) => {
           api('/api/payments/cancel', { body: { paymentId } }).catch(() => undefined);
-          reject(new ApiError(0, '결제가 취소되었습니다.', 'PAYMENT_CANCELLED'));
+          reject(new ApiError(0, en ? 'Payment was cancelled.' : '결제가 취소되었습니다.', 'PAYMENT_CANCELLED'));
         },
         onError: (error, payment) => {
           if (payment?.identifier) {
             api('/api/payments/cancel', { body: { paymentId: payment.identifier } }).catch(() => undefined);
           }
-          reject(error instanceof Error ? error : new Error('결제 중 오류가 발생했습니다.'));
+          reject(error instanceof Error ? error : new Error(en ? 'Payment error occurred.' : '결제 중 오류가 발생했습니다.'));
         },
       },
     );
