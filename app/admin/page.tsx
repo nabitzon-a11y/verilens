@@ -11,8 +11,10 @@ import {
   Flag,
   Layers,
   Loader2,
+  PlusCircle,
   RefreshCw,
   ShieldAlert,
+  Sparkles,
   Users,
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -22,6 +24,15 @@ import { LoginPanel } from '@/components/LoginPanel';
 import { ApiError, api } from '@/lib/apiClient';
 import { errorMessage, formatDateTime, formatPi } from '@/lib/format';
 
+interface GeneratedDraft {
+  prompt: string;
+  sourceLabel: string;
+  aBody: string;
+  bBody: string;
+  humanSide: 'A' | 'B';
+  aiTell: string;
+}
+
 export default function AdminPage() {
   const { ready, profile } = useApp();
   const [data, setData] = useState<AdminOverviewResponse | null>(null);
@@ -29,6 +40,12 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [forbidden, setForbidden] = useState(false);
   const [closingId, setClosingId] = useState<string | null>(null);
+
+  const [topic, setTopic] = useState('');
+  const [generating, setGenerating] = useState(false);
+  const [draftSource, setDraftSource] = useState<'gemini' | 'template' | null>(null);
+  const [drafts, setDrafts] = useState<GeneratedDraft[]>([]);
+  const [publishingIdx, setPublishingIdx] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -59,6 +76,37 @@ export default function AdminPage() {
       setError(errorMessage(err));
     } finally {
       setClosingId(null);
+    }
+  };
+
+  const generateDrafts = async () => {
+    setGenerating(true);
+    setError(null);
+    try {
+      const res = await api<{ source: 'gemini' | 'template'; drafts: GeneratedDraft[] }>('/api/admin/generate', {
+        body: { topic: topic.trim() || undefined },
+      });
+      setDraftSource(res.source);
+      setDrafts(res.drafts);
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const publishDraft = async (idx: number) => {
+    const d = drafts[idx];
+    if (!d) return;
+    setPublishingIdx(idx);
+    try {
+      await api('/api/admin/missions/publish', { body: d });
+      setDrafts((prev) => prev.filter((_, i) => i !== idx));
+      await load();
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setPublishingIdx(null);
     }
   };
 
@@ -141,6 +189,68 @@ export default function AdminPage() {
               value={formatPi(data.summary.u2aRevenuePi)}
               sub={`지급 ${formatPi(data.summary.a2uRewardedPi)} · 청구 ${formatPi(data.summary.a2uClaimedPi)}`}
             />
+          </section>
+
+          {/* AI 문항 자동 생성 */}
+          <section className="card space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="h-4 w-4 text-brand" />
+                <h2 className="text-sm font-bold text-slate-900">AI 문항 자동 생성기</h2>
+              </div>
+              {draftSource && (
+                <span className="chip bg-brand-soft text-brand">
+                  {draftSource === 'gemini' ? 'Gemini 실시간 생성' : '내장 템플릿 (GEMINI_API_KEY 미설정)'}
+                </span>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <input
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                placeholder="주제 입력 (예: 부동산, 중고거래, 여행)"
+                className="input flex-1 py-2 text-sm"
+              />
+              <button
+                type="button"
+                disabled={generating}
+                onClick={() => void generateDrafts()}
+                className="btn-primary shrink-0 px-3.5 py-2 text-xs"
+              >
+                {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                초안 3개 생성
+              </button>
+            </div>
+            {drafts.length > 0 && (
+              <div className="space-y-2.5 pt-1">
+                {drafts.map((d, idx) => (
+                  <div key={idx} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="chip bg-white text-slate-700">{d.sourceLabel}</span>
+                      <span className="text-xs font-bold text-human-dark">인간 정답: {d.humanSide}</span>
+                    </div>
+                    <p className="text-xs text-slate-700">
+                      <b className="text-brand">A:</b> {d.aBody}
+                    </p>
+                    <p className="text-xs text-slate-700">
+                      <b className="text-brand">B:</b> {d.bBody}
+                    </p>
+                    <div className="flex items-center justify-between gap-2 pt-1">
+                      <p className="flex-1 text-[11px] text-slate-500">{d.aiTell}</p>
+                      <button
+                        type="button"
+                        disabled={publishingIdx === idx}
+                        onClick={() => void publishDraft(idx)}
+                        className="btn-primary shrink-0 px-3 py-1.5 text-xs"
+                      >
+                        <PlusCircle className="h-3.5 w-3.5" />
+                        {publishingIdx === idx ? '등록 중…' : '출제 승인'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
 
           {/* 의뢰 문항 관리 */}
