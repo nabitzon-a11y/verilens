@@ -89,3 +89,11 @@ verilens/
 - JSON/메모리 저장소와 프로세스 내 잠금은 단일 서버 기준. Supabase 저장소는 금전 관련 중복(Claim·세트 보상·결제 원장)만 DB 유니크 인덱스로 차단
 - Supabase 저장소는 코드 작성만 완료, **실제 Supabase 연결 테스트는 미실시** (DEPLOY.md 2단계 후 진행)
 - PiVerify·A2U 는 Mock (실제 API 연동 지점은 `lib/piVerify.ts`, `lib/wallet.ts` 의 TODO 참고)
+
+## 향후 로드맵 (Phase 2: B2B & OUSD 하이브리드 결제)
+
+1. **Dual-Currency 원장 추상화 (`PI` / `OUSD`)**
+   - `PaymentRecord` 와 `LedgerEntry` 에 `currency: 'PI' | 'OUSD'` 를 추가하고 결제 어댑터(`PiPaymentAdapter` / `OusdPaymentAdapter`)를 분리하여, 기존 `draft → 결제 승인 → active` 플로우를 그대로 유지한 채 멀티 통화 결제를 지원합니다.
+2. **B2B 기업용 OUSD(Open USD) 스테이블코인 정산**
+   - 기업 고객은 Pi 변동성 부담 없이 **`1 OUSD = $1`** 기준 정가(예: 대량 검수 패키지·월 구독)로 결제하고, 파이 네트워크 내 판별자(Pioneer)에게는 **Pi 또는 OUSD**로 보상을 지급하는 하이브리드 정산 구조를 구축합니다.
+   - Pi Browser 내 공식 OUSD 지원 및 PC 웹 B2B 체크아웃(OUSD 지원 멀티체인 / Stripe 연동)을 모두 수용할 수 있도록 설계합니다.
