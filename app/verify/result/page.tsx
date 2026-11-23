@@ -5,6 +5,7 @@ import Link from 'next/link';
 import {
   AlertOctagon,
   CheckCircle2,
+  FilePlus2,
   Flame,
   Home,
   Image as ImageIcon,
@@ -157,6 +158,25 @@ export default function ResultPage() {
             {t.homeBtn}
           </Link>
         </div>
+
+        <Link
+          href="/submit"
+          className="flex items-center gap-3 rounded-2xl border border-brand/25 bg-brand-soft/60 p-4 transition hover:bg-brand-soft"
+        >
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand text-white">
+            <FilePlus2 className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-slate-900">
+              {lang === 'en' ? 'Have content you want verified?' : '내가 헷갈리는 글·사진도 검증해 볼까요?'}
+            </p>
+            <p className="text-xs text-slate-600">
+              {lang === 'en'
+                ? 'Submit reviews, posts, or images for 10-human consensus.'
+                : '수상한 후기·이미지·AI 글을 올리면 10인이 판별해 드립니다.'}
+            </p>
+          </div>
+        </Link>
       </section>
 
       {toast && (

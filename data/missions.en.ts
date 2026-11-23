@@ -289,4 +289,28 @@ export const SEED_EN: Record<string, SeedEnTranslation> = {
     bPlaceholder: 'Fruit Stall B',
     aiTell: 'Image B has garbled chalk text ("FRE5H OЯANG"), waxy-uniform fruit, and crate slats warping into each other at the center seam.',
   },
+  'seed-t21': {
+    prompt: 'Was this product review written by a real human or AI?',
+    sourceLabel: 'Product Review',
+    aBody: 'Sophisticated design and outstanding durability blend in perfect harmony. It is highly practical for everyday use, and overall quality and satisfaction exceed expectations. Confidently recommended to anyone.',
+    aiTell: 'Lists abstract praise ("perfect harmony", "overall quality") with zero specific details on size, delivery, or minor flaws—classic AI-generated review.',
+  },
+  'seed-t22': {
+    prompt: 'Is this community post a real human story or AI-generated?',
+    sourceLabel: 'Forum Post',
+    aBody: 'First time at a self-serve car wash today and ran short on coins, so I sprinted to a convenience store to buy gum for change lol. Whoever used the foam brush before me did not rinse the floor so it was super slippery.',
+    aiTell: 'Buying gum for coin change and complaining about a slippery bay from the previous person are authentic lived details from a real human.',
+  },
+  'seed-t23': {
+    prompt: 'Is this delivery review from a real customer or AI-generated?',
+    sourceLabel: 'Delivery Review',
+    aBody: 'Arrived 15 mins late because of the rain, but the driver texted ahead to apologize so it was totally fine. Sauce was already poured over the crispy pork, though luckily it was not soggy. Thanks for the extra pickled radish!',
+    aiTell: 'Includes specific weather delay, driver courtesy, and exact packaging/side-dish details typical of a genuine human review.',
+  },
+  'seed-t24': {
+    prompt: 'Was this company memo written by a human or AI?',
+    sourceLabel: 'Team Memo',
+    aBody: 'We deeply appreciate the dedication of every team member. In the upcoming quarter, let us continue driving bold innovation and seamless cross-functional synergy to achieve even greater milestones together.',
+    aiTell: 'Pure corporate buzzwords ("bold innovation", "cross-functional synergy", "greater milestones") with no actual dates, goals, or action items.',
+  },
 };
