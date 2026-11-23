@@ -196,7 +196,7 @@ export default function AdminPage() {
 
           {/* AI 문항 자동 생성 */}
           <section className="card space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-1.5">
                 <Sparkles className="h-4 w-4 text-brand" />
                 <h2 className="text-sm font-bold text-slate-900">AI 문항 자동 생성기</h2>

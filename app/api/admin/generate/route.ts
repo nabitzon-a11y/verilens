@@ -45,6 +45,37 @@ const FALLBACK_DRAFTS: GeneratedDraft[] = [
   },
 ];
 
+async function listFlashModels(apiKey: string): Promise<string[]> {
+  const defaults = ['gemini-3.5-flash-lite', 'gemini-3-flash-preview', 'gemini-2.5-flash-lite'];
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`,
+      { signal: AbortSignal.timeout(5_000) },
+    );
+    if (res.ok) {
+      const json = (await res.json()) as {
+        models?: Array<{ name?: string; supportedGenerationMethods?: string[] }>;
+      };
+      const discovered = (json.models ?? [])
+        .filter(
+          (m) =>
+            m.name &&
+            m.name.includes('flash') &&
+            !m.name.includes('tts') &&
+            !m.name.includes('image') &&
+            !m.name.includes('audio') &&
+            m.supportedGenerationMethods?.includes('generateContent'),
+        )
+        .map((m) => m.name!.replace(/^models\//, ''))
+        .sort((a, b) => b.localeCompare(a));
+      return [...new Set([...discovered, ...defaults])].slice(0, 4);
+    }
+  } catch {
+    /* 모델 목록 조회 실패 시 기본값 사용 */
+  }
+  return defaults;
+}
+
 async function generateWithGemini(
   apiKey: string,
   topic?: string,
@@ -58,25 +89,34 @@ Return ONLY valid JSON array of 3 objects with exact keys:
 prompt (string), sourceLabel (string), aBody (string), bBody (string), humanSide ("A" or "B"), aiTell (string, 1-sentence Korean explanation).`;
 
   try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: promptText }] }],
-          generationConfig: {
-            responseMimeType: 'application/json',
-            temperature: 0.9,
-            thinkingConfig: { thinkingBudget: 0 },
-          },
-        }),
-        signal: AbortSignal.timeout(15_000),
-      },
-    );
-    if (!res.ok) {
-      const errText = await res.text().catch(() => '');
-      return { error: `Gemini HTTP ${res.status}: ${errText.slice(0, 120)}` };
+    const models = await listFlashModels(apiKey);
+    let res: Response | null = null;
+    let lastErr = '';
+    for (const model of models) {
+      const attempt = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: promptText }] }],
+            generationConfig: {
+              responseMimeType: 'application/json',
+              temperature: 0.9,
+            },
+          }),
+          signal: AbortSignal.timeout(12_000),
+        },
+      );
+      if (attempt.ok) {
+        res = attempt;
+        break;
+      }
+      const errText = await attempt.text().catch(() => '');
+      lastErr = `${model} HTTP ${attempt.status}: ${errText.slice(0, 100)}`;
+    }
+    if (!res) {
+      return { error: lastErr || '사용 가능한 Gemini 모델이 없습니다.' };
     }
     const json = (await res.json()) as {
       candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
