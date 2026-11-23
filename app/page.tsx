@@ -65,13 +65,13 @@ export default function HomePage() {
       <AiHintsModal open={hintsOpen} onClose={() => setHintsOpen(false)} lang={lang} />
 
       {/* Hero */}
-      <header className="flex items-center gap-3 pt-1">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-brand/25 bg-white shadow-[0_2px_8px_rgba(112,60,144,0.08)]">
+      <header className="flex items-center gap-3.5 pt-1">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#E2D9EE] bg-gradient-to-br from-white to-brand-soft shadow-[0_2px_10px_rgba(112,60,144,0.1)]">
           <ShieldCheck className="h-7 w-7 text-brand" />
         </div>
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-slate-900">VeriLens</h1>
-          <p className="text-[13px] font-semibold text-pi-light">{t.tagline}</p>
+          <h1 className="text-[26px] font-black leading-none tracking-[0.04em] text-slate-900">VeriLens</h1>
+          <p className="mt-1 text-[13px] font-semibold tracking-[0.01em] text-pi-light">{t.tagline}</p>
         </div>
       </header>
 
