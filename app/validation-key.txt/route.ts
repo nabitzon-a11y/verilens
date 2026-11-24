@@ -6,11 +6,16 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+import { NextRequest } from 'next/server';
+
 const MAINNET_VALIDATION_KEY =
   '1bbde0c59152d1185861697596a0b2135f0ca4c3a980e7b548ca19ca1f8b1322d7ae1b119d6c65c471d2d4acd358cc2a3638d97e88c7acd155c8f46f5cb932eb';
 
-export function GET() {
-  const key = MAINNET_VALIDATION_KEY || process.env.PI_VALIDATION_KEY?.trim();
+export function GET(req: NextRequest) {
+  const host = req.headers.get('host') ?? '';
+  const key = host.includes('verilens-chi')
+    ? (process.env.PI_VALIDATION_KEY?.trim() || MAINNET_VALIDATION_KEY)
+    : MAINNET_VALIDATION_KEY;
   if (!key) return new Response('Not Found', { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
   return new Response(key, {
     status: 200,
