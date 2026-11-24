@@ -96,13 +96,14 @@ function VerifyGame() {
   );
 
   useEffect(() => {
-    if (!ready || !profile || initializedFor.current === profile.uid) return;
-    initializedFor.current = profile.uid;
+    const key = profile ? `${profile.uid}:${lang}` : null;
+    if (!ready || !profile || !key || initializedFor.current === key) return;
+    initializedFor.current = key;
     const s = getActiveSession(profile.uid);
     setSession(s);
     if (s) void loadSet(s);
     else setPhase('need-session');
-  }, [ready, profile, loadSet]);
+  }, [ready, profile, lang, loadSet]);
 
   // 문항이 화면에 표시된 시점부터 반응시간 측정
   useEffect(() => {

@@ -10,6 +10,7 @@ import type {
   SetResult,
 } from '@/types';
 import { toPublicMission } from '@/data/missions';
+import { SEED_EN } from '@/data/missions.en';
 import { evaluateBehavior, evaluateTimingIntegrity } from './behavior';
 import { decideConsensus, getPriorVotes, tallyVotes } from './consensus';
 import { GAME, TRUST, VERIFY, clampTrust, roundPi } from './constants';
@@ -98,12 +99,15 @@ export async function issueMissionSet(
   const need = GAME.QUESTIONS_PER_SET - GAME.GOLD_PER_SET;
   const picked: Mission[] = [];
 
+  // KO 모드에서는 한글이 포함된 문항만, EN 모드에서는 영문 번역이 있는 시드 또는 한글 없는 영문 의뢰 문항만 출제
+  const langEligible = (m: Mission) =>
+    lang === 'en' ? (m.origin === 'seed' ? Boolean(SEED_EN[m.id]) : !hasHangul(m)) : hasHangul(m);
+
+  const eligibleGolds = golds.filter(langEligible);
+  const goldPool = eligibleGolds.length > 0 ? eligibleGolds : golds;
+
   const challenge = challengeId ? regular.find((m) => m.id === challengeId) : undefined;
   if (challenge) picked.push(challenge);
-
-  // KO 모드에서는 한글 포함 의뢰자 문항만, EN 모드에서는 한글 없는 영문 의뢰자 문항만 출제
-  const langEligible = (m: Mission) =>
-    m.origin === 'seed' || (lang === 'en' ? !hasHangul(m) : hasHangul(m));
 
   const requesterFirst = shuffle(
     regular.filter((m) => m.origin === 'requester' && langEligible(m) && !picked.includes(m)),
@@ -116,7 +120,7 @@ export async function issueMissionSet(
   }
 
   const ordered = shuffle(picked.slice(0, need));
-  const gold = golds[randomInt(golds.length)];
+  const gold = goldPool[randomInt(goldPool.length)];
   ordered.splice(randomInt(ordered.length + 1), 0, gold);
 
   const set: MissionSet = {
