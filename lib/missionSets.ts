@@ -63,13 +63,23 @@ function requireVerifySession(token: string, uid: string) {
 /* 세트 발급                                                           */
 /* ------------------------------------------------------------------ */
 
-function hasHangul(m: Mission): boolean {
-  const texts = [
-    m.prompt,
-    m.a.type === 'text' ? m.a.body : '',
-    m.b.type === 'text' ? m.b.body : '',
-  ];
-  return texts.some((t) => /[가-힣]/.test(t));
+function hasHangulText(text: string): boolean {
+  return /[가-힣]/.test(text);
+}
+
+function bodyHasHangul(m: Mission): boolean {
+  const bodies = [m.a.type === 'text' ? m.a.body : '', m.b.type === 'text' ? m.b.body : ''];
+  return bodies.some(hasHangulText);
+}
+
+function isMissionEligibleForLang(m: Mission, lang: 'ko' | 'en'): boolean {
+  if (m.origin === 'seed') {
+    return lang === 'en' ? Boolean(SEED_EN[m.id]) : hasHangulText(m.prompt) || bodyHasHangul(m);
+  }
+  // 이미지 의뢰 문항은 언어 장벽이 없으므로 KO/EN 양쪽에서 모두 판별 참여 가능
+  if (m.kind === 'image') return true;
+  // 텍스트 의뢰 문항은 질문(prompt)이 아닌 실제 본문 언어를 기준으로 KO/EN 엄격 분리
+  return lang === 'en' ? !bodyHasHangul(m) : bodyHasHangul(m);
 }
 
 /**
@@ -99,9 +109,7 @@ export async function issueMissionSet(
   const need = GAME.QUESTIONS_PER_SET - GAME.GOLD_PER_SET;
   const picked: Mission[] = [];
 
-  // KO 모드에서는 한글이 포함된 문항만, EN 모드에서는 영문 번역이 있는 시드 또는 한글 없는 영문 의뢰 문항만 출제
-  const langEligible = (m: Mission) =>
-    lang === 'en' ? (m.origin === 'seed' ? Boolean(SEED_EN[m.id]) : !hasHangul(m)) : hasHangul(m);
+  const langEligible = (m: Mission) => isMissionEligibleForLang(m, lang);
 
   const eligibleGolds = golds.filter(langEligible);
   const goldPool = eligibleGolds.length > 0 ? eligibleGolds : golds;

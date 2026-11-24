@@ -25,7 +25,47 @@ export function translatePromptToEn(prompt: string): string {
   if (prompt === '어느 쪽이 AI가 만들지 않은 원본 장면일까요?') return EN_IMAGE_PROMPT;
   if (prompt === '이 글은 실제 사람이 썼을까요, AI가 썼을까요?') return EN_SINGLE_TEXT_PROMPT;
   if (prompt === '이 이미지는 실제 원본일까요, AI 생성물일까요?') return EN_SINGLE_IMAGE_PROMPT;
+  if (prompt === '어느 쪽이 실제 구매자 후기인가요?') return 'Is this a real buyer review or AI-generated?';
+  if (prompt === '부자연스러운 AI 문체가 느껴지시나요?') return 'Do you notice unnatural AI phrasing here?';
   return prompt;
+}
+
+/** 의뢰자 기본 질문 등 공통 영어 질문 → 한국어 자동 매핑 */
+export function translatePromptToKo(prompt: string): string {
+  if (prompt === EN_TEXT_PROMPT || prompt === 'Was this written by a real human or AI?') {
+    return '어느 쪽이 실제 사람이 직접 쓴 글일까요?';
+  }
+  if (prompt === EN_IMAGE_PROMPT || prompt === 'Which one is the real photo, NOT AI-generated?') {
+    return '어느 쪽이 AI가 만들지 않은 원본 장면일까요?';
+  }
+  if (prompt === EN_SINGLE_TEXT_PROMPT) return '이 글은 실제 사람이 썼을까요, AI가 썼을까요?';
+  if (prompt === EN_SINGLE_IMAGE_PROMPT || prompt === 'Is this a real photo or AI-generated?') {
+    return '이 이미지는 실제 원본일까요, AI 생성물일까요?';
+  }
+  if (prompt === 'Is this a real buyer review or AI-generated?') return '어느 쪽이 실제 구매자 후기인가요?';
+  if (prompt === 'Do you notice unnatural AI phrasing here?') return '부자연스러운 AI 문체가 느껴지시나요?';
+  return prompt;
+}
+
+const SOURCE_LABEL_PAIRS: [string, string][] = [
+  ['뉴스 기사', 'News Article'],
+  ['배달 후기', 'Delivery Review'],
+  ['상품 리뷰', 'Product Review'],
+  ['SNS 글', 'Social Post'],
+  ['커뮤니티 댓글', 'Forum Reply'],
+  ['카페 후기', 'Cafe Review'],
+  ['실제 현장 사진', 'Real Scene'],
+  ['의뢰 텍스트', 'Submitted Text'],
+  ['의뢰 이미지', 'Submitted Image'],
+];
+
+export function translateSourceLabel(label: string | undefined, lang: 'ko' | 'en'): string | undefined {
+  if (!label) return label;
+  for (const [ko, en] of SOURCE_LABEL_PAIRS) {
+    if (lang === 'en' && label === ko) return en;
+    if (lang === 'ko' && label === en) return ko;
+  }
+  return label;
 }
 
 export const SEED_EN: Record<string, SeedEnTranslation> = {

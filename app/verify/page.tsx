@@ -4,7 +4,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Flag, Gift, Lightbulb, Loader2, RefreshCw, ScanFace, Timer, X } from 'lucide-react';
 import type { AnswerInput, Choice, PublicMission, PublicMissionSet, SetResult, VerifySession } from '@/types';
-import { SEED_EN, translatePromptToEn } from '@/data/missions.en';
+import { SEED_EN, translatePromptToEn, translatePromptToKo, translateSourceLabel } from '@/data/missions.en';
 import { AiHintsModal } from '@/components/AiHintsModal';
 import { useApp } from '@/components/AppProvider';
 import { LoginPanel } from '@/components/LoginPanel';
@@ -448,10 +448,22 @@ function VerifyGame() {
 }
 
 function localizeMission(m: PublicMission, lang: 'ko' | 'en'): PublicMission {
-  if (lang !== 'en') return m;
+  if (lang === 'ko') {
+    return {
+      ...m,
+      prompt: translatePromptToKo(m.prompt),
+      a: m.a.type === 'text' ? { ...m.a, sourceLabel: translateSourceLabel(m.a.sourceLabel, 'ko') } : m.a,
+      b: m.b.type === 'text' ? { ...m.b, sourceLabel: translateSourceLabel(m.b.sourceLabel, 'ko') } : m.b,
+    };
+  }
   const tr = SEED_EN[m.id];
   if (!tr) {
-    return { ...m, prompt: translatePromptToEn(m.prompt) };
+    return {
+      ...m,
+      prompt: translatePromptToEn(m.prompt),
+      a: m.a.type === 'text' ? { ...m.a, sourceLabel: translateSourceLabel(m.a.sourceLabel, 'en') } : m.a,
+      b: m.b.type === 'text' ? { ...m.b, sourceLabel: translateSourceLabel(m.b.sourceLabel, 'en') } : m.b,
+    };
   }
   return {
     ...m,
