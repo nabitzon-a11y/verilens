@@ -101,8 +101,9 @@ export async function issueMissionSet(
   const challenge = challengeId ? regular.find((m) => m.id === challengeId) : undefined;
   if (challenge) picked.push(challenge);
 
-  // 영문(EN) 모드에서는 한글로 작성된 의뢰자 문항을 제외해 100% 영문 세트를 보장
-  const langEligible = (m: Mission) => lang !== 'en' || m.origin === 'seed' || !hasHangul(m);
+  // KO 모드에서는 한글 포함 의뢰자 문항만, EN 모드에서는 한글 없는 영문 의뢰자 문항만 출제
+  const langEligible = (m: Mission) =>
+    m.origin === 'seed' || (lang === 'en' ? !hasHangul(m) : hasHangul(m));
 
   const requesterFirst = shuffle(
     regular.filter((m) => m.origin === 'requester' && langEligible(m) && !picked.includes(m)),
