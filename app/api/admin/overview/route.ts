@@ -3,6 +3,7 @@ import { requireAdmin } from '@/lib/admin';
 import { GAME } from '@/lib/constants';
 import { ok, withErrorHandling } from '@/lib/http';
 import { getRepository } from '@/lib/repository';
+import { migrateTrust } from '@/lib/users';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -67,7 +68,7 @@ export const GET = withErrorHandling(async (req) => {
       uid: u.uid,
       username: u.username,
       isDemo: u.isDemo,
-      trustScore: u.trustScore,
+      trustScore: migrateTrust(u).trustScore,
       setsCompleted: u.setsCompleted,
       balance: u.balance,
       botFlags: u.botFlags,

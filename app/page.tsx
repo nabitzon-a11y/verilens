@@ -3,25 +3,38 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, Coins, FilePlus2, Flame, Layers, Lightbulb, Loader2, ScanFace, ShieldCheck, Timer, Users, Wallet } from 'lucide-react';
+import {
+  ChevronRight,
+  Coins,
+  FilePlus2,
+  Flame,
+  Gift,
+  HelpCircle,
+  Image as ImageIcon,
+  Layers,
+  Lightbulb,
+  Loader2,
+  ScanFace,
+  ShieldCheck,
+  Timer,
+  Users,
+  Wallet,
+} from 'lucide-react';
 import clsx from 'clsx';
-import type { VerifySession } from '@/types';
+import type { LivePoolResponse, VerifySession } from '@/types';
+import { translatePromptToEn, translatePromptToKo } from '@/data/missions.en';
 import { AiHintsModal } from '@/components/AiHintsModal';
 import { useApp } from '@/components/AppProvider';
 import { LoginPanel } from '@/components/LoginPanel';
 import { useScanModal } from '@/components/ScanModal';
+import { TierChip, TrustProgress } from '@/components/TierBadge';
+import { api } from '@/lib/apiClient';
 import { GAME, TRUST_TIERS } from '@/lib/constants';
 import { formatMmSs, formatPi } from '@/lib/format';
 import { useNow } from '@/lib/hooks';
 import { HOME_TEXT, NAV_LABELS, VERIFY_TEXT } from '@/lib/i18n';
 import { getActiveSession, startHumanSession } from '@/lib/piVerifyClient';
 
-const TIER_STYLE: Record<string, string> = {
-  platinum: 'bg-cyan-50 text-cyan-700 border border-cyan-200',
-  gold: 'bg-amber-50 text-amber-700 border border-amber-200',
-  silver: 'bg-slate-100 text-slate-700 border border-slate-200',
-  bronze: 'bg-orange-50 text-orange-700 border border-orange-200',
-};
 
 export default function HomePage() {
   const { ready, profile, verifyMode, lang } = useApp();
@@ -101,10 +114,10 @@ export default function HomePage() {
                 <p className="label">Pioneer</p>
                 <p className="text-xl font-extrabold text-slate-900">@{profile.username}</p>
               </div>
-              <span className={clsx('chip', TIER_STYLE[profile.tier])}>{profile.tierLabel}</span>
+              <TierChip score={profile.trustScore} />
             </div>
 
-            <TrustBar label={t.trustLabel} score={profile.trustScore} />
+            <TrustProgress label={t.trustLabel} score={profile.trustScore} lang={lang} />
 
             <div className="grid grid-cols-3 gap-2.5 text-center">
               <Stat icon={<Flame className="h-4 w-4 text-orange-500" />} label={t.streakLabel} value={`${profile.streak}${t.streakUnit}`} />
@@ -148,6 +161,9 @@ export default function HomePage() {
               </>
             )}
           </section>
+
+          {/* 의뢰하기 강조: 하루 1회 무료 출제 + 실시간 의뢰 현황 */}
+          <SubmitSpotlight lang={lang} />
 
           {/* 빠른 이동 */}
           <div className="grid grid-cols-2 gap-2.5">
@@ -205,17 +221,95 @@ export default function HomePage() {
   );
 }
 
-function TrustBar({ label, score }: { label: string; score: number }) {
+function SubmitSpotlight({ lang }: { lang: 'ko' | 'en' }) {
+  const en = lang === 'en';
+  const [live, setLive] = useState<LivePoolResponse | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    api<LivePoolResponse>(`/api/missions/live?lang=${lang}`)
+      .then((d) => alive && setLive(d))
+      .catch(() => alive && setLive(null));
+    return () => {
+      alive = false;
+    };
+  }, [lang]);
+
+  const free = live ? live.freeQuizAvailable : true;
+  const eligible = live ? live.freeQuizEligible : true;
+  const href = free && eligible ? '/submit?tier=free' : '/submit';
+
   return (
-    <div>
-      <div className="mb-1.5 flex items-center justify-between text-xs">
-        <span className="font-medium text-slate-500">{label}</span>
-        <span className="font-bold text-human-dark">{score}%</span>
+    <section className="relative overflow-hidden rounded-3xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 via-white to-brand-soft p-4 shadow-[0_6px_24px_rgba(224,168,66,0.18)]">
+      <div className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-amber-300/25 blur-2xl" />
+      <div className="flex items-start gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-amber-500 text-white shadow">
+          <HelpCircle className="h-6 w-6" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-[15px] font-extrabold leading-snug text-slate-900">
+            {en ? 'Not sure if it’s AI? Ask 10 real humans.' : '이 글·사진, AI인지 헷갈리나요?'}
+          </p>
+          <p className="mt-0.5 text-xs leading-relaxed text-slate-600">
+            {en
+              ? 'Suspicious reviews, chat replies, listings or photos — verified Pioneers judge it for you.'
+              : '수상한 후기·카톡 답장·중고 매물·사진을 올리면 인증된 10명이 판별해 드려요.'}
+          </p>
+        </div>
       </div>
-      <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
-        <div className="h-full rounded-full bg-gradient-to-r from-human-dark to-human transition-all" style={{ width: `${score}%` }} />
-      </div>
-    </div>
+
+      <Link href={href} className="btn-primary mt-3.5 w-full py-3.5 text-[15px] font-bold">
+        <Gift className="h-5 w-5" />
+        {free && eligible
+          ? en
+            ? 'Ask 10 humans — 1 FREE today'
+            : '오늘 1회 무료로 10명에게 물어보기'
+          : !eligible
+            ? en
+              ? 'Finish 1 set to unlock a free quiz'
+              : '판별 1세트 완료 시 무료 출제 오픈'
+            : en
+              ? 'Submit for verification (1 Test-Pi)'
+              : '검증 의뢰하기 (1 Test-Pi)'}
+        <ChevronRight className="h-5 w-5" />
+      </Link>
+
+      {live && live.items.length > 0 && (
+        <div className="mt-3.5 space-y-2">
+          <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-500">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-70" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500" />
+            </span>
+            {en ? `Live now · ${live.activeCount} in verification` : `실시간 검증 중 · ${live.activeCount}건`}
+          </p>
+          {live.items.map((item) => (
+            <div key={item.id} className="rounded-xl border border-slate-100 bg-white/90 px-3 py-2.5">
+              <div className="flex items-center gap-2">
+                {item.kind === 'image' ? (
+                  <ImageIcon className="h-3.5 w-3.5 shrink-0 text-brand" />
+                ) : (
+                  <FilePlus2 className="h-3.5 w-3.5 shrink-0 text-brand" />
+                )}
+                <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-slate-800">
+                  {en ? translatePromptToEn(item.prompt) : translatePromptToKo(item.prompt)}
+                </p>
+                <span className="shrink-0 text-[11px] font-bold text-brand">
+                  {item.votes}/{item.target}
+                  {en ? ' votes' : '표'}
+                </span>
+              </div>
+              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-brand to-amber-400"
+                  style={{ width: `${(item.votes / item.target) * 100}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 

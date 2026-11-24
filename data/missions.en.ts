@@ -26,6 +26,7 @@ export function translatePromptToEn(prompt: string): string {
   if (prompt === '이 글은 실제 사람이 썼을까요, AI가 썼을까요?') return EN_SINGLE_TEXT_PROMPT;
   if (prompt === '이 이미지는 실제 원본일까요, AI 생성물일까요?') return EN_SINGLE_IMAGE_PROMPT;
   if (prompt === '어느 쪽이 실제 구매자 후기인가요?') return 'Is this a real buyer review or AI-generated?';
+  if (prompt === '실제 구매자 후기일까요, AI 생성 리뷰일까요?') return 'Is this a real buyer review or AI-generated?';
   if (prompt === '부자연스러운 AI 문체가 느껴지시나요?') return 'Do you notice unnatural AI phrasing here?';
   return prompt;
 }
@@ -42,17 +43,22 @@ export function translatePromptToKo(prompt: string): string {
   if (prompt === EN_SINGLE_IMAGE_PROMPT || prompt === 'Is this a real photo or AI-generated?') {
     return '이 이미지는 실제 원본일까요, AI 생성물일까요?';
   }
-  if (prompt === 'Is this a real buyer review or AI-generated?') return '어느 쪽이 실제 구매자 후기인가요?';
+  if (prompt === 'Is this a real buyer review or AI-generated?') return '실제 구매자 후기일까요, AI 생성 리뷰일까요?';
   if (prompt === 'Do you notice unnatural AI phrasing here?') return '부자연스러운 AI 문체가 느껴지시나요?';
   return prompt;
 }
 
 const SOURCE_LABEL_PAIRS: [string, string][] = [
   ['뉴스 기사', 'News Article'],
+  ['배달앱 리뷰', 'Delivery Review'],
   ['배달 후기', 'Delivery Review'],
+  ['쇼핑몰 상품평', 'Product Review'],
   ['상품 리뷰', 'Product Review'],
+  ['SNS 게시글', 'Social Post'],
   ['SNS 글', 'Social Post'],
+  ['커뮤니티 답변', 'Forum Reply'],
   ['커뮤니티 댓글', 'Forum Reply'],
+  ['카페/식당 후기', 'Cafe Review'],
   ['카페 후기', 'Cafe Review'],
   ['실제 현장 사진', 'Real Scene'],
   ['의뢰 텍스트', 'Submitted Text'],
@@ -394,5 +400,47 @@ export const SEED_EN: Record<string, SeedEnTranslation> = {
     aBody: 'Three interviewers joined and pressed way more on how I handled a teammate conflict than coding questions. Waiting room had water and coffee, and results come next Friday.',
     bBody: 'The interview proceeded in a comfortable atmosphere, offering a thorough evaluation of the candidate’s skills and experience. Looking forward to positive outcomes.',
     aiTell: 'AI summarizes the atmosphere generically without specific interviewer counts, question focus, or result dates.',
+  },
+  'seed-t31': {
+    prompt: EN_TEXT_PROMPT,
+    sourceLabel: 'Marketplace Listing (Scam?)',
+    aBody: '[URGENT] Sealed iPad Pro 6th gen, $250! I am overseas on business so no meetups—payment only through my secure-pay link. Whoever pays today gets it first. Lots of inquiries, message me fast!',
+    bBody: 'Selling my used iPad Pro 6th gen. One light scratch on the bottom-right of the screen, battery health 89%. Box and charger included. Meetup only, weekday evenings at the Central Station exit 2.',
+    aiTell: 'A follows a classic scam template: an absurdly low price, "overseas, no meetups, external secure-pay link, pay today first". Real sellers disclose flaws like scratch location and battery health.',
+  },
+  'seed-t32': {
+    prompt: EN_TEXT_PROMPT,
+    sourceLabel: 'Text Reply After a Date',
+    aBody: 'I had a truly wonderful time today! Every conversation we shared felt precious, and I hope we can spend more warm moments like this together. Have a peaceful night 😊',
+    bBody: 'lol the wait at that pasta place was insane my legs hurt 😭 but ok the tiramisu was elite… next time lets hit the rice bowl spot i know, no line there. get home ok??',
+    aiTell: 'The AI-ghostwritten reply is a polite summary ("precious conversations", "warm moments") with none of the shared details—the wait, the dessert, the next spot.',
+  },
+  'seed-t33': {
+    prompt: EN_TEXT_PROMPT,
+    sourceLabel: 'Restaurant Receipt Review',
+    aBody: 'Receipt attached. 2-person set $38 plus extra rice $1. Meat was thinner than the photos but the charcoal flavor is legit. Cold noodle broth was way too sweet, left half. Restroom is outside the building, annoying.',
+    bBody: 'Great atmosphere and truly delicious food! The meat was tender and juicy, and the staff were so kind that we enjoyed every moment. Highly recommended for family and date nights!',
+    aiTell: 'The AI review evenly lists praise keywords without receipt-level facts like prices, add-ons or where the restroom is.',
+  },
+  'seed-t34': {
+    prompt: EN_TEXT_PROMPT,
+    sourceLabel: 'YouTube Video Title',
+    aBody: 'Surviving a week on $5 by raiding my fridge after 3 years living alone (failed on day 3)',
+    bBody: 'SHOCKING! The ONE secret even experts don’t know… this will change your life forever (watch till the end)',
+    aiTell: 'AI clickbait recycles empty formulas ("shocking", "one secret", "change your life"). Human titles are concrete—amounts, durations, even failures.',
+  },
+  'seed-t35': {
+    prompt: EN_TEXT_PROMPT,
+    sourceLabel: 'Lost Item Post',
+    aBody: 'I have lost a precious item. I would be sincerely grateful to anyone who finds it and will offer a small reward. Your kind attention and help would mean a lot.',
+    bBody: 'Left a black AirPods Pro case on the back seat of the #3 shuttle bus around 10pm last night (Tue) 😭 It has a cat sticker on it. $30 reward if you find it!',
+    aiTell: 'The AI post never says what, when or where. Real lost-item posts hinge on identifiers like bus number, seat and stickers.',
+  },
+  'seed-t36': {
+    prompt: EN_TEXT_PROMPT,
+    sourceLabel: 'Host Reply to Guest',
+    aBody: 'Thanks for the feedback! We had a plumber replace the shower head yesterday for the water pressure, and we now leave earplugs for the 2nd-floor noise. I will add an extra breakfast coupon next time.',
+    bBody: 'Thank you sincerely for your valuable review. Your satisfaction is our top priority, and we will always strive to provide better service. We look forward to welcoming you again.',
+    aiTell: 'The AI reply repeats gratitude and promises without saying what was fixed. Real hosts list concrete actions like replacing the shower head.',
   },
 };

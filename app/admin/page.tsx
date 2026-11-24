@@ -338,7 +338,7 @@ export default function AdminPage() {
                         )}
                       </div>
                       <p className="text-xs text-slate-500">
-                        신뢰도 {u.trustScore}% · 완료 {u.setsCompleted}세트 · {formatDateTime(u.updatedAt)}
+                        신뢰도 {u.trustScore}점 · 완료 {u.setsCompleted}세트 · {formatDateTime(u.updatedAt)}
                       </p>
                     </div>
                     <span className="shrink-0 text-sm font-bold text-brand">{formatPi(u.balance)}</span>

@@ -76,7 +76,7 @@ export default function WalletPage() {
       <header className="pt-2">
         <h1 className="text-2xl font-black text-slate-900">{t.title}</h1>
         <p className="mt-1 text-sm text-slate-600">
-          @{p.username} · {t.trustLabel} {p.trustScore}% ({p.tierLabel})
+          @{p.username} · {t.trustLabel} {p.trustScore.toLocaleString()} / 1,000 ({p.tierLabel})
         </p>
       </header>
 

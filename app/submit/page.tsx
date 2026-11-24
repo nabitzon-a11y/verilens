@@ -189,6 +189,11 @@ export default function SubmitPage() {
     if (profile) void loadMine();
   }, [profile, loadMine]);
 
+  // 홈/결과 화면의 "하루 1회 무료 출제" 버튼으로 들어오면 무료 퀴즈 탭을 기본 선택
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('tier') === 'free') setSubmitTier('community');
+  }, []);
+
   const touch = () => {
     setDraftId(null);
     setError(null);

@@ -128,6 +128,8 @@ export interface PioneerUser {
   setsCompleted: number;
   /** 매크로 의심 누적 횟수 */
   botFlags: number;
+  /** 신뢰도 점수 체계 (1000 = 0~1000점 체계, 미설정 시 구버전 0~100) */
+  trustScale?: number;
   createdAt: ISODateString;
   updatedAt: ISODateString;
 }
@@ -137,7 +139,7 @@ export interface PioneerProfile extends Pick<
   PioneerUser,
   'uid' | 'username' | 'isDemo' | 'trustScore' | 'streak' | 'balance' | 'totalEarned' | 'totalClaimed' | 'setsCompleted'
 > {
-  tier: 'platinum' | 'gold' | 'silver' | 'bronze';
+  tier: 'master' | 'diamond' | 'platinum' | 'gold' | 'silver' | 'bronze';
   tierLabel: string;
 }
 
@@ -209,14 +211,64 @@ export interface MissionSet {
   verifyToken: string;
   issuedAt: ISODateString;
   submittedAt?: ISODateString;
+  /** [서버 전용] 이 세트에 포함된 보너스 문제 ID */
+  bonusId?: string;
   /** 제출 완료 시 결과 (중복 제출 시 그대로 반환) */
   result?: SetResult;
+}
+
+/** 보너스 문제 (AI 흔적 짚기 3지선다) — 서버 내부용 (정답 포함) */
+export interface BonusQuiz {
+  id: string;
+  kind: 'image' | 'text';
+  /** kind=image: 로컬 이미지 경로 */
+  image?: string;
+  /** kind=text: 판별 대상 문장 */
+  text?: { ko: string; en: string };
+  prompt: { ko: string; en: string };
+  options: { ko: string[]; en: string[] };
+  /** [서버 전용] 정답 옵션 인덱스 */
+  answer: number;
+  /** [결과 공개용] 해설 */
+  explain: { ko: string; en: string };
+}
+
+/** 클라이언트에 내려가는 보너스 문제 (정답·해설 제거) */
+export type PublicBonusQuiz = Omit<BonusQuiz, 'answer' | 'explain'>;
+
+export interface BonusResult {
+  quizId: string;
+  choice: number;
+  answer: number;
+  correct: boolean;
+  /** 보너스로 얻은 신뢰도 점수 (실격 세트는 0) */
+  trustGain: number;
+  explain: { ko: string; en: string };
 }
 
 /** 클라이언트에 내려가는 판별 세트 */
 export interface PublicMissionSet {
   setId: string;
   missions: PublicMission[];
+  bonus?: PublicBonusQuiz;
+}
+
+/** 홈 화면 실시간 의뢰 현황 */
+export interface LivePoolResponse {
+  activeCount: number;
+  items: {
+    id: string;
+    kind: MissionKind;
+    mode?: MissionMode;
+    prompt: string;
+    sourceLabel?: string;
+    votes: number;
+    target: number;
+  }[];
+  /** 오늘 무료 퀴즈 출제 가능 (24시간 1회) */
+  freeQuizAvailable: boolean;
+  /** 판별 1세트 이상 완료해 무료 출제 자격 충족 */
+  freeQuizEligible: boolean;
 }
 
 export interface AnswerInput {
@@ -253,6 +305,9 @@ export interface MissionResult {
   ownMission?: boolean;
   /** 실제 인간 원본 쪽 (시드 문항처럼 정답이 알려진 경우만) */
   humanSide?: Choice;
+  /** 10인 패널 중 AI 쪽을 고른(=속은) 인원 (정답이 알려진 문항만) */
+  fooledCount?: number;
+  difficulty?: 1 | 2 | 3;
   aiTell: string;
   reactionMs: number;
   // 🔒 어떤 문항이 기준 문항(Gold)이었는지는 공개하지 않습니다. (재사용 시 암기 방지)
@@ -274,6 +329,14 @@ export interface SetResult {
   reward: number;
   trustDelta: number;
   trustScore: number;
+  /** 세트 시작 전 신뢰도 */
+  trustBefore?: number;
+  /** 등급 변화 */
+  tierChange?: 'up' | 'down';
+  /** 완벽 적중 세트 */
+  perfect?: boolean;
+  /** 보너스 문제 결과 */
+  bonus?: BonusResult;
   /** 상위 N% (시뮬레이션) */
   topPercent: number;
   streak: number;

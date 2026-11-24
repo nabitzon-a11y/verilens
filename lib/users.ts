@@ -1,7 +1,17 @@
 import 'server-only';
 import type { PioneerProfile, PioneerUser } from '@/types';
-import { TRUST, getTrustTier } from './constants';
+import { TRUST, clampTrust, getTrustTier } from './constants';
 import { getRepository } from './repository';
+
+/** 구버전(0~100) 신뢰도 사용자를 1000점 체계로 1회 환산 (멱등) */
+export function migrateTrust(user: PioneerUser): PioneerUser {
+  if (user.trustScale === TRUST.SCALE) return user;
+  return {
+    ...user,
+    trustScore: clampTrust(user.trustScore * TRUST.LEGACY_MULTIPLIER),
+    trustScale: TRUST.SCALE,
+  };
+}
 
 export async function getOrCreateUser(uid: string, username: string, isDemo: boolean): Promise<PioneerUser> {
   const repo = getRepository();
@@ -9,8 +19,9 @@ export async function getOrCreateUser(uid: string, username: string, isDemo: boo
   const existing = await repo.getUser(uid);
 
   if (existing) {
-    if (existing.username === username) return existing;
-    return repo.upsertUser({ ...existing, username, updatedAt: now });
+    const migrated = migrateTrust(existing);
+    if (existing.username === username && migrated === existing) return existing;
+    return repo.upsertUser({ ...migrated, username, updatedAt: now });
   }
 
   return repo.upsertUser({
@@ -18,6 +29,7 @@ export async function getOrCreateUser(uid: string, username: string, isDemo: boo
     username,
     isDemo,
     trustScore: TRUST.INITIAL,
+    trustScale: TRUST.SCALE,
     streak: 0,
     balance: 0,
     totalEarned: 0,
@@ -29,7 +41,8 @@ export async function getOrCreateUser(uid: string, username: string, isDemo: boo
   });
 }
 
-export function toProfile(user: PioneerUser): PioneerProfile {
+export function toProfile(raw: PioneerUser): PioneerProfile {
+  const user = migrateTrust(raw);
   const tier = getTrustTier(user.trustScore);
   return {
     uid: user.uid,

@@ -2,6 +2,7 @@ import 'server-only';
 import { randomInt, randomUUID } from 'crypto';
 import type {
   AnswerInput,
+  BonusResult,
   Mission,
   MissionResult,
   MissionSet,
@@ -11,17 +12,22 @@ import type {
 } from '@/types';
 import { toPublicMission } from '@/data/missions';
 import { SEED_EN } from '@/data/missions.en';
+import { BONUS_QUIZZES, getBonusQuiz, toPublicBonus } from '@/data/bonus';
 import { evaluateBehavior, evaluateTimingIntegrity } from './behavior';
 import { decideConsensus, getPriorVotes, tallyVotes } from './consensus';
-import { GAME, TRUST, VERIFY, clampTrust, roundPi } from './constants';
+import { BONUS, GAME, TRUST, TRUST_TIERS, VERIFY, applyTrustChange, getTrustTier, roundPi } from './constants';
 import { HttpError } from './http';
 import { withLock } from './lock';
 import { SESSION_STAGES, getPiVerifyAdapter } from './piVerify';
 import { getRepository } from './repository';
+import { migrateTrust } from './users';
 
 /* ------------------------------------------------------------------ */
 /* 유틸                                                                */
 /* ------------------------------------------------------------------ */
+
+/** 등급 순서 (index 가 작을수록 상위) */
+const GAME_TIER_ORDER: string[] = TRUST_TIERS.map((t) => t.tier);
 
 function shuffle<T>(items: T[]): T[] {
   const arr = [...items];
@@ -72,7 +78,7 @@ function bodyHasHangul(m: Mission): boolean {
   return bodies.some(hasHangulText);
 }
 
-function isMissionEligibleForLang(m: Mission, lang: 'ko' | 'en'): boolean {
+export function isMissionEligibleForLang(m: Mission, lang: 'ko' | 'en'): boolean {
   if (m.origin === 'seed') {
     return lang === 'en' ? Boolean(SEED_EN[m.id]) : hasHangulText(m.prompt) || bodyHasHangul(m);
   }
@@ -131,16 +137,23 @@ export async function issueMissionSet(
   const gold = goldPool[randomInt(goldPool.length)];
   ordered.splice(randomInt(ordered.length + 1), 0, gold);
 
+  const bonusQuiz = randomInt(1000) < BONUS.CHANCE * 1000 ? BONUS_QUIZZES[randomInt(BONUS_QUIZZES.length)] : undefined;
+
   const set: MissionSet = {
     setId: randomUUID(),
     uid: user.uid,
     missionIds: ordered.map((m) => m.id),
     verifyToken,
     issuedAt: new Date().toISOString(),
+    bonusId: bonusQuiz?.id,
   };
   await repo.saveSet(set);
 
-  return { setId: set.setId, missions: ordered.map(toPublicMission) };
+  return {
+    setId: set.setId,
+    missions: ordered.map(toPublicMission),
+    bonus: bonusQuiz ? toPublicBonus(bonusQuiz) : undefined,
+  };
 }
 
 /* ------------------------------------------------------------------ */
@@ -149,7 +162,7 @@ export async function issueMissionSet(
 
 export async function submitMissionSet(
   uid: string,
-  input: { setId: string; verifyToken: string; answers: AnswerInput[] },
+  input: { setId: string; verifyToken: string; answers: AnswerInput[]; bonusChoice?: number },
 ): Promise<SetResult> {
   const repo = getRepository();
 
@@ -186,6 +199,8 @@ export async function submitMissionSet(
     let goldPassed = true;
     let matchedCount = 0;
     let rewardedCount = 0;
+    let hardMatched = 0;
+    let regularCount = 0;
     let mismatchedRegular = 0;
     let challengeMissionId: string | undefined;
     const pendingVotes: { missionId: string; choice: AnswerInput['choice'] }[] = [];
@@ -207,12 +222,19 @@ export async function submitMissionSet(
       } else {
         matched = consensus !== null && answer.choice === consensus;
         if (!ownMission) {
-          if (matched && !excludedFast) rewardedCount += 1;
+          regularCount += 1;
+          if (matched && !excludedFast) {
+            rewardedCount += 1;
+            if (mission.difficulty === 3) hardMatched += 1;
+          }
           if (!matched) mismatchedRegular += 1;
           if (!challengeMissionId || (matched && mission.origin === 'seed')) challengeMissionId = mission.id;
         }
       }
       if (matched) matchedCount += 1;
+
+      // 정답이 알려진 문항: 10인 패널 중 AI 쪽을 고른(=속은) 인원
+      const fooledCount = mission.humanSide ? tally[mission.humanSide === 'A' ? 'B' : 'A'] : undefined;
 
       results.push({
         missionId: id,
@@ -226,6 +248,8 @@ export async function submitMissionSet(
         excludedFast,
         ownMission: ownMission || undefined,
         humanSide: mission.humanSide,
+        fooledCount,
+        difficulty: mission.difficulty,
         aiTell: ownMission
           ? '내가 의뢰한 문항입니다. 본인 응답은 보상과 실제 집계에서 제외됩니다.'
           : mission.aiTell || '의뢰자 문항입니다. 정답은 인증된 판별자들의 다수결로 확정됩니다.',
@@ -251,27 +275,65 @@ export async function submitMissionSet(
       }
     }
 
-    // 보상 & 신뢰도
-    let reward = 0;
-    let trustDelta: number;
+    // 보너스 문제 판정 (세트에 포함된 경우에만, 정답은 서버만 앎)
+    const bonusQuiz = set.bonusId ? getBonusQuiz(set.bonusId) : undefined;
+    const bonusCorrect =
+      bonusQuiz !== undefined && typeof input.bonusChoice === 'number' && input.bonusChoice === bonusQuiz.answer;
+    const qualified = !flagged && goldPassed;
+    const perfect = qualified && regularCount > 0 && rewardedCount === regularCount;
+
+    // 보상 (Pi)
+    const reward = qualified ? roundPi(rewardedCount * GAME.REWARD_PER_MATCH_PI) : 0;
+
+    // 신뢰도 기본 변동폭 (등급 배율은 사용자 점수 기준으로 아래에서 적용)
+    let rawGain = 0;
+    let rawLoss = 0;
     if (flagged) {
-      trustDelta = TRUST.BOT_FLAG_DELTA;
+      rawLoss = TRUST.BOT_FLAG_DELTA;
     } else if (!goldPassed) {
-      trustDelta = TRUST.GOLD_FAIL_DELTA;
+      rawLoss = TRUST.GOLD_FAIL_DELTA;
     } else {
-      reward = roundPi(rewardedCount * GAME.REWARD_PER_MATCH_PI);
-      trustDelta = rewardedCount * TRUST.MATCH_DELTA + mismatchedRegular * TRUST.MISMATCH_DELTA;
+      rawGain =
+        rewardedCount * TRUST.MATCH_DELTA + hardMatched * TRUST.HARD_MATCH_BONUS + (perfect ? TRUST.PERFECT_SET_BONUS : 0);
+      rawLoss = mismatchedRegular * TRUST.MISMATCH_DELTA;
     }
 
     const completedAt = new Date(submittedAtMs).toISOString();
 
     const result = await withLock(`user:${uid}`, async () => {
-      const user = await repo.getUser(uid);
-      if (!user) throw new HttpError(401, '사용자 정보를 찾을 수 없습니다.', 'UNAUTHORIZED');
+      const raw = await repo.getUser(uid);
+      if (!raw) throw new HttpError(401, '사용자 정보를 찾을 수 없습니다.', 'UNAUTHORIZED');
+      const user = migrateTrust(raw);
+      const beforeTier = getTrustTier(user.trustScore);
+
+      const bonusGain =
+        bonusCorrect && qualified
+          ? Math.max(TRUST.BONUS_MIN_DELTA, Math.round(TRUST.BONUS_CORRECT_DELTA * beforeTier.gainRate))
+          : 0;
+      const { next: nextTrust, delta: trustDelta } = applyTrustChange(user.trustScore, rawGain, rawLoss, bonusGain);
+      const afterTier = getTrustTier(nextTrust);
+      const tierOrder = (t: string) => GAME_TIER_ORDER.indexOf(t);
+      const tierChange =
+        tierOrder(afterTier.tier) < tierOrder(beforeTier.tier)
+          ? ('up' as const)
+          : tierOrder(afterTier.tier) > tierOrder(beforeTier.tier)
+            ? ('down' as const)
+            : undefined;
+
+      const bonus: BonusResult | undefined = bonusQuiz
+        ? {
+            quizId: bonusQuiz.id,
+            choice: typeof input.bonusChoice === 'number' ? input.bonusChoice : -1,
+            answer: bonusQuiz.answer,
+            correct: bonusCorrect,
+            trustGain: bonusGain,
+            explain: bonusQuiz.explain,
+          }
+        : undefined;
 
       const updated: PioneerUser = {
         ...user,
-        trustScore: clampTrust(user.trustScore + trustDelta),
+        trustScore: nextTrust,
         balance: roundPi(user.balance + reward),
         totalEarned: roundPi(user.totalEarned + reward),
         setsCompleted: user.setsCompleted + 1,
@@ -309,6 +371,10 @@ export async function submitMissionSet(
         reward,
         trustDelta,
         trustScore: updated.trustScore,
+        trustBefore: user.trustScore,
+        tierChange,
+        perfect,
+        bonus,
         topPercent: estimateTopPercent(matchedCount, set.missionIds.length),
         streak: updated.streak,
         challengeMissionId,

@@ -4,11 +4,15 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   AlertOctagon,
+  AlertTriangle,
   CheckCircle2,
+  ChevronRight,
   FilePlus2,
   Flame,
+  Gift,
   Home,
   Image as ImageIcon,
+  PartyPopper,
   RotateCcw,
   Share2,
   ShieldAlert,
@@ -16,20 +20,23 @@ import {
   Sparkles,
   TrendingDown,
   TrendingUp,
+  Users,
   XCircle,
   Zap,
 } from 'lucide-react';
 import clsx from 'clsx';
-import type { MissionResult, SetResult } from '@/types';
+import type { BonusResult, MissionResult, SetResult } from '@/types';
 import { SEED_EN } from '@/data/missions.en';
 import { useApp } from '@/components/AppProvider';
+import { TIER_THEME, TrustProgress } from '@/components/TierBadge';
+import { getTrustTier } from '@/lib/constants';
 import { formatSignedPi } from '@/lib/format';
 import { RESULT_TEXT } from '@/lib/i18n';
 import { buildShareUrl, shareLink } from '@/lib/piSdk';
 import { loadLastResult } from '@/lib/resultStore';
 
 export default function ResultPage() {
-  const { lang } = useApp();
+  const { lang, profile } = useApp();
   const t = RESULT_TEXT[lang];
   const [result, setResult] = useState<SetResult | null | undefined>(undefined);
   const [toast, setToast] = useState<string | null>(null);
@@ -120,7 +127,8 @@ export default function ResultPage() {
           >
             {result.trustDelta >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
             {t.trustLabel} {result.trustDelta >= 0 ? '+' : ''}
-            {result.trustDelta} → {result.trustScore}%
+            {result.trustDelta} → {result.trustScore.toLocaleString()}
+            {lang === 'en' ? ' pts' : '점'}
           </span>
           <span className="chip border border-orange-200 bg-orange-50 text-orange-700">
             <Flame className="h-3.5 w-3.5" />
@@ -131,6 +139,10 @@ export default function ResultPage() {
       </section>
 
       <StatusBanner result={result} t={t} />
+
+      <TierCard result={result} lang={lang} username={profile?.username} onToast={setToast} />
+
+      {result.bonus && <BonusResultCard bonus={result.bonus} lang={lang} />}
 
       {/* 문항별 리포트 */}
       <section className="space-y-3">
@@ -160,22 +172,24 @@ export default function ResultPage() {
         </div>
 
         <Link
-          href="/submit"
-          className="flex items-center gap-3 rounded-2xl border border-brand/25 bg-brand-soft/60 p-4 transition hover:bg-brand-soft"
+          href="/submit?tier=free"
+          className="relative flex items-center gap-3 overflow-hidden rounded-2xl border-2 border-brand/30 bg-gradient-to-r from-brand-soft via-white to-amber-50 p-4 shadow-sm transition hover:border-brand/50"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand text-white">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand text-white shadow">
             <FilePlus2 className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-slate-900">
-              {lang === 'en' ? 'Have content you want verified?' : '내가 헷갈리는 글·사진도 검증해 볼까요?'}
+            <p className="flex items-center gap-1.5 text-sm font-extrabold text-slate-900">
+              {lang === 'en' ? 'Now you be the quiz master!' : '이번엔 내가 출제자!'}
+              <span className="chip bg-amber-400 px-2 py-0.5 text-[10px] text-white">{lang === 'en' ? '1 FREE / day' : '하루 1회 무료'}</span>
             </p>
-            <p className="text-xs text-slate-600">
+            <p className="mt-0.5 text-xs text-slate-600">
               {lang === 'en'
-                ? 'Submit reviews, posts, or images for 10-human consensus.'
-                : '수상한 후기·이미지·AI 글을 올리면 10인이 판별해 드립니다.'}
+                ? 'Post a suspicious review, text or photo and let 10 verified humans judge it.'
+                : '헷갈리는 후기·카톡·사진을 올리면 인증된 10명이 진짜인지 판별해 드려요.'}
             </p>
           </div>
+          <ChevronRight className="h-5 w-5 shrink-0 text-brand" />
         </Link>
       </section>
 
@@ -185,6 +199,150 @@ export default function ResultPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function TierCard({
+  result,
+  lang,
+  username,
+  onToast,
+}: {
+  result: SetResult;
+  lang: 'ko' | 'en';
+  username?: string;
+  onToast: (msg: string) => void;
+}) {
+  const en = lang === 'en';
+  const tier = getTrustTier(result.trustScore);
+  const theme = TIER_THEME[tier.tier];
+  const Icon = theme.icon;
+  const prevTier = result.trustBefore !== undefined ? getTrustTier(result.trustBefore) : undefined;
+
+  const shareCard = async () => {
+    const text = en
+      ? `My Human Intuition tier: ${tier.label} (${result.trustScore}/1000) · Top ${result.topPercent}%. Can you spot AI fakes better than me?`
+      : `나의 인간 직관 등급은 ${tier.label} (${result.trustScore}/1000점) · 상위 ${result.topPercent}%! AI 가짜, 나보다 잘 가려낼 수 있어?`;
+    const outcome = await shareLink(en ? 'VeriLens Tier Card' : 'VeriLens 직관 등급 카드', text, buildShareUrl('/'));
+    onToast(
+      outcome === 'clipboard'
+        ? en
+          ? 'Tier card copied'
+          : '등급 카드를 복사했어요'
+        : outcome === 'failed'
+          ? en
+            ? 'Failed to share'
+            : '공유에 실패했습니다'
+          : en
+            ? 'Tier card shared'
+            : '등급 카드를 공유했어요',
+    );
+  };
+
+  return (
+    <section className="space-y-3">
+      {result.tierChange === 'up' && prevTier && (
+        <div className="flex items-center gap-2 rounded-2xl border border-amber-300 bg-gradient-to-r from-amber-50 to-white p-3.5 text-sm font-bold text-amber-800">
+          <PartyPopper className="h-5 w-5 shrink-0" />
+          {en ? `Tier up! ${prevTier.label} → ${tier.label}` : `등급 승급! ${prevTier.label} → ${tier.label}`}
+        </div>
+      )}
+      {result.tierChange === 'down' && prevTier && (
+        <div className="flex items-center gap-2 rounded-2xl border border-red-200 bg-red-50 p-3.5 text-sm font-bold text-red-700">
+          <TrendingDown className="h-5 w-5 shrink-0" />
+          {en ? `Tier down: ${prevTier.label} → ${tier.label}` : `등급 하락: ${prevTier.label} → ${tier.label}`}
+        </div>
+      )}
+
+      <div className={clsx('relative overflow-hidden rounded-3xl bg-gradient-to-br p-5 text-white shadow-lg', theme.gradient)}>
+        <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/15 blur-2xl" />
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-white/75">
+              {en ? 'Human Intuition Card' : '인간 직관 등급 카드'}
+            </p>
+            {username && <p className="mt-0.5 text-sm font-semibold text-white/90">@{username}</p>}
+          </div>
+          {result.perfect && (
+            <span className="chip bg-white/95 text-[11px] font-black text-amber-600">
+              <Sparkles className="h-3.5 w-3.5" />
+              PERFECT
+            </span>
+          )}
+        </div>
+        <div className="mt-3 flex items-center gap-3">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20 backdrop-blur">
+            <Icon className="h-8 w-8" />
+          </div>
+          <div>
+            <p className="text-3xl font-black leading-none">{tier.label}</p>
+            <p className="mt-1 text-sm font-bold text-white/85">
+              {result.trustScore.toLocaleString()} / 1,000
+              <span className="ml-1.5 text-white/70">
+                ({result.trustDelta >= 0 ? '+' : ''}
+                {result.trustDelta})
+              </span>
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+          <CardStat label={en ? 'Accuracy' : '적중'} value={`${result.matchedCount}/${result.total}`} />
+          <CardStat label={en ? 'Rank' : '순위'} value={en ? `Top ${result.topPercent}%` : `상위 ${result.topPercent}%`} />
+          <CardStat label={en ? 'Streak' : '연속'} value={en ? `${result.streak}d` : `${result.streak}일`} />
+        </div>
+      </div>
+
+      <div className="card">
+        <TrustProgress score={result.trustScore} lang={lang} label={en ? 'Trust Score' : '신뢰도 (Trust Score)'} />
+        <button type="button" onClick={shareCard} className="btn-ghost mt-3 w-full text-sm">
+          <Share2 className="h-4 w-4" />
+          {en ? 'Share my tier card' : '내 등급 카드 자랑하기'}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function CardStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-white/15 py-2 backdrop-blur">
+      <p className="text-[10px] font-semibold text-white/75">{label}</p>
+      <p className="text-sm font-black">{value}</p>
+    </div>
+  );
+}
+
+function BonusResultCard({ bonus, lang }: { bonus: BonusResult; lang: 'ko' | 'en' }) {
+  const en = lang === 'en';
+  const skipped = bonus.choice < 0;
+  const tone = bonus.correct
+    ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+    : skipped
+      ? 'border-slate-200 bg-slate-50 text-slate-700'
+      : 'border-amber-200 bg-amber-50 text-amber-900';
+  return (
+    <section className={clsx('space-y-1.5 rounded-2xl border p-4', tone)}>
+      <p className="flex items-center gap-1.5 text-sm font-bold">
+        <Gift className="h-4 w-4" />
+        {bonus.correct
+          ? en
+            ? `Bonus correct! +${bonus.trustGain} Trust pts`
+            : `보너스 정답! 신뢰도 +${bonus.trustGain}점`
+          : skipped
+            ? en
+              ? 'Bonus skipped'
+              : '보너스를 건너뛰었어요'
+            : en
+              ? `So close! The answer was option ${bonus.answer + 1}`
+              : `아쉬워요! 정답은 ${bonus.answer + 1}번이었어요`}
+      </p>
+      {bonus.correct && bonus.trustGain === 0 && (
+        <p className="text-xs opacity-80">
+          {en ? 'Bonus points are not granted for disqualified sets.' : '실격 처리된 세트에는 보너스 점수가 지급되지 않아요.'}
+        </p>
+      )}
+      <p className="text-xs leading-relaxed opacity-85">{en ? bonus.explain.en : bonus.explain.ko}</p>
+    </section>
   );
 }
 
@@ -268,6 +426,12 @@ function ResultItem({ n, r, t, lang }: { n: number; r: MissionResult; t: (typeof
             {t.fastExcluded}
           </span>
         )}
+        {r.difficulty === 3 && (
+          <span className="chip border border-rose-200 bg-rose-50 text-rose-600">
+            <Flame className="h-3.5 w-3.5" />
+            {lang === 'en' ? 'HARD' : '고난도'}
+          </span>
+        )}
         <span className="ml-auto">
           {r.matched ? <CheckCircle2 className="h-5 w-5 text-human-dark" /> : <XCircle className="h-5 w-5 text-red-500" />}
         </span>
@@ -301,6 +465,31 @@ function ResultItem({ n, r, t, lang }: { n: number; r: MissionResult; t: (typeof
           </span>
         </div>
       </div>
+
+      {r.fooledCount !== undefined && !r.ownMission && (
+        <p
+          className={clsx(
+            'flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold',
+            r.fooledCount >= 4
+              ? 'bg-rose-50 text-rose-700'
+              : r.fooledCount === 0
+                ? 'bg-emerald-50 text-emerald-700'
+                : 'bg-slate-50 text-slate-600',
+          )}
+        >
+          {r.fooledCount >= 4 ? <AlertTriangle className="h-3.5 w-3.5" /> : <Users className="h-3.5 w-3.5" />}
+          {r.fooledCount === 0
+            ? lang === 'en'
+              ? `All ${total} verifiers saw through it`
+              : `${total}명 모두 간파한 문제예요`
+            : lang === 'en'
+              ? `${r.fooledCount} of ${total} people were fooled by the AI${r.fooledCount >= 4 ? '!' : ''}`
+              : `${total}명 중 ${r.fooledCount}명이 AI에 속았어요${r.fooledCount >= 4 ? '!' : ''}`}
+          {r.matched && r.fooledCount >= 4 && (
+            <span className="ml-auto text-[11px] text-rose-500">{lang === 'en' ? 'You nailed it 👏' : '당신은 간파 👏'}</span>
+          )}
+        </p>
+      )}
 
       <p className="rounded-xl border border-slate-100 bg-slate-50 p-3.5 text-[13px] leading-relaxed text-slate-700">
         <span className="mb-1 flex items-center gap-1 font-bold text-brand">

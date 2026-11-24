@@ -2,8 +2,8 @@
 
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Flag, Gift, Lightbulb, Loader2, RefreshCw, ScanFace, Timer, X } from 'lucide-react';
-import type { AnswerInput, Choice, PublicMission, PublicMissionSet, SetResult, VerifySession } from '@/types';
+import { Flag, Flame, Gift, Lightbulb, Loader2, RefreshCw, ScanFace, Timer, X } from 'lucide-react';
+import type { AnswerInput, Choice, PublicBonusQuiz, PublicMission, PublicMissionSet, SetResult, VerifySession } from '@/types';
 import { SEED_EN, translatePromptToEn, translatePromptToKo, translateSourceLabel } from '@/data/missions.en';
 import { AiHintsModal } from '@/components/AiHintsModal';
 import { useApp } from '@/components/AppProvider';
@@ -22,7 +22,7 @@ import { saveLastResult } from '@/lib/resultStore';
 const SELECT_FEEDBACK_MS = 260;
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-type Phase = 'idle' | 'need-session' | 'loading' | 'playing' | 'submitting' | 'error';
+type Phase = 'idle' | 'need-session' | 'loading' | 'playing' | 'bonus' | 'submitting' | 'error';
 
 export default function VerifyPage() {
   return (
@@ -52,6 +52,8 @@ function VerifyGame() {
   const [hintsOpen, setHintsOpen] = useState(false);
   const [reporting, setReporting] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  /** 보너스 문제 선택 (null = 아직 선택 안 함 / -1 = 건너뜀) */
+  const [bonusPicked, setBonusPicked] = useState<number | null>(null);
 
   useEffect(() => {
     if (!toast) return;
@@ -80,6 +82,7 @@ function VerifyGame() {
         setIndex(0);
         setSelected(null);
         setLocked(false);
+        setBonusPicked(null);
         setPhase('playing');
       } catch (err) {
         if (err instanceof ApiError && err.code === 'VERIFY_REQUIRED') {
@@ -125,7 +128,7 @@ function VerifyGame() {
   };
 
   /* ---------------- 제출 ---------------- */
-  async function submit(allowRetry = true): Promise<void> {
+  async function submit(allowRetry = true, bonusChoice?: number): Promise<void> {
     if (!missionSet) return;
     setPhase('submitting');
     try {
@@ -133,7 +136,12 @@ function VerifyGame() {
       if (!s) throw new ApiError(401, '인간 판별 세션이 만료되었습니다.', 'VERIFY_REQUIRED');
 
       const result = await api<SetResult>('/api/missions/submit', {
-        body: { setId: missionSet.setId, verifyToken: s.token, answers: answers.current },
+        body: {
+          setId: missionSet.setId,
+          verifyToken: s.token,
+          answers: answers.current,
+          ...(typeof bonusChoice === 'number' && bonusChoice >= 0 ? { bonusChoice } : {}),
+        },
       });
       saveLastResult(result);
       void refresh();
@@ -146,7 +154,7 @@ function VerifyGame() {
             subtitle: t.expiredSubtitle,
           });
           setSession(s);
-          return submit(false);
+          return submit(false, bonusChoice);
         } catch {
           /* 아래에서 오류 표시 */
         }
@@ -162,9 +170,18 @@ function VerifyGame() {
       setIndex(index + 1);
       setSelected(null);
       setLocked(false);
+    } else if (missionSet.bonus) {
+      setPhase('bonus');
     } else {
       void submit();
     }
+  };
+
+  const chooseBonus = async (choice: number) => {
+    if (phase !== 'bonus' || bonusPicked !== null) return;
+    setBonusPicked(choice);
+    await sleep(SELECT_FEEDBACK_MS);
+    void submit(true, choice);
   };
 
   /* ---------------- 선택 & 2단계 행동 감시 ---------------- */
@@ -275,7 +292,7 @@ function VerifyGame() {
         </section>
       )}
 
-      {(phase === 'playing' || phase === 'submitting') && missionSet && (
+      {(phase === 'playing' || (phase === 'submitting' && bonusPicked === null)) && missionSet && (
         <>
           {/* 진행 상태 */}
           <div className="space-y-2">
@@ -314,6 +331,12 @@ function VerifyGame() {
             const isSingle = m.mode === 'single';
             return (
               <>
+                {m.difficulty === 3 && (
+                  <span className="chip w-fit border border-rose-200 bg-rose-50 text-rose-600">
+                    <Flame className="h-3.5 w-3.5" />
+                    {lang === 'en' ? 'HARD · Most people get fooled' : '고난도 · 많은 사람이 속는 문제'}
+                  </span>
+                )}
                 <h1 className="text-xl font-bold leading-snug text-slate-900">{m.prompt}</h1>
                 {isSingle ? (
                   <div className="space-y-3" key={m.id}>
@@ -432,18 +455,94 @@ function VerifyGame() {
               <p className="rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-lg">{toast}</p>
             </div>
           )}
-
-          {phase === 'submitting' && (
-            <div className="fixed inset-0 z-40 flex items-center justify-center bg-white/75 backdrop-blur-sm">
-              <div className="flex flex-col items-center gap-3 text-base font-semibold text-slate-800">
-                <Loader2 className="h-8 w-8 animate-spin text-brand" />
-                {t.submitting}
-              </div>
-            </div>
-          )}
         </>
       )}
+
+      {(phase === 'bonus' || (phase === 'submitting' && bonusPicked !== null)) && missionSet?.bonus && (
+        <BonusCard quiz={missionSet.bonus} lang={lang} picked={bonusPicked} onPick={(c) => void chooseBonus(c)} />
+      )}
+
+      {phase === 'submitting' && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-white/75 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-3 text-base font-semibold text-slate-800">
+            <Loader2 className="h-8 w-8 animate-spin text-brand" />
+            {t.submitting}
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+function BonusCard({
+  quiz,
+  lang,
+  picked,
+  onPick,
+}: {
+  quiz: PublicBonusQuiz;
+  lang: 'ko' | 'en';
+  picked: number | null;
+  onPick: (choice: number) => void;
+}) {
+  const en = lang === 'en';
+  return (
+    <section className="space-y-4">
+      <div className="relative overflow-hidden rounded-3xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 via-white to-brand-soft p-5 shadow-[0_8px_30px_rgba(224,168,66,0.25)]">
+        <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-amber-300/30 blur-2xl" />
+        <div className="flex items-center gap-2">
+          <span className="chip bg-gradient-to-r from-amber-400 to-amber-500 text-white shadow-sm">
+            <Gift className="h-3.5 w-3.5" />
+            BONUS
+          </span>
+          <span className="text-xs font-bold text-amber-800">{en ? 'Spot the AI Tell' : 'AI 흔적 짚기'}</span>
+        </div>
+        <p className="mt-2 text-xs text-amber-900/80">
+          {en
+            ? 'Get it right for extra Trust Score points! No penalty if wrong.'
+            : '맞히면 신뢰도 보너스 점수 획득! 틀려도 감점은 없어요.'}
+        </p>
+        <h1 className="mt-3 text-lg font-bold leading-snug text-slate-900">{en ? quiz.prompt.en : quiz.prompt.ko}</h1>
+      </div>
+
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        {quiz.kind === 'image' && quiz.image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={quiz.image} alt="bonus" draggable={false} className="aspect-[4/3] w-full select-none object-cover" />
+        ) : (
+          <p className="whitespace-pre-line p-5 text-base leading-relaxed text-slate-800">{en ? quiz.text?.en : quiz.text?.ko}</p>
+        )}
+      </div>
+
+      <div className="space-y-2.5">
+        {(en ? quiz.options.en : quiz.options.ko).map((opt, i) => (
+          <button
+            key={i}
+            type="button"
+            disabled={picked !== null}
+            onClick={() => onPick(i)}
+            className={
+              picked === i
+                ? 'btn w-full justify-start border-2 border-amber-400 bg-amber-50 py-3.5 text-left text-[15px] text-amber-900'
+                : 'btn w-full justify-start border-2 border-slate-200 bg-white py-3.5 text-left text-[15px] text-slate-800 shadow-sm hover:border-amber-300'
+            }
+          >
+            <span className="mr-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-black text-slate-600">
+              {i + 1}
+            </span>
+            {opt}
+          </button>
+        ))}
+        <button
+          type="button"
+          disabled={picked !== null}
+          onClick={() => onPick(-1)}
+          className="w-full py-2 text-center text-xs font-semibold text-slate-400 hover:text-slate-600"
+        >
+          {en ? 'Skip bonus' : '보너스 건너뛰기'}
+        </button>
+      </div>
+    </section>
   );
 }
 
