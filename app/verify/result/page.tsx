@@ -7,6 +7,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   ChevronRight,
+  Download,
   FilePlus2,
   Flame,
   Gift,
@@ -21,6 +22,7 @@ import {
   TrendingDown,
   TrendingUp,
   Users,
+  X,
   XCircle,
   Zap,
 } from 'lucide-react';
@@ -34,6 +36,7 @@ import { formatSignedPi } from '@/lib/format';
 import { RESULT_TEXT } from '@/lib/i18n';
 import { buildShareUrl, shareLink } from '@/lib/piSdk';
 import { loadLastResult } from '@/lib/resultStore';
+import { renderTierCardPng } from '@/lib/tierCardImage';
 
 export default function ResultPage() {
   const { lang, profile } = useApp();
@@ -239,6 +242,51 @@ function TierCard({
   const theme = TIER_THEME[tier.tier];
   const Icon = theme.icon;
   const prevTier = result.trustBefore !== undefined ? getTrustTier(result.trustBefore) : undefined;
+  const [cardPreview, setCardPreview] = useState<string | null>(null);
+  const [savingImg, setSavingImg] = useState(false);
+
+  const saveCardImage = async () => {
+    if (savingImg) return;
+    setSavingImg(true);
+    try {
+      const { dataUrl, blob } = await renderTierCardPng({ result, lang, username });
+      const file = new File([blob], `verilens-${tier.tier}.png`, { type: 'image/png' });
+
+      // 1) 모바일 네이티브 파일 공유(카톡 등) 지원 시 우선 호출
+      if (typeof navigator !== 'undefined' && navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: en ? 'VeriLens Tier Card' : 'VeriLens 직관 등급 카드',
+            text: en
+              ? `My Human Intuition tier: ${tier.label} (${result.trustScore}/1000)`
+              : `나의 인간 직관 등급: ${tier.label} (${result.trustScore}/1,000점)`,
+          });
+          onToast(en ? 'Tier card image shared' : '등급 카드 이미지를 공유했어요');
+          return;
+        } catch {
+          /* 취소 또는 미지원 시 아래 다운로드/미리보기로 진행 */
+        }
+      }
+
+      // 2) 일반 브라우저 파일 다운로드 트리거 + Pi Browser 웹뷰 대비 미리보기 모달 표시
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `verilens-${tier.tier}-${result.trustScore}.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+
+      setCardPreview(dataUrl);
+      onToast(en ? 'Tier card PNG ready!' : '등급 카드 이미지가 준비되었습니다!');
+    } catch {
+      onToast(en ? 'Could not generate card image' : '이미지 생성에 실패했습니다');
+    } finally {
+      setSavingImg(false);
+    }
+  };
 
   const shareCard = async () => {
     const text = en
@@ -315,11 +363,54 @@ function TierCard({
 
       <div className="card">
         <TrustProgress score={result.trustScore} lang={lang} label={en ? 'Trust Score' : '신뢰도 (Trust Score)'} />
-        <button type="button" onClick={shareCard} className="btn-ghost mt-3 w-full text-sm">
-          <Share2 className="h-4 w-4" />
-          {en ? 'Share my tier card' : '내 등급 카드 자랑하기'}
-        </button>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button type="button" onClick={() => void saveCardImage()} disabled={savingImg} className="btn-amber text-sm">
+            <Download className="h-4 w-4" />
+            {savingImg ? (en ? 'Saving…' : '생성 중…') : en ? 'Save Card PNG' : '이미지 저장'}
+          </button>
+          <button type="button" onClick={shareCard} className="btn-ghost text-sm">
+            <Share2 className="h-4 w-4" />
+            {en ? 'Share Link' : '텍스트 공유'}
+          </button>
+        </div>
       </div>
+
+      {cardPreview && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-5 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-xs space-y-3 rounded-3xl bg-white p-4 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-extrabold text-slate-900">{en ? 'Your Tier Card PNG' : '등급 카드 이미지'}</p>
+              <button
+                type="button"
+                onClick={() => setCardPreview(null)}
+                aria-label="닫기"
+                className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-800"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={cardPreview} alt="VeriLens Tier Card" className="w-full rounded-2xl border border-slate-200 shadow-sm" />
+            <p className="text-center text-xs text-slate-500">
+              {en
+                ? 'Saved! In Pi Browser, long-press the image to save it to Photos.'
+                : '다운로드되지 않은 환경에서는 이미지를 길게 눌러 저장하세요.'}
+            </p>
+            <a
+              href={cardPreview}
+              download={`verilens-${tier.tier}-${result.trustScore}.png`}
+              className="btn-primary w-full py-2.5 text-sm"
+            >
+              <Download className="h-4 w-4" />
+              {en ? 'Download PNG' : 'PNG 다시 저장'}
+            </a>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
