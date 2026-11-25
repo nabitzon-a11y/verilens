@@ -74,7 +74,11 @@ function hasHangulText(text: string): boolean {
 }
 
 function bodyHasHangul(m: Mission): boolean {
-  const bodies = [m.a.type === 'text' ? m.a.body : '', m.b.type === 'text' ? m.b.body : ''];
+  // single 모드의 b 는 고정 라벨('AI 생성 · 합성')이므로 실제 판별 대상인 a 만 검사
+  const bodies =
+    m.mode === 'single'
+      ? [m.a.type === 'text' ? m.a.body : '']
+      : [m.a.type === 'text' ? m.a.body : '', m.b.type === 'text' ? m.b.body : ''];
   return bodies.some(hasHangulText);
 }
 
