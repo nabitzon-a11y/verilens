@@ -106,34 +106,154 @@ const SOURCE_PRESETS: Record<'ko' | 'en', readonly string[]> = {
   en: ['News Article', 'Delivery Review', 'Product Review', 'Social Post', 'Forum Reply', 'Cafe Review'],
 };
 
-const TEXT_SAMPLES = {
+interface TextSampleItem {
+  single: { prompt: string; a: string };
+  compare: { prompt: string; a: string; b: string };
+}
+
+const TEXT_SAMPLES_BY_SOURCE: Record<'ko' | 'en', Record<string, TextSampleItem>> = {
   ko: {
-    single: {
-      prompt: '실제 구매자 후기일까요, AI 생성 리뷰일까요?',
-      sourceLabel: '쇼핑몰 상품평',
-      a: '비 오는 날 출근길에 처음 신어봤는데 발목 뒤꿈치가 살짝 쓸리긴 해도 방수는 확실히 되네요. 다만 바닥이 생각보다 미끄러워서 지하철 계단 내려갈 땐 조심해야 할 듯합니다.',
+    '뉴스 기사': {
+      single: {
+        prompt: '실제 기자가 쓴 기사일까요, AI 생성 기사일까요?',
+        a: '21일 오전 7시 40분께 경기도의 한 아파트 지하 2층 주차장에서 불이 나 차량 3대가 타고 주민 20여 명이 대피했다. 소방당국은 장비 18대와 인력 52명을 투입해 약 40분 만에 불을 껐다.',
+      },
+      compare: {
+        prompt: '어느 쪽이 실제 사람이 직접 쓴 기사일까요?',
+        a: '서울의 한 전통시장 상인회는 이달부터 지역화폐로 결제하면 5%를 추가 할인해 주는 행사를 연다고 20일 밝혔다. 행사는 12월 31일까지이며 1인당 월 10만 원 한도다.',
+        b: '최근 지역 경제 활성화를 위한 다양한 노력이 이어지면서 소상공인들에게 큰 힘이 되고 있습니다. 전문가들은 이번 정책이 소비 진작에 긍정적인 영향을 미칠 것으로 기대하고 있습니다.',
+      },
     },
-    compare: {
-      prompt: '어느 쪽이 실제 사람이 직접 쓴 글일까요?',
-      sourceLabel: '배달앱 리뷰',
-      a: '김치찌개 국물이 진해서 밥 두 공기 뚝딱했어요. 다만 계란말이가 조금 식어서 온 건 아쉽네요. 다음엔 매장 가서 먹어보려고요.',
-      b: '신선한 재료와 정성스러운 조리가 어우러져 최고의 맛을 선사합니다. 깔끔한 포장과 신속한 배달 서비스까지 완벽한 만족감을 경험하실 수 있습니다.',
+    '배달앱 리뷰': {
+      single: {
+        prompt: '실제 주문자가 남긴 배달 리뷰일까요, AI 생성 리뷰일까요?',
+        a: '비 와서 15분 늦긴 했는데 기사님이 죄송하다고 먼저 연락 주셔서 괜찮았어요. 탕수육 소스는 부먹으로 왔는데 다행히 눅눅하진 않네요. 단무지 하나 더 넣어주셔서 감사!',
+      },
+      compare: {
+        prompt: '어느 쪽이 실제 사람이 직접 쓴 글일까요?',
+        a: '김치찌개 국물이 진해서 밥 두 공기 뚝딱했어요. 다만 계란말이가 조금 식어서 온 건 아쉽네요. 다음엔 매장 가서 먹어보려고요.',
+        b: '신선한 재료와 정성스러운 조리가 어우러져 최고의 맛을 선사합니다. 깔끔한 포장과 신속한 배달 서비스까지 완벽한 만족감을 경험하실 수 있습니다.',
+      },
+    },
+    '쇼핑몰 상품평': {
+      single: {
+        prompt: '실제 구매자 후기일까요, AI 생성 리뷰일까요?',
+        a: '비 오는 날 출근길에 처음 신어봤는데 발목 뒤꿈치가 살짝 쓸리긴 해도 방수는 확실히 되네요. 다만 바닥이 생각보다 미끄러워서 지하철 계단 내려갈 땐 조심해야 할 듯합니다.',
+      },
+      compare: {
+        prompt: '어느 쪽이 실제 사람이 직접 쓴 글일까요?',
+        a: '왼쪽만 가끔 끊겨요. 출근길 지하철 환승할 때 특히 심함. 배터리는 5시간 좀 넘게 가고 케이스 뚜껑이 헐렁해서 주머니에서 두 번 열렸어요.',
+        b: '뛰어난 음질과 편안한 착용감을 제공하는 제품입니다. 노이즈 캔슬링 성능 또한 기대 이상이었으며, 전반적으로 가격 대비 훌륭한 선택이라고 생각합니다.',
+      },
+    },
+    'SNS 게시글': {
+      single: {
+        prompt: '실제 사람이 올린 SNS 글일까요, AI 생성 글일까요?',
+        a: '엄마 생신이라 아침에 미역국 끓였는데 국간장을 콸콸 부어버려서 물 두 컵 더 부음... 냄비 넘치기 직전ㅋㅋ 그래도 엄마는 맛있다고 두 그릇 드심 ㅠ',
+      },
+      compare: {
+        prompt: '어느 쪽이 실제 사람이 직접 쓴 글일까요?',
+        a: '렌트카 반납 시간 착각해서 공항까지 20분 만에 밟음... 귤 한 박스 들고 비행기 탔다가 팔 빠질 뻔했어요 ㅋㅋ',
+        b: '제주도 여행은 정말 환상적이었습니다! 아름다운 자연경관과 맛있는 음식까지 모든 것이 완벽한 힐링의 시간이었어요. ✨🌊 #제주 #여행스타그램',
+      },
+    },
+    '커뮤니티 답변': {
+      single: {
+        prompt: '실제 경험자가 남긴 댓글일까요, AI 생성 답변일까요?',
+        a: '저도 똑같은 증상이었는데 공유기 껐다 켜도 안 되다가 랜선 바꾸니까 바로 해결됐어요. 오래된 선 보니까 CAT.5 적혀있더라고요. 기가 인터넷이면 선부터 확인해 보세요.',
+      },
+      compare: {
+        prompt: '어느 쪽이 실제 사람이 직접 쓴 글일까요?',
+        a: '저희 집 고양이도 사료 안 먹어서 병원 갔더니 치아 염증이었어요. 이틀 넘게 안 먹으면 무조건 병원 가세요. 저는 하루 더 기다렸다가 후회함.',
+        b: '고양이가 사료를 먹지 않는 데에는 스트레스, 건강 문제 등 다양한 원인이 있을 수 있습니다. 증상이 지속된다면 수의사와 상담하는 것을 권장합니다.',
+      },
+    },
+    '카페/식당 후기': {
+      single: {
+        prompt: '실제 방문객 후기일까요, AI 생성 리뷰일까요?',
+        a: '주차장 입구가 골목 안쪽이라 내비가 두 번이나 빙 돌렸어요. 커피는 산미 좋아하시면 괜찮고 아니면 비추. 2층 창가 자리엔 콘센트가 없으니 참고하세요.',
+      },
+      compare: {
+        prompt: '어느 쪽이 실제 사람이 직접 쓴 글일까요?',
+        a: '웨이팅 40분 했는데 국물은 솔직히 좀 짰음. 근데 수육이 미쳤어요 ㅋㅋ 비계 싫어하는 저도 다 먹음. 주차는 포기하세요.',
+        b: '세련된 인테리어와 아늑한 분위기가 돋보이는 공간입니다. 정성 가득한 메뉴와 친절한 응대 덕분에 잊지 못할 시간을 보냈습니다. 강력 추천해요!',
+      },
     },
   },
   en: {
-    single: {
-      prompt: 'Is this a real buyer review or AI-generated?',
-      sourceLabel: 'Product Review',
-      a: 'Wore these on my rainy commute today—waterproofing held up great, though the heel rubbed a bit on the first mile. Watch out on wet subway stairs since the sole feels slightly slick.',
+    'News Article': {
+      single: {
+        prompt: 'Was this news report written by a real journalist or AI?',
+        a: 'Around 7:40 a.m. on the 21st, a fire broke out in the B2 underground parking lot of an apartment complex, damaging 3 cars and forcing 20 residents to evacuate. Firefighters extinguished it in 40 minutes.',
+      },
+      compare: {
+        prompt: 'Which one was written by a real human?',
+        a: 'A local market association announced on the 20th a 5% extra discount for local-currency payments through December 31, capped at $75 per person each month.',
+        b: 'Recent efforts to revitalize the local economy are gaining momentum. Experts anticipate this initiative will have a positive impact on consumer sentiment and small businesses.',
+      },
     },
-    compare: {
-      prompt: 'Which one was written by a real human?',
-      sourceLabel: 'Delivery Review',
-      a: 'Broth was rich enough that I finished two bowls of rice. The rolled omelet arrived a little lukewarm, which was a minor letdown, so I will dine in next time.',
-      b: 'Fresh ingredients and meticulous preparation combine to deliver an extraordinary culinary experience. Clean packaging and prompt delivery ensure complete satisfaction.',
+    'Delivery Review': {
+      single: {
+        prompt: 'Is this a real delivery review or AI-generated?',
+        a: 'Arrived 15 minutes late in the rain, though the driver texted ahead to apologize so it was totally fine. Sauce came already poured on, luckily the pork stayed crispy. Thanks for the extra pickles!',
+      },
+      compare: {
+        prompt: 'Which one was written by a real human?',
+        a: 'Broth was rich enough that I finished two bowls of rice. The rolled omelet arrived a little lukewarm, which was a minor letdown, so I will dine in next time.',
+        b: 'Fresh ingredients and meticulous preparation combine to deliver an extraordinary culinary experience. Clean packaging and prompt delivery ensure complete satisfaction.',
+      },
+    },
+    'Product Review': {
+      single: {
+        prompt: 'Is this a real buyer review or AI-generated?',
+        a: 'Wore these on my rainy commute today—waterproofing held up great, though the heel rubbed a bit on the first mile. Watch out on wet subway stairs since the sole feels slightly slick.',
+      },
+      compare: {
+        prompt: 'Which one was written by a real human?',
+        a: 'Left bud drops out occasionally when transferring at rush-hour subway stations. Battery lasts a bit over 5 hours and the case lid popped open in my pocket twice.',
+        b: 'These earbuds offer excellent sound quality and a comfortable fit. The noise-canceling performance also exceeded expectations, making it a great value choice overall.',
+      },
+    },
+    'Social Post': {
+      single: {
+        prompt: 'Is this a real social post or AI-generated?',
+        a: "Made seaweed soup this morning for mom's birthday and dumped way too much soy sauce in while tasting... pot almost overflowed lol. Mom still had two bowls tho!",
+      },
+      compare: {
+        prompt: 'Which one was written by a real human?',
+        a: 'Misread the rental car return time and floored it to the airport in 20 mins... nearly threw my arm out carrying a whole box of tangerines onto the plane lol.',
+        b: 'This trip was truly unforgettable! From breathtaking scenery to amazing food, every single moment felt like pure healing. ✨🌊 #Travel #Memories',
+      },
+    },
+    'Forum Reply': {
+      single: {
+        prompt: 'Is this a real forum reply or AI-generated?',
+        a: 'Had the exact same issue—rebooting did nothing, swapping the ethernet cable fixed it instantly. Checked my old cable and it said CAT.5 on it. Check your cable first on gigabit plans.',
+      },
+      compare: {
+        prompt: 'Which one was written by a real human?',
+        a: 'My cat stopped eating too and it turned out to be a tooth infection. If it goes past two days, go straight to the vet—I waited an extra day and regretted it.',
+        b: 'There can be several reasons a cat refuses food, including stress or underlying health issues. If the symptom persists, consulting a veterinarian is strongly recommended.',
+      },
+    },
+    'Cafe Review': {
+      single: {
+        prompt: 'Is this a real cafe review or AI-generated?',
+        a: 'Parking entrance is tucked in a back alley—GPS looped me twice. Coffee is nice if you like bright acidity, skip if not. No power outlets by the 2nd floor window seats.',
+      },
+      compare: {
+        prompt: 'Which one was written by a real human?',
+        a: 'Waited 40 mins and honestly the broth was a bit salty. Pork slices were insane though lol, ate every piece. Just forget about parking here.',
+        b: 'A cozy space boasting stylish interior design and wonderful ambiance. Thanks to the heartfelt menu and attentive staff, we had an unforgettable time. Highly recommended!',
+      },
     },
   },
-} as const;
+};
+
+const DEFAULT_SOURCE_KEY: Record<'ko' | 'en', string> = {
+  ko: '쇼핑몰 상품평',
+  en: 'Product Review',
+};
 
 /** 두 텍스트의 유사도 (0~1, 2글자 바이그램 Jaccard) */
 function textSimilarity(a: string, b: string): number {
@@ -200,9 +320,13 @@ export default function SubmitPage() {
   };
 
   const fillSample = () => {
-    const sample = TEXT_SAMPLES[en ? 'en' : 'ko'][mode];
+    const locale = en ? 'en' : 'ko';
+    const pool = TEXT_SAMPLES_BY_SOURCE[locale];
+    const trimmed = sourceLabel.trim();
+    const resolvedKey = trimmed && trimmed in pool ? trimmed : DEFAULT_SOURCE_KEY[locale];
+    const sample = pool[resolvedKey][mode];
     setPrompt(sample.prompt);
-    setSourceLabel(sample.sourceLabel);
+    if (!trimmed) setSourceLabel(resolvedKey);
     setTextA(sample.a);
     if (mode === 'compare' && 'b' in sample) {
       setTextB(sample.b);
