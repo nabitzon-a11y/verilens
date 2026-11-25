@@ -69,6 +69,13 @@ export const BONUS = {
   CHANCE: 0.4,
 } as const;
 
+/** 데일리 퀘스트 & 연속 참여 마일스톤 보너스 */
+export const QUEST = {
+  DAILY_TRUST_BONUS: 20,
+  STREAK_MILESTONES: [3, 7, 14, 30] as readonly number[],
+  MILESTONE_TRUST_BONUS: 35,
+} as const;
+
 /** PiVerify 3단계 세션 보안 규칙 */
 export const VERIFY = {
   /** 1단계: 세션 토큰 유효시간 (1시간) */

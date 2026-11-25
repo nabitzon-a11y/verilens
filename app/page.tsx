@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
+  CheckCircle2,
   ChevronRight,
   Coins,
+  Crown,
   FilePlus2,
   Flame,
   Gift,
@@ -16,12 +18,14 @@ import {
   Loader2,
   ScanFace,
   ShieldCheck,
+  Sparkles,
+  Target,
   Timer,
+  Trophy,
   Users,
-  Wallet,
 } from 'lucide-react';
 import clsx from 'clsx';
-import type { LivePoolResponse, VerifySession } from '@/types';
+import type { HomeOverviewResponse, LivePoolResponse, VerifySession } from '@/types';
 import { translatePromptToEn, translatePromptToKo } from '@/data/missions.en';
 import { AiHintsModal } from '@/components/AiHintsModal';
 import { useApp } from '@/components/AppProvider';
@@ -32,7 +36,7 @@ import { api } from '@/lib/apiClient';
 import { GAME, TRUST_TIERS } from '@/lib/constants';
 import { formatMmSs, formatPi } from '@/lib/format';
 import { useNow } from '@/lib/hooks';
-import { HOME_TEXT, NAV_LABELS, VERIFY_TEXT } from '@/lib/i18n';
+import { HOME_TEXT, VERIFY_TEXT } from '@/lib/i18n';
 import { getActiveSession, startHumanSession } from '@/lib/piVerifyClient';
 
 
@@ -44,14 +48,28 @@ export default function HomePage() {
   const [session, setSession] = useState<VerifySession | null>(null);
   const [starting, setStarting] = useState(false);
   const [hintsOpen, setHintsOpen] = useState(false);
+  const [overview, setOverview] = useState<HomeOverviewResponse | null>(null);
 
   const t = HOME_TEXT[lang];
-  const nav = NAV_LABELS[lang];
   const vt = VERIFY_TEXT[lang];
 
   useEffect(() => {
     setSession(profile ? getActiveSession(profile.uid) : null);
   }, [profile]);
+
+  useEffect(() => {
+    if (!profile) {
+      setOverview(null);
+      return;
+    }
+    let alive = true;
+    api<HomeOverviewResponse>(`/api/home/overview?lang=${lang}`)
+      .then((d) => alive && setOverview(d))
+      .catch(() => alive && setOverview(null));
+    return () => {
+      alive = false;
+    };
+  }, [profile, lang]);
 
   const remaining = session ? Math.max(0, session.expiresAt - now) : 0;
   const sessionActive = remaining > 0;
@@ -103,6 +121,7 @@ export default function HomePage() {
               {t.introSuffix}
             </p>
           </section>
+          <TeaserQuizCard lang={lang} onStartFull={() => void startSession()} />
           <LoginPanel title={t.loginTitle} />
         </>
       ) : (
@@ -124,7 +143,17 @@ export default function HomePage() {
               <Stat icon={<Layers className="h-4 w-4 text-brand" />} label={t.setsLabel} value={`${profile.setsCompleted}`} />
               <Stat icon={<Coins className="h-4 w-4 text-pi-light" />} label={t.balanceLabel} value={formatPi(profile.balance)} accent />
             </div>
+
+            {overview && <DailyQuestBar quest={overview.quest} lang={lang} />}
           </section>
+
+          {/* 오늘 아직 1세트도 안 풀었으면 5초 맛보기 퀴즈로 즉시 몰입 유도 */}
+          {overview && !overview.quest.dailyDoneToday && (
+            <TeaserQuizCard
+              lang={lang}
+              onStartFull={() => (sessionActive ? router.push('/verify') : void startSession())}
+            />
+          )}
 
           {/* 세션 */}
           <section className="card space-y-3.5">
@@ -162,20 +191,13 @@ export default function HomePage() {
             )}
           </section>
 
-          {/* 의뢰하기 강조: 하루 1회 무료 출제 + 실시간 의뢰 현황 */}
-          <SubmitSpotlight lang={lang} />
+          {/* 의뢰하기 강조: 하루 1회 무료 출제 + 실시간 의뢰 현황 (중복 빠른이동 버튼은 UX 다이어트로 제거) */}
+          <SubmitSpotlight lang={lang} live={overview?.live ?? null} />
 
-          {/* 빠른 이동 */}
-          <div className="grid grid-cols-2 gap-2.5">
-            <Link href="/submit" className="btn-ghost">
-              <FilePlus2 className="h-4 w-4 text-brand" />
-              {nav.submit}
-            </Link>
-            <Link href="/wallet" className="btn-ghost">
-              <Wallet className="h-4 w-4 text-pi-light" />
-              {nav.wallet}
-            </Link>
-          </div>
+          {/* 실시간 명예의 전당 Top 5 리더보드 */}
+          {overview && overview.leaderboard.top.length > 0 && (
+            <LeaderboardCard board={overview.leaderboard} lang={lang} />
+          )}
         </>
       )}
 
@@ -221,19 +243,193 @@ export default function HomePage() {
   );
 }
 
-function SubmitSpotlight({ lang }: { lang: 'ko' | 'en' }) {
+function DailyQuestBar({ quest, lang }: { quest: HomeOverviewResponse['quest']; lang: 'ko' | 'en' }) {
   const en = lang === 'en';
-  const [live, setLive] = useState<LivePoolResponse | null>(null);
+  return (
+    <div
+      className={clsx(
+        'flex items-center gap-2.5 rounded-2xl border px-3.5 py-2.5 text-xs',
+        quest.dailyDoneToday
+          ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+          : 'border-brand/20 bg-brand-soft/70 text-slate-800',
+      )}
+    >
+      {quest.dailyDoneToday ? (
+        <CheckCircle2 className="h-4 w-4 shrink-0 text-human-dark" />
+      ) : (
+        <Target className="h-4 w-4 shrink-0 text-brand" />
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="font-bold">
+          {quest.dailyDoneToday
+            ? en
+              ? `Today's Quest Complete! (+${quest.dailyBonusPts} pts earned)`
+              : `오늘의 미션 완료! (+${quest.dailyBonusPts}점 획득)`
+            : en
+              ? `Today's Quest: Finish 1 set (+${quest.dailyBonusPts} Trust pts)`
+              : `오늘의 미션: 1세트 완료 시 신뢰도 +${quest.dailyBonusPts}점`}
+        </p>
+        {quest.nextMilestone && (
+          <p className="mt-0.5 text-[11px] opacity-80">
+            {en
+              ? `${quest.nextMilestone}-day streak bonus (+${quest.milestoneBonusPts} pts) · ${quest.streak}/${quest.nextMilestone}d`
+              : `${quest.nextMilestone}일 연속 달성 시 +${quest.milestoneBonusPts}점 보너스 (${quest.streak}/${quest.nextMilestone}일)`}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
 
-  useEffect(() => {
-    let alive = true;
-    api<LivePoolResponse>(`/api/missions/live?lang=${lang}`)
-      .then((d) => alive && setLive(d))
-      .catch(() => alive && setLive(null));
-    return () => {
-      alive = false;
-    };
-  }, [lang]);
+const TEASER_QUIZ = {
+  ko: {
+    badge: '5초 맛보기 퀴즈',
+    question: '어느 쪽이 실제 중고거래 판매자가 쓴 글일까요?',
+    a: '[급처] 아이패드 프로 미개봉 35만원! 해외 출장 중이라 직거래 불가하고 안전결제 링크로만 거래합니다.',
+    b: '아이패드 프로 쓰던 거 팔아요. 액정 오른쪽 아래 생활기스 하나 있고 배터리 89%예요. 강남역 직거래만.',
+    human: 'B' as const,
+    explain: '시세보다 터무니없이 싸고 "해외 출장·외부 링크"를 유도하는 A는 전형적인 AI/사기 템플릿입니다!',
+  },
+  en: {
+    badge: '5-Sec Quick Try',
+    question: 'Which marketplace listing was written by a real human seller?',
+    a: '[URGENT] Sealed iPad Pro $250! Overseas on business so no meetups—pay only via my secure link today!',
+    b: 'Selling my used iPad Pro. Light scratch on bottom-right screen, 89% battery health. Meetup only at Central Station.',
+    human: 'B' as const,
+    explain: 'Unreal price + "overseas, external link only" (A) is a classic AI/scam template. Real sellers disclose flaws!',
+  },
+};
+
+function TeaserQuizCard({ lang, onStartFull }: { lang: 'ko' | 'en'; onStartFull: () => void }) {
+  const en = lang === 'en';
+  const q = TEASER_QUIZ[lang];
+  const [picked, setPicked] = useState<'A' | 'B' | null>(null);
+  const correct = picked === q.human;
+
+  return (
+    <section className="card space-y-3 border-2 border-brand/25 bg-gradient-to-br from-white via-white to-brand-soft/45">
+      <div className="flex items-center justify-between">
+        <span className="chip bg-brand text-white">
+          <Sparkles className="h-3.5 w-3.5" />
+          {q.badge}
+        </span>
+        <span className="text-[11px] font-bold text-slate-400">{en ? 'Tap A or B' : 'A 또는 B를 눌러보세요'}</span>
+      </div>
+      <p className="text-[15px] font-extrabold text-slate-900">{q.question}</p>
+      <div className="grid gap-2">
+        {(['A', 'B'] as const).map((side) => {
+          const body = side === 'A' ? q.a : q.b;
+          const isPick = picked === side;
+          const isHuman = side === q.human;
+          return (
+            <button
+              key={side}
+              type="button"
+              disabled={picked !== null}
+              onClick={() => setPicked(side)}
+              className={clsx(
+                'flex items-start gap-2.5 rounded-2xl border-2 p-3 text-left text-[13px] leading-relaxed transition',
+                picked === null
+                  ? 'border-slate-200 bg-white hover:border-brand/50'
+                  : isHuman
+                    ? 'border-emerald-400 bg-emerald-50 text-emerald-950'
+                    : isPick
+                      ? 'border-rose-300 bg-rose-50 text-rose-900'
+                      : 'border-slate-100 bg-slate-50 text-slate-400',
+              )}
+            >
+              <span
+                className={clsx(
+                  'mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-black',
+                  picked !== null && isHuman
+                    ? 'bg-emerald-600 text-white'
+                    : isPick
+                      ? 'bg-rose-500 text-white'
+                      : 'bg-slate-900 text-white',
+                )}
+              >
+                {side}
+              </span>
+              <span>{body}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {picked !== null && (
+        <div className="space-y-2.5 rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
+          <p className={clsx('text-xs font-extrabold', correct ? 'text-human-dark' : 'text-rose-600')}>
+            {correct
+              ? en
+                ? 'Spot on! Sharp human intuition!'
+                : '정답입니다! 날카로운 인간 직관이에요!'
+              : en
+                ? 'Ooh, caught by the trap! Answer was B.'
+                : '아쉽네요! 진짜 판매자는 B였어요.'}
+          </p>
+          <p className="text-xs leading-relaxed text-slate-600">{q.explain}</p>
+          <button type="button" onClick={onStartFull} className="btn-primary w-full py-3 text-sm font-bold">
+            <ScanFace className="h-4 w-4" />
+            {en ? 'Play full 5-item set & earn Pi' : '본 게임 5문항 풀고 Pi 보상 받기'}
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function LeaderboardCard({ board, lang }: { board: HomeOverviewResponse['leaderboard']; lang: 'ko' | 'en' }) {
+  const en = lang === 'en';
+  return (
+    <section className="card space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="flex items-center gap-1.5 text-sm font-extrabold text-slate-900">
+          <Trophy className="h-4 w-4 text-amber-500" />
+          {en ? 'Top 5 Human Intuition' : '명예의 전당 · 인간 직관 TOP 5'}
+        </p>
+        <span className="chip bg-slate-100 text-[11px] text-slate-600">
+          {en ? `My Rank #${board.myRank}/${board.totalUsers}` : `내 순위 #${board.myRank}/${board.totalUsers}`}
+        </span>
+      </div>
+      <div className="space-y-1.5">
+        {board.top.map((row) => (
+          <div
+            key={`${row.rank}-${row.username}`}
+            className={clsx(
+              'flex items-center gap-2.5 rounded-xl border px-3 py-2 text-xs',
+              row.isMe ? 'border-brand/40 bg-brand-soft/70 font-bold' : 'border-slate-100 bg-slate-50',
+            )}
+          >
+            <span
+              className={clsx(
+                'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-black',
+                row.rank === 1
+                  ? 'bg-amber-400 text-white'
+                  : row.rank === 2
+                    ? 'bg-slate-400 text-white'
+                    : row.rank === 3
+                      ? 'bg-amber-700 text-white'
+                      : 'bg-slate-200 text-slate-600',
+              )}
+            >
+              {row.rank === 1 ? <Crown className="h-3.5 w-3.5" /> : row.rank}
+            </span>
+            <span className="min-w-0 flex-1 truncate text-slate-800">
+              @{row.username}
+              {row.isMe && <span className="ml-1 text-[10px] text-brand">{en ? '(You)' : '(나)'}</span>}
+            </span>
+            <TierChip score={row.trustScore} className="px-2 py-0.5 text-[10px]" />
+            <span className="w-12 text-right font-mono font-extrabold text-slate-900">{row.trustScore}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function SubmitSpotlight({ lang, live }: { lang: 'ko' | 'en'; live: LivePoolResponse | null }) {
+  const en = lang === 'en';
 
   const free = live ? live.freeQuizAvailable : true;
   const eligible = live ? live.freeQuizEligible : true;

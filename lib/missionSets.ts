@@ -15,7 +15,7 @@ import { SEED_EN } from '@/data/missions.en';
 import { BONUS_QUIZZES, getBonusQuiz, toPublicBonus } from '@/data/bonus';
 import { evaluateBehavior, evaluateTimingIntegrity } from './behavior';
 import { decideConsensus, getPriorVotes, tallyVotes } from './consensus';
-import { BONUS, GAME, TRUST, TRUST_TIERS, VERIFY, applyTrustChange, getTrustTier, roundPi } from './constants';
+import { BONUS, GAME, QUEST, TRUST, TRUST_TIERS, VERIFY, applyTrustChange, getTrustTier, roundPi } from './constants';
 import { HttpError } from './http';
 import { withLock } from './lock';
 import { SESSION_STAGES, getPiVerifyAdapter } from './piVerify';
@@ -306,11 +306,27 @@ export async function submitMissionSet(
       const user = migrateTrust(raw);
       const beforeTier = getTrustTier(user.trustScore);
 
+      const today = kstDate();
+      const updatedStreak = nextStreak(user);
+      const dailyQuestBonus = qualified && user.lastQuestDate !== today ? QUEST.DAILY_TRUST_BONUS : 0;
+      const hitMilestone =
+        qualified &&
+        user.lastActiveDate !== today &&
+        QUEST.STREAK_MILESTONES.includes(updatedStreak)
+          ? updatedStreak
+          : undefined;
+      const streakBonus = hitMilestone ? QUEST.MILESTONE_TRUST_BONUS : 0;
+
       const bonusGain =
         bonusCorrect && qualified
           ? Math.max(TRUST.BONUS_MIN_DELTA, Math.round(TRUST.BONUS_CORRECT_DELTA * beforeTier.gainRate))
           : 0;
-      const { next: nextTrust, delta: trustDelta } = applyTrustChange(user.trustScore, rawGain, rawLoss, bonusGain);
+      const { next: nextTrust, delta: trustDelta } = applyTrustChange(
+        user.trustScore,
+        rawGain,
+        rawLoss,
+        bonusGain + dailyQuestBonus + streakBonus,
+      );
       const afterTier = getTrustTier(nextTrust);
       const tierOrder = (t: string) => GAME_TIER_ORDER.indexOf(t);
       const tierChange =
@@ -338,8 +354,9 @@ export async function submitMissionSet(
         totalEarned: roundPi(user.totalEarned + reward),
         setsCompleted: user.setsCompleted + 1,
         botFlags: user.botFlags + (flagged ? 1 : 0),
-        streak: nextStreak(user),
-        lastActiveDate: kstDate(),
+        streak: updatedStreak,
+        lastActiveDate: today,
+        lastQuestDate: dailyQuestBonus > 0 ? today : user.lastQuestDate,
         updatedAt: completedAt,
       };
 
@@ -375,6 +392,8 @@ export async function submitMissionSet(
         tierChange,
         perfect,
         bonus,
+        dailyQuestBonus: dailyQuestBonus > 0 ? dailyQuestBonus : undefined,
+        streakMilestone: hitMilestone,
         topPercent: estimateTopPercent(matchedCount, set.missionIds.length),
         streak: updated.streak,
         challengeMissionId,

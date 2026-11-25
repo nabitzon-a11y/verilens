@@ -119,6 +119,8 @@ export interface PioneerUser {
   streak: number;
   /** 마지막 참여일 (YYYY-MM-DD, KST 기준) */
   lastActiveDate?: string;
+  /** 마지막 데일리 퀘스트 보상 수령일 (YYYY-MM-DD, KST 기준) */
+  lastQuestDate?: string;
   /** 출금 가능 잔액 (Pi) */
   balance: number;
   /** 누적 획득 보상 (Pi) */
@@ -253,6 +255,31 @@ export interface PublicMissionSet {
   bonus?: PublicBonusQuiz;
 }
 
+/** 홈 화면 통합 응답 (단일 API 호출로 네트워크/로그 최소화) */
+export interface HomeOverviewResponse {
+  live: LivePoolResponse;
+  leaderboard: {
+    top: {
+      rank: number;
+      username: string;
+      trustScore: number;
+      tier: PioneerProfile['tier'];
+      tierLabel: string;
+      setsCompleted: number;
+      isMe?: boolean;
+    }[];
+    myRank: number;
+    totalUsers: number;
+  };
+  quest: {
+    dailyDoneToday: boolean;
+    dailyBonusPts: number;
+    streak: number;
+    nextMilestone: number | null;
+    milestoneBonusPts: number;
+  };
+}
+
 /** 홈 화면 실시간 의뢰 현황 */
 export interface LivePoolResponse {
   activeCount: number;
@@ -337,6 +364,10 @@ export interface SetResult {
   perfect?: boolean;
   /** 보너스 문제 결과 */
   bonus?: BonusResult;
+  /** 오늘 첫 유효 세트 완료 데일리 퀘스트 보너스 점수 */
+  dailyQuestBonus?: number;
+  /** 3/7/14/30일 연속 참여 달성 보너스 (달성 일수) */
+  streakMilestone?: number;
   /** 상위 N% (시뮬레이션) */
   topPercent: number;
   streak: number;

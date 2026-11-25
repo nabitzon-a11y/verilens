@@ -140,6 +140,27 @@ export default function ResultPage() {
 
       <StatusBanner result={result} t={t} />
 
+      {(result.dailyQuestBonus || result.streakMilestone) && (
+        <section className="space-y-2">
+          {result.dailyQuestBonus && (
+            <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-3.5 text-sm font-bold text-emerald-900">
+              <Sparkles className="h-5 w-5 shrink-0 text-human-dark" />
+              {lang === 'en'
+                ? `Daily Quest Complete! +${result.dailyQuestBonus} Trust pts`
+                : `오늘의 미션 달성! 신뢰도 +${result.dailyQuestBonus}점 추가`}
+            </div>
+          )}
+          {result.streakMilestone && (
+            <div className="flex items-center gap-2 rounded-2xl border border-amber-300 bg-amber-50 p-3.5 text-sm font-bold text-amber-900">
+              <Flame className="h-5 w-5 shrink-0 text-orange-500" />
+              {lang === 'en'
+                ? `${result.streakMilestone}-Day Streak Milestone! +35 Bonus Trust pts`
+                : `${result.streakMilestone}일 연속 참여 달성! 보너스 신뢰도 +35점`}
+            </div>
+          )}
+        </section>
+      )}
+
       <TierCard result={result} lang={lang} username={profile?.username} onToast={setToast} />
 
       {result.bonus && <BonusResultCard bonus={result.bonus} lang={lang} />}
