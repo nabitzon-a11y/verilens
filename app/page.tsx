@@ -33,7 +33,7 @@ import { LoginPanel } from '@/components/LoginPanel';
 import { useScanModal } from '@/components/ScanModal';
 import { TierChip, TrustProgress } from '@/components/TierBadge';
 import { api } from '@/lib/apiClient';
-import { GAME, TRUST_TIERS } from '@/lib/constants';
+import { GAME, TRUST_TIERS, getTrustTier } from '@/lib/constants';
 import { formatMmSs, formatPi } from '@/lib/format';
 import { useNow } from '@/lib/hooks';
 import { HOME_TEXT, VERIFY_TEXT } from '@/lib/i18n';
@@ -74,7 +74,7 @@ export default function HomePage() {
   const remaining = session ? Math.max(0, session.expiresAt - now) : 0;
   const sessionActive = remaining > 0;
 
-  const startSession = async () => {
+  const startSession = async (nextHref = '/verify') => {
     setStarting(true);
     try {
       const s = await run(() => startHumanSession(), {
@@ -82,7 +82,7 @@ export default function HomePage() {
         subtitle: vt.scanSubtitle,
       });
       setSession(s);
-      router.push('/verify');
+      router.push(nextHref);
     } catch {
       /* 모달에서 오류 표시 */
     } finally {
@@ -133,7 +133,14 @@ export default function HomePage() {
                 <p className="label">Pioneer</p>
                 <p className="text-xl font-extrabold text-slate-900">@{profile.username}</p>
               </div>
-              <TierChip score={profile.trustScore} />
+              <div className="flex flex-col items-end gap-1">
+                <TierChip score={profile.trustScore} />
+                <span className="text-[11px] font-bold text-pi-light">
+                  {lang === 'en'
+                    ? `Reward ${getTrustTier(profile.trustScore).rewardMult}x (Max 2x)`
+                    : `보상 ${getTrustTier(profile.trustScore).rewardMult}x (최대 2배)`}
+                </span>
+              </div>
             </div>
 
             <TrustProgress label={t.trustLabel} score={profile.trustScore} lang={lang} />
@@ -183,12 +190,38 @@ export default function HomePage() {
                   <b className="text-slate-900">{t.sessionDescHighlight}</b>
                   {t.sessionDesc2}
                 </p>
-                <button type="button" className="btn-primary w-full py-4 text-[17px] font-bold" onClick={startSession} disabled={starting}>
+                <button
+                  type="button"
+                  className="btn-primary w-full py-4 text-[17px] font-bold"
+                  onClick={() => void startSession()}
+                  disabled={starting}
+                >
                   {starting ? <Loader2 className="h-5 w-5 animate-spin" /> : <ScanFace className="h-5 w-5" />}
                   {t.startSession}
                 </button>
               </>
             )}
+            <button
+              type="button"
+              onClick={() => (sessionActive ? router.push('/verify?mode=daily') : void startSession('/verify?mode=daily'))}
+              disabled={starting}
+              className="flex w-full items-center justify-between rounded-2xl border-2 border-amber-300 bg-gradient-to-r from-amber-50 via-white to-rose-50 px-4 py-3 text-left transition hover:border-amber-400"
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-white shadow-sm">
+                  <Flame className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-sm font-extrabold text-slate-900">
+                    {lang === 'en' ? "Today's Daily Challenge (5 Qs)" : '오늘의 데일리 챌린지 (공통 5문제)'}
+                  </p>
+                  <p className="text-[11px] font-semibold text-slate-500">
+                    {lang === 'en' ? '1-min daily · Same questions worldwide!' : '하루 1분 컷 · 전 세계 유저 공통 문제!'}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 shrink-0 text-amber-600" />
+            </button>
           </section>
 
           {/* 의뢰하기 강조: 하루 1회 무료 출제 + 실시간 의뢰 현황 (중복 빠른이동 버튼은 UX 다이어트로 제거) */}

@@ -1,5 +1,5 @@
 import 'server-only';
-import { randomInt, randomUUID } from 'crypto';
+import { createHash, randomInt, randomUUID } from 'crypto';
 import type {
   AnswerInput,
   BonusResult,
@@ -28,6 +28,16 @@ import { migrateTrust } from './users';
 
 /** 등급 순서 (index 가 작을수록 상위) */
 const GAME_TIER_ORDER: string[] = TRUST_TIERS.map((t) => t.tier);
+
+function deterministicShuffle<T extends { id: string }>(items: T[], seed: string): T[] {
+  return [...items]
+    .map((item) => ({
+      item,
+      key: createHash('sha256').update(`${seed}:${item.id}`).digest('hex'),
+    }))
+    .sort((a, b) => a.key.localeCompare(b.key))
+    .map((x) => x.item);
+}
 
 function shuffle<T>(items: T[]): T[] {
   const arr = [...items];
@@ -103,6 +113,7 @@ export async function issueMissionSet(
   verifyToken: string,
   challengeId?: string,
   lang: 'ko' | 'en' = 'ko',
+  mode: 'normal' | 'daily' = 'normal',
 ): Promise<PublicMissionSet> {
   requireVerifySession(verifyToken, user.uid);
   const repo = getRepository();
@@ -118,30 +129,53 @@ export async function issueMissionSet(
 
   const need = GAME.QUESTIONS_PER_SET - GAME.GOLD_PER_SET;
   const picked: Mission[] = [];
-
   const langEligible = (m: Mission) => isMissionEligibleForLang(m, lang);
-
   const eligibleGolds = golds.filter(langEligible);
   const goldPool = eligibleGolds.length > 0 ? eligibleGolds : golds;
 
-  const challenge = challengeId ? regular.find((m) => m.id === challengeId) : undefined;
-  if (challenge) picked.push(challenge);
+  const isDaily = mode === 'daily';
+  let ordered: Mission[];
+  let gold: Mission;
 
-  const requesterFirst = shuffle(
-    regular.filter((m) => m.origin === 'requester' && langEligible(m) && !picked.includes(m)),
-  ).slice(0, 2);
-  picked.push(...requesterFirst);
+  if (isDaily) {
+    // 오늘(KST) 날짜 기반 전 세계 공통 5문항 (시드 문항 풀에서 결정적 선택)
+    const dailySeed = `daily:${kstDate()}:${lang}`;
+    const seedRegular = deterministicShuffle(
+      regular.filter((m) => m.origin === 'seed' && langEligible(m)),
+      dailySeed,
+    );
+    const seedGolds = deterministicShuffle(
+      goldPool.filter((m) => m.origin === 'seed'),
+      `${dailySeed}:gold`,
+    );
+    ordered = seedRegular.slice(0, need);
+    gold = seedGolds[0] ?? goldPool[0];
+    const hashByte = createHash('sha256').update(dailySeed).digest()[0];
+    ordered.splice(hashByte % (ordered.length + 1), 0, gold);
+  } else {
+    const challenge = challengeId ? regular.find((m) => m.id === challengeId) : undefined;
+    if (challenge) picked.push(challenge);
 
-  for (const m of shuffle(regular.filter((m) => langEligible(m) && !picked.includes(m)))) {
-    if (picked.length >= need) break;
-    picked.push(m);
+    const requesterFirst = shuffle(
+      regular.filter((m) => m.origin === 'requester' && langEligible(m) && !picked.includes(m)),
+    ).slice(0, 2);
+    picked.push(...requesterFirst);
+
+    for (const m of shuffle(regular.filter((m) => langEligible(m) && !picked.includes(m)))) {
+      if (picked.length >= need) break;
+      picked.push(m);
+    }
+
+    ordered = shuffle(picked.slice(0, need));
+    gold = goldPool[randomInt(goldPool.length)];
+    ordered.splice(randomInt(ordered.length + 1), 0, gold);
   }
 
-  const ordered = shuffle(picked.slice(0, need));
-  const gold = goldPool[randomInt(goldPool.length)];
-  ordered.splice(randomInt(ordered.length + 1), 0, gold);
-
-  const bonusQuiz = randomInt(1000) < BONUS.CHANCE * 1000 ? BONUS_QUIZZES[randomInt(BONUS_QUIZZES.length)] : undefined;
+  const bonusQuiz = isDaily
+    ? BONUS_QUIZZES[createHash('sha256').update(`daily-bonus:${kstDate()}`).digest()[0] % BONUS_QUIZZES.length]
+    : randomInt(1000) < BONUS.CHANCE * 1000
+      ? BONUS_QUIZZES[randomInt(BONUS_QUIZZES.length)]
+      : undefined;
 
   const set: MissionSet = {
     setId: randomUUID(),
@@ -150,6 +184,7 @@ export async function issueMissionSet(
     verifyToken,
     issuedAt: new Date().toISOString(),
     bonusId: bonusQuiz?.id,
+    isDaily: isDaily || undefined,
   };
   await repo.saveSet(set);
 
@@ -286,9 +321,6 @@ export async function submitMissionSet(
     const qualified = !flagged && goldPassed;
     const perfect = qualified && regularCount > 0 && rewardedCount === regularCount;
 
-    // 보상 (Pi)
-    const reward = qualified ? roundPi(rewardedCount * GAME.REWARD_PER_MATCH_PI) : 0;
-
     // 신뢰도 기본 변동폭 (등급 배율은 사용자 점수 기준으로 아래에서 적용)
     let rawGain = 0;
     let rawLoss = 0;
@@ -309,6 +341,8 @@ export async function submitMissionSet(
       if (!raw) throw new HttpError(401, '사용자 정보를 찾을 수 없습니다.', 'UNAUTHORIZED');
       const user = migrateTrust(raw);
       const beforeTier = getTrustTier(user.trustScore);
+      const rewardMult = beforeTier.rewardMult;
+      const reward = qualified ? roundPi(rewardedCount * GAME.REWARD_PER_MATCH_PI * rewardMult) : 0;
 
       const today = kstDate();
       const updatedStreak = nextStreak(user);
@@ -390,6 +424,8 @@ export async function submitMissionSet(
         flagReason,
         rechecked,
         reward,
+        rewardMultiplier: rewardMult,
+        isDaily: set.isDaily,
         trustDelta,
         trustScore: updated.trustScore,
         trustBefore: user.trustScore,

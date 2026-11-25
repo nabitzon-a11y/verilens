@@ -36,7 +36,9 @@ function VerifyGame() {
   const { ready, profile, verifyMode, refresh, lang } = useApp();
   const t = VERIFY_TEXT[lang];
   const router = useRouter();
-  const challenge = useSearchParams().get('challenge') ?? undefined;
+  const searchParams = useSearchParams();
+  const challenge = searchParams.get('challenge') ?? undefined;
+  const mode = searchParams.get('mode') === 'daily' ? 'daily' : 'normal';
   const now = useNow(1000);
   const { modal, run } = useScanModal(verifyMode === 'mock');
 
@@ -74,7 +76,7 @@ function VerifyGame() {
       setError(null);
       try {
         const data = await api<PublicMissionSet>('/api/missions/set', {
-          body: { verifyToken: s.token, challenge, lang },
+          body: { verifyToken: s.token, challenge, lang, mode },
         });
         monitor.current.reset();
         answers.current = [];
@@ -95,18 +97,18 @@ function VerifyGame() {
         setPhase('error');
       }
     },
-    [challenge, lang],
+    [challenge, lang, mode],
   );
 
   useEffect(() => {
-    const key = profile ? `${profile.uid}:${lang}` : null;
+    const key = profile ? `${profile.uid}:${lang}:${mode}` : null;
     if (!ready || !profile || !key || initializedFor.current === key) return;
     initializedFor.current = key;
     const s = getActiveSession(profile.uid);
     setSession(s);
     if (s) void loadSet(s);
     else setPhase('need-session');
-  }, [ready, profile, lang, loadSet]);
+  }, [ready, profile, lang, mode, loadSet]);
 
   // 문항이 화면에 표시된 시점부터 반응시간 측정
   useEffect(() => {
@@ -322,6 +324,12 @@ function VerifyGame() {
             </div>
           </div>
 
+          {mode === 'daily' && index === 0 && (
+            <p className="chip mx-auto border border-amber-300 bg-amber-50 text-amber-800">
+              <Flame className="h-4 w-4 text-orange-500" />
+              {lang === 'en' ? "Today's Daily Challenge · Worldwide" : '오늘의 데일리 챌린지 · 전 세계 공통'}
+            </p>
+          )}
           {challenge && index === 0 && <ChallengeChip label={t.challengeChip} />}
 
           {/* 질문 & 카드 (단일 감별 vs A/B 비교) */}

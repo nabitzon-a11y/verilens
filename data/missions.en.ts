@@ -4,6 +4,8 @@
  * - 클라이언트에서 lang === 'en' 일 때 화면 표시용 텍스트만 교체합니다.
  */
 
+import { EXTRA_SEED_EN } from './missions.extra.en';
+
 export interface SeedEnTranslation {
   prompt: string;
   sourceLabel?: string;
@@ -443,4 +445,5 @@ export const SEED_EN: Record<string, SeedEnTranslation> = {
     bBody: 'Thank you sincerely for your valuable review. Your satisfaction is our top priority, and we will always strive to provide better service. We look forward to welcoming you again.',
     aiTell: 'The AI reply repeats gratitude and promises without saying what was fixed. Real hosts list concrete actions like replacing the shower head.',
   },
+  ...EXTRA_SEED_EN,
 };

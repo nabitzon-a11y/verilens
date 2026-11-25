@@ -11,12 +11,13 @@ const schema = z.object({
   verifyToken: z.string().min(1).max(4096),
   challenge: z.string().max(100).optional(),
   lang: z.enum(['ko', 'en']).optional(),
+  mode: z.enum(['normal', 'daily']).optional(),
 });
 
 /** 판별 세트 발급 (유효한 PiVerify 세션 필요) */
 export const POST = withErrorHandling(async (req) => {
   const { user } = await requireUser(req);
-  const { verifyToken, challenge, lang } = await parseBody(req, schema);
+  const { verifyToken, challenge, lang, mode } = await parseBody(req, schema);
 
-  return ok<PublicMissionSet>(await issueMissionSet(user, verifyToken, challenge, lang));
+  return ok<PublicMissionSet>(await issueMissionSet(user, verifyToken, challenge, lang, mode));
 });

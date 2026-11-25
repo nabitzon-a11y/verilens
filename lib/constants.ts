@@ -52,14 +52,14 @@ export const TRUST = {
   LEGACY_MULTIPLIER: 8,
 } as const;
 
-/** 신뢰도 등급 (minScore 내림차순) — 상위로 갈수록 획득률↓ · 감점률↑ */
+/** 신뢰도 등급 (minScore 내림차순) — 상위로 갈수록 획득률↓ · 감점률↑ · 대신 Pi 보상 배율↑ */
 export const TRUST_TIERS = [
-  { tier: 'master', label: 'Master', minScore: 950, gainRate: 0.12, lossRate: 2 },
-  { tier: 'diamond', label: 'Diamond', minScore: 850, gainRate: 0.2, lossRate: 1.7 },
-  { tier: 'platinum', label: 'Platinum', minScore: 700, gainRate: 0.35, lossRate: 1.4 },
-  { tier: 'gold', label: 'Gold', minScore: 550, gainRate: 0.55, lossRate: 1.2 },
-  { tier: 'silver', label: 'Silver', minScore: 400, gainRate: 0.8, lossRate: 1 },
-  { tier: 'bronze', label: 'Bronze', minScore: 0, gainRate: 1, lossRate: 0.8 },
+  { tier: 'master', label: 'Master', minScore: 950, gainRate: 0.12, lossRate: 2, rewardMult: 2.0 },
+  { tier: 'diamond', label: 'Diamond', minScore: 850, gainRate: 0.2, lossRate: 1.7, rewardMult: 1.7 },
+  { tier: 'platinum', label: 'Platinum', minScore: 700, gainRate: 0.35, lossRate: 1.4, rewardMult: 1.4 },
+  { tier: 'gold', label: 'Gold', minScore: 550, gainRate: 0.55, lossRate: 1.2, rewardMult: 1.25 },
+  { tier: 'silver', label: 'Silver', minScore: 400, gainRate: 0.8, lossRate: 1, rewardMult: 1.1 },
+  { tier: 'bronze', label: 'Bronze', minScore: 0, gainRate: 1, lossRate: 0.8, rewardMult: 1.0 },
 ] as const;
 
 export type TrustTierId = (typeof TRUST_TIERS)[number]['tier'];

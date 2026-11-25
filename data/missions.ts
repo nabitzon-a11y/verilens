@@ -15,13 +15,14 @@
  */
 
 import type { Choice, Mission, MissionCategory, PublicMission } from '@/types';
+import { EXTRA_SEED_MISSIONS } from './missions.extra';
 
 const SEED_CREATED_AT = '2026-11-21T00:00:00.000Z';
 
 const TEXT_PROMPT = '어느 쪽이 실제 사람이 직접 쓴 글일까요?';
 const IMAGE_PROMPT = '어느 쪽이 AI가 만들지 않은 원본 장면일까요?';
 
-export const SEED_MISSIONS: Mission[] = [
+export const SEED_MISSIONS_BASE: Mission[] = [
   /* ------------------------------------------------------------------
    * ① 텍스트 진위 판별 (6문항)
    * ------------------------------------------------------------------ */
@@ -574,6 +575,9 @@ export const SEED_MISSIONS: Mission[] = [
     tell: 'AI 답글은 감사·노력 다짐만 반복할 뿐 무엇을 고쳤는지가 없습니다. 실제 호스트는 샤워기 교체·귀마개 비치처럼 구체적 조치를 적습니다.',
   }),
 ];
+
+/** 초기 46종 + 수석 출제위원 확장 34종 = 총 80종 시드 (Gold Standard 15개 포함) */
+export const SEED_MISSIONS: Mission[] = [...SEED_MISSIONS_BASE, ...EXTRA_SEED_MISSIONS];
 
 /* ------------------------------------------------------------------
  * 시드 문항 생성 헬퍼

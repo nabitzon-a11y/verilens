@@ -215,6 +215,8 @@ export interface MissionSet {
   submittedAt?: ISODateString;
   /** [서버 전용] 이 세트에 포함된 보너스 문제 ID */
   bonusId?: string;
+  /** 오늘의 데일리 챌린지(전 세계 공통 5문항) 여부 */
+  isDaily?: boolean;
   /** 제출 완료 시 결과 (중복 제출 시 그대로 반환) */
   result?: SetResult;
 }
@@ -354,6 +356,10 @@ export interface SetResult {
   /** 세트 도중 2단계 재검증을 통과했는지 */
   rechecked: boolean;
   reward: number;
+  /** 적용된 등급 보상 배율 (1.0 ~ 2.0) */
+  rewardMultiplier?: number;
+  /** 오늘의 데일리 챌린지 여부 */
+  isDaily?: boolean;
   trustDelta: number;
   trustScore: number;
   /** 세트 시작 전 신뢰도 */

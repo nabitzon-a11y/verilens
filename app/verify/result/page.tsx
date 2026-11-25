@@ -68,15 +68,26 @@ export default function ResultPage() {
   }
 
   const share = async () => {
-    if (!result.challengeMissionId) return;
-    const url = buildShareUrl(`/verify?challenge=${encodeURIComponent(result.challengeMissionId)}`);
-    const outcome = await shareLink(
-      lang === 'en' ? 'VeriLens Challenge' : 'VeriLens 도전장',
-      lang === 'en'
+    if (!result.challengeMissionId && !result.isDaily) return;
+    const grid = result.results.map((r) => (r.matched ? '🟩' : '🟥')).join('');
+    const url = result.isDaily
+      ? buildShareUrl('/verify?mode=daily')
+      : buildShareUrl(`/verify?challenge=${encodeURIComponent(result.challengeMissionId!)}`);
+    const title = result.isDaily
+      ? lang === 'en'
+        ? 'VeriLens Daily Challenge'
+        : 'VeriLens 오늘의 데일리 챌린지'
+      : lang === 'en'
+        ? 'VeriLens Challenge'
+        : 'VeriLens 도전장';
+    const text = result.isDaily
+      ? lang === 'en'
+        ? `VeriLens Daily ${result.matchedCount}/${result.total} · Top ${result.topPercent}%\n${grid}\nCan you beat today's 5 AI traps?`
+        : `VeriLens 오늘의 데일리 ${result.matchedCount}/${result.total} · 상위 ${result.topPercent}%\n${grid}\n오늘 5문제 같이 도전해 보세요!`
+      : lang === 'en'
         ? `Human or AI? I scored ${result.matchedCount}/${result.total}. Can you beat my intuition?`
-        : `AI 가짜일까, 진짜 사람일까? 나는 ${result.matchedCount}/${result.total} 맞혔어. 너의 인간 직관을 증명해 봐!`,
-      url,
-    );
+        : `AI 가짜일까, 진짜 사람일까? 나는 ${result.matchedCount}/${result.total} 맞혔어. 너의 인간 직관을 증명해 봐!`;
+    const outcome = await shareLink(title, text, url);
     setToast(
       outcome === 'clipboard'
         ? lang === 'en'
@@ -117,6 +128,11 @@ export default function ResultPage() {
             <p className="text-xs text-amber-700">
               {result.rewardedCount}
               {t.matchedSuffix}
+              {result.rewardMultiplier && result.rewardMultiplier > 1
+                ? lang === 'en'
+                  ? ` · ${result.rewardMultiplier}x Tier Bonus`
+                  : ` · 등급 ${result.rewardMultiplier}x 배율 적용`
+                : ''}
             </p>
           )}
         </div>
@@ -178,10 +194,14 @@ export default function ResultPage() {
 
       {/* 액션 */}
       <section className="space-y-2.5">
-        {result.challengeMissionId && (
+        {(result.challengeMissionId || result.isDaily) && (
           <button type="button" className="btn-amber w-full" onClick={share}>
             <Share2 className="h-4 w-4" />
-            {t.shareBtn}
+            {result.isDaily
+              ? lang === 'en'
+                ? 'Share Daily Result (🟩🟥)'
+                : '오늘의 데일리 결과 공유 (🟩🟥)'
+              : t.shareBtn}
           </button>
         )}
         <div className="grid grid-cols-2 gap-2.5">
