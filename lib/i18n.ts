@@ -59,6 +59,9 @@ export const HOME_HUB_TEXT: Record<
     yesterdayTrap: (p: number) => string;
     aiSampleTag: string;
     aiTellLabel: string;
+    chipSmishing: string;
+    chipListing: string;
+    chipReview: string;
   }
 > = {
   ko: {
@@ -68,7 +71,7 @@ export const HOME_HUB_TEXT: Record<
     verifySub: '5문항 · Pi 적립',
     verifyResumeSub: '이어서 풀기',
     submitTitle: '진위 의뢰하기',
-    submitSub: '10명에게 묻기',
+    submitSub: '스미싱 · 매물 · 리뷰',
     walletTitle: '내 지갑',
     walletSub: '보상 · Pi 출금',
     myTitle: '마이 · 랭킹',
@@ -82,6 +85,9 @@ export const HOME_HUB_TEXT: Record<
     yesterdayTrap: (p) => `어제 오답 1위 · 오답률 ${p}%`,
     aiSampleTag: '🤖 많은 사람이 속은 AI 함정 예시',
     aiTellLabel: '감별 포인트: ',
+    chipSmishing: '🚨 스미싱 의심',
+    chipListing: '📸 중고매물 검증',
+    chipReview: '⭐ 가짜리뷰 판별',
   },
   en: {
     heroCta: 'Spot AI fakes & earn Pi in 1 minute!',
@@ -90,7 +96,7 @@ export const HOME_HUB_TEXT: Record<
     verifySub: '5 Qs · Earn Pi',
     verifyResumeSub: 'Continue set',
     submitTitle: 'Submit Check',
-    submitSub: 'Ask 10 humans',
+    submitSub: 'Scam · Listing · Review',
     walletTitle: 'My Wallet',
     walletSub: 'Rewards · Claim',
     myTitle: 'My · Ranking',
@@ -104,6 +110,9 @@ export const HOME_HUB_TEXT: Record<
     yesterdayTrap: (p) => `Yesterday #1 · ${p}% fooled`,
     aiSampleTag: '🤖 AI Trap Sample',
     aiTellLabel: 'AI Tell: ',
+    chipSmishing: '🚨 Scam Check',
+    chipListing: '📸 Listing Photo',
+    chipReview: '⭐ Fake Review',
   },
   vi: {
     heroCta: 'Phát hiện AI giả & nhận thưởng Pi trong 1 phút!',
@@ -112,7 +121,7 @@ export const HOME_HUB_TEXT: Record<
     verifySub: '5 câu · Nhận Pi',
     verifyResumeSub: 'Tiếp tục',
     submitTitle: 'Gửi kiểm tra',
-    submitSub: 'Hỏi 10 người thật',
+    submitSub: 'Lừa đảo · Đồ cũ · Review',
     walletTitle: 'Ví của tôi',
     walletSub: 'Thưởng · Rút Pi',
     myTitle: 'Cá nhân · BXH',
@@ -126,6 +135,9 @@ export const HOME_HUB_TEXT: Record<
     yesterdayTrap: (p) => `Bẫy khó nhất hôm qua · ${p}% nhầm`,
     aiSampleTag: '🤖 Mẫu bẫy AI',
     aiTellLabel: 'Dấu hiệu AI: ',
+    chipSmishing: '🚨 Tin lừa đảo',
+    chipListing: '📸 Ảnh rao bán',
+    chipReview: '⭐ Review ảo',
   },
   id: {
     heroCta: 'Deteksi palsu AI & raih Pi dalam 1 menit!',
@@ -134,7 +146,7 @@ export const HOME_HUB_TEXT: Record<
     verifySub: '5 Soal · Dapat Pi',
     verifyResumeSub: 'Lanjutkan',
     submitTitle: 'Ajukan Cek',
-    submitSub: 'Tanya 10 orang',
+    submitSub: 'Penipuan · Barang · Ulasan',
     walletTitle: 'Dompet Saya',
     walletSub: 'Hadiah · Klaim Pi',
     myTitle: 'Saya · Peringkat',
@@ -148,6 +160,9 @@ export const HOME_HUB_TEXT: Record<
     yesterdayTrap: (p) => `Jebakan #1 Kemarin · ${p}% tertipu`,
     aiSampleTag: '🤖 Contoh Jebakan AI',
     aiTellLabel: 'Ciri AI: ',
+    chipSmishing: '🚨 Cek Penipuan',
+    chipListing: '📸 Foto Barang',
+    chipReview: '⭐ Ulasan Palsu',
   },
   zh: {
     heroCta: '1分钟识破AI造假，赢取Pi奖励！',
@@ -156,7 +171,7 @@ export const HOME_HUB_TEXT: Record<
     verifySub: '5题 · 赚取 Pi',
     verifyResumeSub: '继续答题',
     submitTitle: '发起委托',
-    submitSub: '10人真实共识',
+    submitSub: '防诈 · 二手 · 刷评',
     walletTitle: '我的钱包',
     walletSub: '奖励 · 提取 Pi',
     myTitle: '我的 · 排行',
@@ -170,6 +185,9 @@ export const HOME_HUB_TEXT: Record<
     yesterdayTrap: (p) => `昨日最难陷阱 · ${p}% 答错`,
     aiSampleTag: '🤖 AI 陷阱示例',
     aiTellLabel: '识别要点：',
+    chipSmishing: '🚨 疑似诈骗',
+    chipListing: '📸 二手验图',
+    chipReview: '⭐ 虚假好评',
   },
   es: {
     heroCta: '¡Detecta falsos de IA y gana Pi en 1 minuto!',
@@ -178,7 +196,7 @@ export const HOME_HUB_TEXT: Record<
     verifySub: '5 pregs · Gana Pi',
     verifyResumeSub: 'Continuar',
     submitTitle: 'Enviar Duda',
-    submitSub: '10 humanos reales',
+    submitSub: 'Estafa · Anuncio · Reseña',
     walletTitle: 'Billetera',
     walletSub: 'Premios · Reclamar',
     myTitle: 'Perfil · Ranking',
@@ -192,6 +210,9 @@ export const HOME_HUB_TEXT: Record<
     yesterdayTrap: (p) => `Trampa #1 de ayer · ${p}% falló`,
     aiSampleTag: '🤖 Ejemplo trampa IA',
     aiTellLabel: 'Pista IA: ',
+    chipSmishing: '🚨 Posible estafa',
+    chipListing: '📸 Foto anuncio',
+    chipReview: '⭐ Reseña falsa',
   },
 };
 

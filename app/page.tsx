@@ -247,6 +247,23 @@ export default function HomePage() {
             </Link>
           </section>
 
+          {/* 실생활 의뢰 원클릭 칩 (컴팩트 1줄) */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+            {[
+              { tpl: 'smishing', label: hub.chipSmishing },
+              { tpl: 'listing', label: hub.chipListing },
+              { tpl: 'review', label: hub.chipReview },
+            ].map((chip) => (
+              <Link
+                key={chip.tpl}
+                href={`/submit?tpl=${chip.tpl}`}
+                className="shrink-0 whitespace-nowrap rounded-full border border-slate-200/90 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm transition hover:border-brand/40 hover:text-brand"
+              >
+                {chip.label}
+              </Link>
+            ))}
+          </div>
+
           {/* 2. 실사 맛보기 (항상 노출 · 로테이션 지원) */}
           <TeaserQuizCard
             lang={lang}
@@ -311,10 +328,12 @@ const PHOTO_TEASERS = [
     bImg: '/missions/v09-b.jpg',
     human: 'B' as const,
     ko: {
+      tag: '카페 후기',
       question: '둘 중 실제 카페 사진은 어느 쪽일까요?',
       explain: 'A는 메뉴판 글자("CΦFFΞE", "LATTƎ")가 깨져 있고 스푼 손잡이가 나무 결 속으로 녹아 있습니다. 실제 사진은 B입니다!',
     },
     en: {
+      tag: 'Cafe Review',
       question: 'Which cafe photo is REAL (not AI)?',
       explain: 'Image A has garbled menu text ("CΦFFΞE", "LATTƎ") and a warped spoon handle melting into wood. B is real!',
     },
@@ -324,10 +343,12 @@ const PHOTO_TEASERS = [
     bImg: '/missions/v11-b.jpg',
     human: 'A' as const,
     ko: {
+      tag: '식당 리뷰',
       question: '둘 중 실제 카페 브런치 사진은 어느 쪽일까요?',
       explain: 'B는 포크 날이 5개로 뭉쳐 있고 오른쪽 아래 영수증 글자가 깨져 있습니다. 실제 사진은 A입니다!',
     },
     en: {
+      tag: 'Dining Review',
       question: 'Which cafe brunch photo is REAL?',
       explain: 'In B, the fork has 5 merged prongs and the receipt text is garbled. A is the real photo!',
     },
@@ -337,10 +358,12 @@ const PHOTO_TEASERS = [
     bImg: '/missions/v14-b.jpg',
     human: 'A' as const,
     ko: {
+      tag: '일상 인증샷',
       question: '둘 중 실제 사람 손 인증샷은 어느 쪽일까요?',
       explain: 'B는 손가락 마디가 부자연스럽게 벌어지고 엄지가 비정상적으로 길어 컵을 감싸는 형태가 어색합니다. 실제 사진은 A입니다!',
     },
     en: {
+      tag: 'Daily Snapshot',
       question: 'Which iced coffee hand photo is REAL?',
       explain: 'In B, the finger joints splay unnaturally and the thumb is overly elongated around the cup. A is real!',
     },
@@ -350,10 +373,12 @@ const PHOTO_TEASERS = [
     bImg: '/missions/v13-b.jpg',
     human: 'A' as const,
     ko: {
+      tag: '중고거래 직거래',
       question: '둘 중 실제 중고거래 노트북 사진은 어느 쪽일까요?',
       explain: 'B는 키보드 배열이 물결처럼 휘고 글자가 뭉개져 있으며 측면 USB 포트가 녹아 있습니다. 실제 사진은 A입니다!',
     },
     en: {
+      tag: 'Used Listing',
       question: 'Which secondhand laptop photo is REAL?',
       explain: 'In B, keyboard rows wave with garbled key labels and side ports look melted. A is real!',
     },
@@ -363,10 +388,12 @@ const PHOTO_TEASERS = [
     bImg: '/missions/v18-b.jpg',
     human: 'A' as const,
     ko: {
+      tag: '매장 간판',
       question: '둘 중 실제 베이커리 매장 간판 사진은 어느 쪽일까요?',
       explain: 'B는 유리창 간판 글자("BRE4D & COFFΞE")가 깨져 있고 오른쪽 창틀 세로 프레임이 휘어져 있습니다. 실제 사진은 A입니다!',
     },
     en: {
+      tag: 'Storefront',
       question: 'Which evening bakery storefront photo is REAL?',
       explain: 'In B, the window sign reads garbled "BRE4D & COFFΞE" and the right window frame bends unnaturally. A is real!',
     },
@@ -376,10 +403,12 @@ const PHOTO_TEASERS = [
     bImg: '/missions/v19-b.jpg',
     human: 'A' as const,
     ko: {
+      tag: '시계 직거래',
       question: '둘 중 실제 손목시계 사진은 어느 쪽일까요?',
       explain: 'B는 11시 숫자와 4~6시 눈금이 뭉개져 있고 보조 다이얼 바늘이 메인 바늘과 붙어 있습니다. 실제 사진은 A입니다!',
     },
     en: {
+      tag: 'Watch Listing',
       question: 'Which analog wristwatch photo is REAL?',
       explain: 'In B, numeral 11 and 4–6 markings are distorted, and the sub-dial hand fuses with the main hand. A is real!',
     },
@@ -389,10 +418,12 @@ const PHOTO_TEASERS = [
     bImg: '/missions/v20-b.jpg',
     human: 'A' as const,
     ko: {
+      tag: '프로필 사진',
       question: '둘 중 실제 인물 사진은 어느 쪽일까요?',
       explain: 'B는 오른쪽 안경 다리가 귀에 닿기 전에 녹아 사라지고 귀걸이와 셔츠 깃이 비대칭입니다. 실제 사진은 A입니다!',
     },
     en: {
+      tag: 'Profile Photo',
       question: 'Which outdoor portrait photo is REAL?',
       explain: 'In B, the right glasses temple melts away before the ear and the earring and collar are asymmetrical. A is real!',
     },
@@ -423,10 +454,15 @@ function TeaserQuizCard({
   return (
     <section className="card space-y-3 rounded-3xl border border-slate-200/80 bg-white p-4 shadow-[0_4px_20px_rgba(15,23,42,0.05)]">
       <div className="flex items-center justify-between gap-2">
-        <span className="chip bg-brand text-white">
-          <Sparkles className="h-3.5 w-3.5" />
-          {hub.photoBadge}
-        </span>
+        <div className="flex min-w-0 items-center gap-1.5">
+          <span className="chip shrink-0 bg-brand text-white">
+            <Sparkles className="h-3.5 w-3.5" />
+            {hub.photoBadge}
+          </span>
+          <span className="truncate rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-600">
+            #{copy.tag}
+          </span>
+        </div>
         <button
           type="button"
           onClick={nextTeaser}

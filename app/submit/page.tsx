@@ -310,10 +310,28 @@ export default function SubmitPage() {
     if (profile) void loadMine();
   }, [profile, loadMine]);
 
-  // 홈/결과 화면의 "하루 1회 무료 출제" 버튼으로 들어오면 무료 퀴즈 탭을 기본 선택
+  // 홈/결과 화면의 "하루 1회 무료 출제" 또는 원클릭 칩(?tpl=)으로 들어오면 자동 세팅
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('tier') === 'free') setSubmitTier('community');
-  }, []);
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tier') === 'free') setSubmitTier('community');
+    const tpl = params.get('tpl');
+    if (tpl === 'smishing') {
+      setMode('single');
+      setKind('text');
+      setSourceLabel(en ? 'Social Post' : 'SNS 게시글');
+      setPrompt(en ? 'Is this message a real notice or an AI/phishing scam?' : '이 문자/메시지, 실제 안내일까요 스미싱 사기일까요?');
+    } else if (tpl === 'listing') {
+      setMode('single');
+      setKind('image');
+      setSourceLabel('');
+      setPrompt(en ? 'Is this listing photo real or AI-manipulated?' : '이 매물 사진, 실제 촬영본일까요 AI 합성일까요?');
+    } else if (tpl === 'review') {
+      setMode('single');
+      setKind('text');
+      setSourceLabel(en ? 'Product Review' : '쇼핑몰 상품평');
+      setPrompt(en ? 'Is this a real buyer review or AI-generated?' : '실제 구매자 후기일까요, AI 생성 리뷰일까요?');
+    }
+  }, [en]);
 
   const touch = () => {
     setDraftId(null);
