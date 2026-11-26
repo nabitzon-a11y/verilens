@@ -37,27 +37,31 @@ async function buildYesterdayRecap(
   );
 
   scored.sort((a, b) => b.fooledPercent - a.fooledPercent || b.m.difficulty - a.m.difficulty);
-  const pick = scored[0]?.m;
+  const pick = scored.find((s) => s.m.kind === 'text' && s.m.mode !== 'single')?.m ?? scored[0]?.m;
   if (!pick) return undefined;
 
   const tr = lang === 'en' ? SEED_EN[pick.id] : undefined;
   const prompt = tr?.prompt ?? pick.prompt;
   const aiTell = tr?.aiTell ?? pick.aiTell;
-  const aiIsB = pick.humanSide === 'A';
-  const aContent = aiIsB
-    ? (tr?.bBody ?? (pick.b.type === 'text' ? pick.b.body : undefined))
-    : (tr?.aBody ?? (pick.a.type === 'text' ? pick.a.body : undefined));
+  const aText = tr?.aBody ?? (pick.a.type === 'text' ? pick.a.body : undefined);
+  const bText = tr?.bBody ?? (pick.b.type === 'text' ? pick.b.body : undefined);
+  const aImg = pick.a.type === 'image' ? pick.a.src : undefined;
+  const bImg = pick.b.type === 'image' ? pick.b.src : undefined;
   const rawSource = pick.a.type === 'text' ? pick.a.sourceLabel : undefined;
   const sourceLabel = tr?.sourceLabel ?? translateSourceLabel(rawSource, lang);
+  const pickFooled = scored.find((s) => s.m.id === pick.id)?.fooledPercent ?? scored[0].fooledPercent;
 
   return {
     missionId: pick.id,
     prompt,
     kind: pick.kind,
     mode: pick.mode,
-    previewText: aContent ? (aContent.length > 120 ? `${aContent.slice(0, 120)}...` : aContent) : undefined,
+    aText,
+    bText,
+    aImg,
+    bImg,
     sourceLabel,
-    fooledPercent: Math.max(28, Math.min(78, scored[0].fooledPercent || 48)),
+    fooledPercent: Math.max(28, Math.min(78, pickFooled || 48)),
     humanSide: pick.humanSide,
     aiTell,
   };

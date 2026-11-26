@@ -555,6 +555,11 @@ function YesterdayRecapCard({
   recap: NonNullable<HomeOverviewResponse['yesterdayRecap']>;
   hub: (typeof HOME_HUB_TEXT)['ko'];
 }) {
+  const [picked, setPicked] = useState<'A' | 'B' | null>(null);
+  const answer = recap.humanSide ?? 'A';
+  const correct = picked === answer;
+  const hasChoices = Boolean(recap.aText && recap.bText);
+
   return (
     <section className="card space-y-2.5 rounded-3xl border border-slate-200/80 bg-white p-4 shadow-[0_4px_20px_rgba(15,23,42,0.05)]">
       <div className="flex items-center justify-between gap-2">
@@ -565,20 +570,63 @@ function YesterdayRecapCard({
           <span className="truncate whitespace-nowrap text-xs font-semibold text-slate-500">{recap.sourceLabel}</span>
         )}
       </div>
-      <p className="text-sm font-extrabold text-slate-900">{recap.prompt}</p>
-      {recap.previewText && (
-        <div className="space-y-1.5 rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
-          <span className="inline-block rounded-md bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-600">
-            {hub.aiSampleTag}
-          </span>
-          <p className="text-[13px] leading-relaxed text-slate-700">“{recap.previewText}”</p>
+
+      <p className="text-[15px] font-extrabold text-slate-900">{recap.prompt}</p>
+
+      {hasChoices && (
+        <div className="grid gap-2">
+          {(['A', 'B'] as const).map((side) => {
+            const body = side === 'A' ? recap.aText : recap.bText;
+            const isPick = picked === side;
+            const isHuman = side === answer;
+            return (
+              <button
+                key={side}
+                type="button"
+                disabled={picked !== null}
+                onClick={() => setPicked(side)}
+                className={clsx(
+                  'flex items-start gap-2.5 rounded-2xl border-2 p-3 text-left text-[13px] leading-relaxed transition',
+                  picked === null
+                    ? 'border-slate-200 bg-white hover:border-brand/50 active:scale-[0.99]'
+                    : isHuman
+                      ? 'border-emerald-400 bg-emerald-50 text-emerald-950'
+                      : isPick
+                        ? 'border-rose-300 bg-rose-50 text-rose-900'
+                        : 'border-slate-100 bg-slate-50 text-slate-400',
+                )}
+              >
+                <span
+                  className={clsx(
+                    'mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-black',
+                    picked !== null && isHuman
+                      ? 'bg-emerald-600 text-white'
+                      : isPick
+                        ? 'bg-rose-500 text-white'
+                        : 'bg-slate-900 text-white',
+                  )}
+                >
+                  {side}
+                </span>
+                <span>{body}</span>
+              </button>
+            );
+          })}
         </div>
       )}
-      {recap.aiTell && (
-        <p className="text-[13px] leading-relaxed text-slate-700">
-          <b className="text-brand">{hub.aiTellLabel}</b>
-          {recap.aiTell}
-        </p>
+
+      {picked !== null && (
+        <div className="space-y-1.5 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+          <p className={clsx('text-xs font-extrabold', correct ? 'text-human-dark' : 'text-rose-600')}>
+            {correct ? hub.yesterdayWin : hub.yesterdayLose(answer)}
+          </p>
+          {recap.aiTell && (
+            <p className="text-[13px] leading-relaxed text-slate-700">
+              <b className="text-brand">{hub.aiTellLabel}</b>
+              {recap.aiTell}
+            </p>
+          )}
+        </div>
       )}
     </section>
   );

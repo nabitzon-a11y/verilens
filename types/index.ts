@@ -292,12 +292,16 @@ export interface HomeOverviewResponse {
     nextMilestone: number | null;
     milestoneBonusPts: number;
   };
-  /** 어제 데일리 챌린지 중 가장 헷갈렸던 1문제 복기 */
+  /** 어제 데일리 챌린지 중 가장 헷갈렸던 1문제 도전 */
   yesterdayRecap?: {
     missionId: string;
     prompt: string;
     kind: MissionKind;
     mode?: MissionMode;
+    aText?: string;
+    bText?: string;
+    aImg?: string;
+    bImg?: string;
     previewText?: string;
     sourceLabel?: string;
     fooledPercent: number;
