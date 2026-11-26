@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import type { DraftResponse, MissionKind, MissionMode, MyMissionItem, PaymentCompleteResponse } from '@/types';
+import { translatePromptToEn, translatePromptToKo } from '@/data/missions.en';
 import { useApp } from '@/components/AppProvider';
 import { LoginPanel } from '@/components/LoginPanel';
 import { api } from '@/lib/apiClient';
@@ -1044,7 +1045,9 @@ function MyMissionRow({
     <article className="card space-y-2 py-3.5">
       <div className="flex items-center gap-2">
         {m.kind === 'text' ? <FileText className="h-4 w-4 text-slate-400" /> : <ImageIcon className="h-4 w-4 text-slate-400" />}
-        <p className="flex-1 truncate text-base font-medium text-slate-900">{m.prompt}</p>
+        <p className="flex-1 truncate text-base font-medium text-slate-900">
+          {en ? translatePromptToEn(m.prompt) : translatePromptToKo(m.prompt)}
+        </p>
         <span className={clsx('chip', s.cls)}>{en ? s.labelEn : s.label}</span>
         {(m.status === 'active' || m.status === 'draft') && (
           <button

@@ -358,6 +358,45 @@ const PHOTO_TEASERS = [
       explain: 'In B, keyboard rows wave with garbled key labels and side ports look melted. A is real!',
     },
   },
+  {
+    aImg: '/missions/v18-a.jpg',
+    bImg: '/missions/v18-b.jpg',
+    human: 'A' as const,
+    ko: {
+      question: '둘 중 실제 베이커리 매장 간판 사진은 어느 쪽일까요?',
+      explain: 'B는 유리창 간판 글자("BRE4D & COFFΞE")가 깨져 있고 오른쪽 창틀 세로 프레임이 휘어져 있습니다. 실제 사진은 A입니다!',
+    },
+    en: {
+      question: 'Which evening bakery storefront photo is REAL?',
+      explain: 'In B, the window sign reads garbled "BRE4D & COFFΞE" and the right window frame bends unnaturally. A is real!',
+    },
+  },
+  {
+    aImg: '/missions/v19-a.jpg',
+    bImg: '/missions/v19-b.jpg',
+    human: 'A' as const,
+    ko: {
+      question: '둘 중 실제 손목시계 사진은 어느 쪽일까요?',
+      explain: 'B는 11시 숫자와 4~6시 눈금이 뭉개져 있고 보조 다이얼 바늘이 메인 바늘과 붙어 있습니다. 실제 사진은 A입니다!',
+    },
+    en: {
+      question: 'Which analog wristwatch photo is REAL?',
+      explain: 'In B, numeral 11 and 4–6 markings are distorted, and the sub-dial hand fuses with the main hand. A is real!',
+    },
+  },
+  {
+    aImg: '/missions/v20-a.jpg',
+    bImg: '/missions/v20-b.jpg',
+    human: 'A' as const,
+    ko: {
+      question: '둘 중 실제 인물 사진은 어느 쪽일까요?',
+      explain: 'B는 오른쪽 안경 다리가 귀에 닿기 전에 녹아 사라지고 귀걸이와 셔츠 깃이 비대칭입니다. 실제 사진은 A입니다!',
+    },
+    en: {
+      question: 'Which outdoor portrait photo is REAL?',
+      explain: 'In B, the right glasses temple melts away before the ear and the earring and collar are asymmetrical. A is real!',
+    },
+  },
 ] as const;
 
 function TeaserQuizCard({
