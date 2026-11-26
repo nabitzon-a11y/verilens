@@ -62,6 +62,7 @@ export const HOME_HUB_TEXT: Record<
     chipSmishing: string;
     chipListing: string;
     chipReview: string;
+    chipAlerts: string;
     yesterdayWin: string;
     yesterdayLose: (ans: string) => string;
   }
@@ -90,6 +91,7 @@ export const HOME_HUB_TEXT: Record<
     chipSmishing: '🚨 스미싱 의심',
     chipListing: '📸 중고매물 검증',
     chipReview: '⭐ 가짜리뷰 판별',
+    chipAlerts: '🛡️ 사기 경보',
     yesterdayWin: '정답! 남들이 다 속은 문제를 맞혔어요!',
     yesterdayLose: (ans) => `아쉽네요! 실제 인간 원본은 ${ans}였어요.`,
   },
@@ -117,6 +119,7 @@ export const HOME_HUB_TEXT: Record<
     chipSmishing: '🚨 Scam Check',
     chipListing: '📸 Listing Photo',
     chipReview: '⭐ Fake Review',
+    chipAlerts: '🛡️ Scam Alerts',
     yesterdayWin: 'Spot on! You beat the trap that fooled most players!',
     yesterdayLose: (ans) => `Caught by the trap! The real human one was ${ans}.`,
   },
@@ -144,6 +147,7 @@ export const HOME_HUB_TEXT: Record<
     chipSmishing: '🚨 Tin lừa đảo',
     chipListing: '📸 Ảnh rao bán',
     chipReview: '⭐ Review ảo',
+    chipAlerts: '🛡️ Cảnh báo',
     yesterdayWin: 'Chính xác! Bạn đã vượt qua bẫy khó nhất hôm qua!',
     yesterdayLose: (ans) => `Tiếc quá! Đáp án người thật là ${ans}.`,
   },
@@ -171,6 +175,7 @@ export const HOME_HUB_TEXT: Record<
     chipSmishing: '🚨 Cek Penipuan',
     chipListing: '📸 Foto Barang',
     chipReview: '⭐ Ulasan Palsu',
+    chipAlerts: '🛡️ Info Penipuan',
     yesterdayWin: 'Tepat! Kamu lolos dari jebakan tersulit kemarin!',
     yesterdayLose: (ans) => `Terjebak! Jawaban asli manusia adalah ${ans}.`,
   },
@@ -198,6 +203,7 @@ export const HOME_HUB_TEXT: Record<
     chipSmishing: '🚨 疑似诈骗',
     chipListing: '📸 二手验图',
     chipReview: '⭐ 虚假好评',
+    chipAlerts: '🛡️ 诈骗警报',
     yesterdayWin: '答对了！你识破了昨天最难的陷阱！',
     yesterdayLose: (ans) => `可惜！真实人类内容是 ${ans}。`,
   },
@@ -225,6 +231,7 @@ export const HOME_HUB_TEXT: Record<
     chipSmishing: '🚨 Posible estafa',
     chipListing: '📸 Foto anuncio',
     chipReview: '⭐ Reseña falsa',
+    chipAlerts: '🛡️ Alertas',
     yesterdayWin: '¡Exacto! Superaste la trampa más difícil de ayer!',
     yesterdayLose: (ans) => `¡Casi! La respuesta humana real era ${ans}.`,
   },

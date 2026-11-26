@@ -286,6 +286,8 @@ export default function SubmitPage() {
   const [prompt, setPrompt] = useState('');
   const [sourceLabel, setSourceLabel] = useState('');
   const [contextNote, setContextNote] = useState('');
+  const [minTier, setMinTier] = useState<'all' | 'gold'>('all');
+  const [publicAlert, setPublicAlert] = useState(true);
   const [textA, setTextA] = useState('');
   const [textB, setTextB] = useState('');
   const [imageA, setImageA] = useState<string | null>(null);
@@ -409,6 +411,8 @@ export default function SubmitPage() {
               prompt: prompt.trim() || undefined,
               sourceLabel: sourceLabel.trim() || undefined,
               contextNote: contextNote.trim() || undefined,
+              ...(submitTier === 'paid' ? { minTier } : {}),
+              publicAlert,
               a: textA.trim(),
               ...(mode === 'compare' ? { b: textB.trim() } : {}),
             }
@@ -417,6 +421,8 @@ export default function SubmitPage() {
               mode,
               prompt: prompt.trim() || undefined,
               contextNote: contextNote.trim() || undefined,
+              ...(submitTier === 'paid' ? { minTier } : {}),
+              publicAlert,
               a: imageA,
               ...(mode === 'compare' ? { b: imageB } : {}),
             };
@@ -841,6 +847,42 @@ export default function SubmitPage() {
             </div>
           )}
 
+          {submitTier === 'paid' && (
+            <div className="space-y-1.5">
+              <p className="text-xs font-bold text-slate-600">
+                {en ? 'Verifier Pool Tier' : '검증단 등급 선택'}
+              </p>
+              <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-slate-100 p-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMinTier('all');
+                    touch();
+                  }}
+                  className={clsx(
+                    'rounded-lg py-2 text-xs font-bold transition',
+                    minTier === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600',
+                  )}
+                >
+                  {en ? 'Standard (All 10)' : '일반 전체 (10인)'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMinTier('gold');
+                    touch();
+                  }}
+                  className={clsx(
+                    'rounded-lg py-2 text-xs font-bold transition',
+                    minTier === 'gold' ? 'bg-brand text-white shadow-sm' : 'text-brand',
+                  )}
+                >
+                  {en ? '🛡️ Gold+ Experts Only' : '🛡️ Gold(550+) 전문가'}
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* 저작권·권리 보증 동의 */}
           <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-sm leading-relaxed text-slate-700">
             <input
@@ -867,6 +909,21 @@ export default function SubmitPage() {
                   )
                 </>
               )}
+            </span>
+          </label>
+
+          {/* 익명 공익 사기 경보 공유 */}
+          <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-600">
+            <input
+              type="checkbox"
+              checked={publicAlert}
+              onChange={(e) => setPublicAlert(e.target.checked)}
+              className="h-4 w-4 shrink-0 rounded accent-brand"
+            />
+            <span>
+              {en
+                ? 'Allow anonymous sharing in Scam Alert Feed if flagged as AI/scam'
+                : 'AI·사기 의심 판정 시 사기 주의 경보 피드(/alerts)에 익명 공유 허용'}
             </span>
           </label>
 
@@ -1090,6 +1147,9 @@ function MyMissionRow({
         <p className="flex-1 truncate text-base font-medium text-slate-900">
           {en ? translatePromptToEn(m.prompt) : translatePromptToKo(m.prompt)}
         </p>
+        {m.minTier === 'gold' && (
+          <span className="chip bg-brand-soft text-[10px] font-bold text-brand">Gold+</span>
+        )}
         <span className={clsx('chip', s.cls)}>{en ? s.labelEn : s.label}</span>
         {(m.status === 'active' || m.status === 'draft') && (
           <button

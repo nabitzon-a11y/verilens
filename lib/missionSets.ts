@@ -155,7 +155,8 @@ export async function issueMissionSet(
 
   const need = GAME.QUESTIONS_PER_SET - GAME.GOLD_PER_SET;
   const picked: Mission[] = [];
-  const langEligible = (m: Mission) => isMissionEligibleForLang(m, lang);
+  const langEligible = (m: Mission) =>
+    isMissionEligibleForLang(m, lang) && (m.minTier !== 'gold' || user.trustScore >= 550 || m.requesterUid === user.uid);
   const eligibleGolds = golds.filter(langEligible);
   const goldPool = eligibleGolds.length > 0 ? eligibleGolds : golds;
 

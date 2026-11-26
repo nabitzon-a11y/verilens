@@ -33,6 +33,8 @@ export const draftSchema = z.discriminatedUnion('kind', [
     prompt: z.string().trim().max(80).optional(),
     sourceLabel: z.string().trim().max(30).optional(),
     contextNote: z.string().trim().max(100).optional(),
+    minTier: z.enum(['all', 'gold']).optional(),
+    publicAlert: z.boolean().optional(),
     a: text,
     b: text.optional(),
   }),
@@ -41,6 +43,8 @@ export const draftSchema = z.discriminatedUnion('kind', [
     mode: modeSchema,
     prompt: z.string().trim().max(80).optional(),
     contextNote: z.string().trim().max(100).optional(),
+    minTier: z.enum(['all', 'gold']).optional(),
+    publicAlert: z.boolean().optional(),
     a: image,
     b: image.optional(),
   }),
@@ -109,6 +113,8 @@ export async function createDraft(uid: string, input: DraftInput): Promise<Draft
     status: 'draft',
     requesterUid: uid,
     contextNote: input.contextNote || undefined,
+    minTier: input.minTier === 'gold' ? 'gold' : undefined,
+    publicAlert: input.publicAlert ?? true,
     createdAt: new Date().toISOString(),
   };
   await repo.saveMission(mission);
@@ -155,6 +161,8 @@ export async function createCommunityMission(uid: string, input: DraftInput): Pr
     status: 'active',
     requesterUid: uid,
     contextNote: input.contextNote || undefined,
+    minTier: input.minTier === 'gold' ? 'gold' : undefined,
+    publicAlert: input.publicAlert ?? true,
     createdAt: new Date().toISOString(),
   };
   await repo.saveMission(mission);
@@ -193,6 +201,8 @@ export async function createTicketMission(uid: string, input: DraftInput): Promi
       status: 'active',
       requesterUid: uid,
       contextNote: input.contextNote || undefined,
+      minTier: input.minTier === 'gold' ? 'gold' : undefined,
+      publicAlert: input.publicAlert ?? true,
       createdAt: now,
     };
 
@@ -223,6 +233,7 @@ export async function listMyMissions(uid: string): Promise<MyMissionItem[]> {
         mode: m.mode,
         prompt: m.prompt,
         contextNote: m.contextNote,
+        minTier: m.minTier,
         status: m.status,
         votes,
         consensus: decideConsensus(votes),
@@ -248,6 +259,7 @@ export async function getPublicVerdict(missionId: string): Promise<PublicVerdict
     mode: m.mode,
     prompt: m.prompt,
     contextNote: m.contextNote,
+    minTier: m.minTier,
     a: m.a,
     b: m.mode === 'compare' || !m.mode ? m.b : undefined,
     status: m.status,

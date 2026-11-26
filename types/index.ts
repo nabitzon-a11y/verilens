@@ -92,6 +92,10 @@ export interface Mission {
   requesterUid?: string;
   /** 의뢰자가 남긴 1줄 상황 메모 (판별자 참고용) */
   contextNote?: string;
+  /** Gold(550+) 이상 상위 등급 전용 정밀 검증 여부 */
+  minTier?: 'gold';
+  /** AI/사기 판정 시 익명 공익 경보 피드(/alerts) 공유 허용 여부 */
+  publicAlert?: boolean;
   /** 판별자들이 남긴 판정 근거 태그 누적 횟수 */
   reasonCounts?: Record<string, number>;
   /** 의뢰자 문항인 경우 연결된 결제 ID */
@@ -614,6 +618,7 @@ export interface MyMissionItem {
   mode?: MissionMode;
   prompt: string;
   contextNote?: string;
+  minTier?: 'gold';
   status: MissionStatus;
   /** 실제 판별자 응답 집계 (가상 응답 제외) */
   votes: VoteTally;
@@ -630,6 +635,7 @@ export interface PublicVerdictResponse {
   mode?: MissionMode;
   prompt: string;
   contextNote?: string;
+  minTier?: 'gold';
   a: MissionContent;
   b?: MissionContent;
   status: MissionStatus;

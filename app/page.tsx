@@ -247,16 +247,17 @@ export default function HomePage() {
             </Link>
           </section>
 
-          {/* 실생활 의뢰 원클릭 칩 (컴팩트 1줄) */}
+          {/* 실생활 의뢰 & 경보 원클릭 칩 (컴팩트 1줄) */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
             {[
-              { tpl: 'smishing', label: hub.chipSmishing },
-              { tpl: 'listing', label: hub.chipListing },
-              { tpl: 'review', label: hub.chipReview },
+              { href: '/submit?tpl=smishing', label: hub.chipSmishing },
+              { href: '/submit?tpl=listing', label: hub.chipListing },
+              { href: '/submit?tpl=review', label: hub.chipReview },
+              { href: '/alerts', label: hub.chipAlerts },
             ].map((chip) => (
               <Link
-                key={chip.tpl}
-                href={`/submit?tpl=${chip.tpl}`}
+                key={chip.href}
+                href={chip.href}
                 className="shrink-0 whitespace-nowrap rounded-full border border-slate-200/90 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm transition hover:border-brand/40 hover:text-brand"
               >
                 {chip.label}
