@@ -4,41 +4,29 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  CheckCircle2,
   ChevronRight,
   Coins,
-  Crown,
   FilePlus2,
   Flame,
-  Gift,
-  HelpCircle,
-  Image as ImageIcon,
-  Layers,
-  Lightbulb,
   Loader2,
   ScanFace,
   ShieldCheck,
   Sparkles,
-  Target,
-  Timer,
-  Trophy,
-  Users,
+  UserCircle2,
+  Wallet,
 } from 'lucide-react';
 import clsx from 'clsx';
-import type { HomeOverviewResponse, LivePoolResponse, VerifySession } from '@/types';
-import { translatePromptToEn, translatePromptToKo } from '@/data/missions.en';
-import { AiHintsModal } from '@/components/AiHintsModal';
+import type { HomeOverviewResponse, VerifySession } from '@/types';
 import { useApp } from '@/components/AppProvider';
 import { LoginPanel } from '@/components/LoginPanel';
 import { useScanModal } from '@/components/ScanModal';
-import { TierChip, TrustProgress } from '@/components/TierBadge';
+import { TierChip } from '@/components/TierBadge';
 import { api } from '@/lib/apiClient';
-import { GAME, TRUST_TIERS, getTrustTier } from '@/lib/constants';
+import { getTrustTier } from '@/lib/constants';
 import { formatMmSs, formatPi } from '@/lib/format';
 import { useNow } from '@/lib/hooks';
 import { HOME_TEXT, VERIFY_TEXT } from '@/lib/i18n';
 import { getActiveSession, startHumanSession } from '@/lib/piVerifyClient';
-
 
 export default function HomePage() {
   const { ready, profile, verifyMode, lang } = useApp();
@@ -47,12 +35,11 @@ export default function HomePage() {
   const { modal, run } = useScanModal(verifyMode === 'mock');
   const [session, setSession] = useState<VerifySession | null>(null);
   const [starting, setStarting] = useState(false);
-  const [hintsOpen, setHintsOpen] = useState(false);
-  const [guideOpen, setGuideOpen] = useState(false);
   const [overview, setOverview] = useState<HomeOverviewResponse | null>(null);
 
   const t = HOME_TEXT[lang];
   const vt = VERIFY_TEXT[lang];
+  const en = lang === 'en';
 
   useEffect(() => {
     setSession(profile ? getActiveSession(profile.uid) : null);
@@ -76,6 +63,10 @@ export default function HomePage() {
   const sessionActive = remaining > 0;
 
   const startSession = async (nextHref = '/verify') => {
+    if (!profile) {
+      document.getElementById('login-panel')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
     setStarting(true);
     try {
       const s = await run(() => startHumanSession(), {
@@ -91,245 +82,226 @@ export default function HomePage() {
     }
   };
 
-  return (
-    <div className="space-y-4">
-      {modal}
-      <AiHintsModal open={hintsOpen} onClose={() => setHintsOpen(false)} lang={lang} />
+  const scrollToLogin = () => {
+    document.getElementById('login-panel')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
 
-      {/* Hero */}
-      <header className="flex items-center gap-2.5 pt-1">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#E2D9EE] bg-gradient-to-br from-white to-brand-soft shadow-[0_2px_10px_rgba(112,60,144,0.1)]">
-          <ShieldCheck className="h-7 w-7 text-brand" />
+  const showYesterdayHook = Boolean(profile && overview?.quest.dailyDoneToday && overview.yesterdayRecap);
+
+  return (
+    <div className="space-y-3.5">
+      {modal}
+
+      {/* 상단 히어로 + 행동 유발 문구 */}
+      <header className="space-y-2.5 pt-1">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#E2D9EE] bg-gradient-to-br from-white to-brand-soft shadow-[0_2px_10px_rgba(112,60,144,0.1)]">
+            <ShieldCheck className="h-6 w-6 text-brand" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-[24px] font-black leading-none tracking-tight text-slate-900">VeriLens</h1>
+            <p className="mt-1 text-[13px] font-bold tracking-tight text-brand">
+              {en
+                ? 'Spot AI fakes & earn Pi in 1 minute!'
+                : 'AI 가짜를 잡아내고 Pi 보상을 받으세요!'}
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-[28px] font-black leading-none tracking-tight text-slate-900">VeriLens</h1>
-          <p className="mt-1 text-[13px] font-semibold tracking-tight text-pi-light">{t.tagline}</p>
-        </div>
+
+        {/* 초슬림 내 상태 바 (클릭 시 마이페이지 이동) */}
+        {ready && profile && (
+          <Link
+            href="/my"
+            className="flex items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white px-3.5 py-2.5 shadow-sm transition hover:border-brand/40"
+          >
+            <div className="flex min-w-0 items-center gap-2">
+              <TierChip score={profile.trustScore} className="px-2 py-0.5 text-[11px]" />
+              <span className="truncate text-xs font-extrabold text-slate-900">@{profile.username}</span>
+              <span className="text-[11px] font-bold text-slate-500">{profile.trustScore}pt</span>
+            </div>
+            <span className="flex shrink-0 items-center gap-0.5 text-xs font-bold text-brand">
+              {en ? 'My Page' : '마이페이지'}
+              <ChevronRight className="h-4 w-4" />
+            </span>
+          </Link>
+        )}
       </header>
 
       {!ready ? (
         <div className="card flex items-center justify-center py-10 text-slate-400">
           <Loader2 className="h-5 w-5 animate-spin text-brand" />
         </div>
-      ) : !profile ? (
-        <>
-          <section className="card">
-            <p className="text-[15px] leading-relaxed text-slate-700">
-              {t.introPrefix}
-              <b className="text-human-dark">{t.introHighlight}</b>
-              {t.introMid}
-              <b className="text-pi-light">{t.introReward}</b>
-              {t.introSuffix}
-            </p>
-          </section>
-          <TeaserQuizCard
-            lang={lang}
-            onStartFull={() => document.getElementById('login-panel')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-          />
-          <div id="login-panel">
-            <LoginPanel title={t.loginTitle} />
-          </div>
-        </>
       ) : (
         <>
-          {/* 컴팩트 프로필 */}
-          <section className="card space-y-3 p-4">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex min-w-0 items-center gap-2">
-                <p className="truncate text-lg font-black text-slate-900">@{profile.username}</p>
-                <span className="chip bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-pi-light">
-                  {getTrustTier(profile.trustScore).rewardMult}x
-                </span>
-              </div>
-              <TierChip score={profile.trustScore} />
-            </div>
+          {/* 1. 시선 끄는 콘텐츠 1개 (핵심 메뉴/판별하기 바로 위) */}
+          {showYesterdayHook && overview?.yesterdayRecap ? (
+            <YesterdayRecapCard
+              recap={overview.yesterdayRecap}
+              lang={lang}
+              onPlayDaily={() => (sessionActive ? router.push('/verify?mode=daily') : void startSession('/verify?mode=daily'))}
+            />
+          ) : (
+            <TeaserQuizCard
+              lang={lang}
+              onStartFull={() =>
+                profile
+                  ? sessionActive
+                    ? router.push('/verify')
+                    : void startSession('/verify')
+                  : scrollToLogin()
+              }
+            />
+          )}
 
-            <TrustProgress label={t.trustLabel} score={profile.trustScore} lang={lang} />
-
-            <div className="grid grid-cols-3 divide-x divide-slate-200 rounded-xl border border-slate-100 bg-slate-50 py-2 text-center text-xs">
-              <div className="flex items-center justify-center gap-1 font-bold text-slate-800">
-                <Flame className="h-3.5 w-3.5 text-orange-500" />
-                <span>{profile.streak}{t.streakUnit}</span>
-              </div>
-              <div className="flex items-center justify-center gap-1 font-bold text-slate-800">
-                <Layers className="h-3.5 w-3.5 text-brand" />
-                <span>{profile.setsCompleted}{lang === 'en' ? ' sets' : '세트'}</span>
-              </div>
-              <div className="flex items-center justify-center gap-1 font-bold text-pi-light">
-                <Coins className="h-3.5 w-3.5" />
-                <span>{formatPi(profile.balance)}</span>
-              </div>
-            </div>
-
-            {overview && <DailyQuestBar quest={overview.quest} lang={lang} />}
-          </section>
-
-          {/* 핵심 플레이 & 데일리 챌린지 (첫 화면 즉시 노출) */}
-          <section className="card space-y-2.5 p-4">
+          {/* 2. 핵심 액션 허브 (금융 앱 런처 스타일) */}
+          <section className="space-y-2.5">
+            {/* 데일리 챌린지 메인 배너 */}
             <button
               type="button"
-              onClick={() => (sessionActive ? router.push('/verify?mode=daily') : void startSession('/verify?mode=daily'))}
+              onClick={() =>
+                profile
+                  ? sessionActive
+                    ? router.push('/verify?mode=daily')
+                    : void startSession('/verify?mode=daily')
+                  : scrollToLogin()
+              }
               disabled={starting}
-              className="flex w-full items-center justify-between rounded-2xl border-2 border-amber-300 bg-gradient-to-r from-amber-50 via-white to-rose-50 px-4 py-3 text-left transition hover:border-amber-400"
+              className="flex w-full items-center justify-between rounded-2xl border-2 border-amber-300 bg-gradient-to-r from-amber-50 via-white to-rose-50 px-4 py-3.5 text-left shadow-sm transition hover:border-amber-400"
             >
-              <div className="flex items-center gap-2.5">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-white shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-white shadow-sm">
                   <Flame className="h-5 w-5" />
                 </span>
                 <div>
-                  <p className="text-sm font-extrabold text-slate-900">
-                    {lang === 'en' ? "Today's Daily Challenge (5 Qs)" : '오늘의 데일리 챌린지 (공통 5문제)'}
+                  <p className="text-[15px] font-black text-slate-900">
+                    {en ? "Today's Daily Challenge (5 Qs)" : '오늘의 데일리 챌린지 (공통 5문제)'}
                   </p>
-                  <p className="text-[11px] font-semibold text-slate-500">
-                    {lang === 'en' ? '1-min daily · Same questions worldwide!' : '하루 1분 컷 · 전 세계 유저 공통 문제!'}
+                  <p className="text-xs font-semibold text-slate-500">
+                    {en ? '1-min daily · Same questions worldwide!' : '하루 1분 컷 · 전 세계 유저 공통 문제!'}
                   </p>
                 </div>
               </div>
               <ChevronRight className="h-5 w-5 shrink-0 text-amber-600" />
             </button>
 
-            {sessionActive ? (
-              <div className="space-y-2">
-                <Link href="/verify" className="btn-primary w-full py-3.5 text-[16px] font-bold">
-                  <ScanFace className="h-5 w-5" />
-                  {t.continueVerify}
-                  <span className="ml-1 rounded-full bg-white/20 px-2 py-0.5 font-mono text-[11px]">
-                    {formatMmSs(remaining)}
-                  </span>
-                  <ChevronRight className="h-5 w-5" />
-                </Link>
-              </div>
-            ) : (
+            {/* 2x2 핵심 메뉴 그리드 */}
+            <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
-                className="btn-primary w-full py-3.5 text-[16px] font-bold"
-                onClick={() => void startSession()}
+                onClick={() =>
+                  profile
+                    ? sessionActive
+                      ? router.push('/verify')
+                      : void startSession('/verify')
+                    : scrollToLogin()
+                }
                 disabled={starting}
+                className="flex flex-col justify-between rounded-2xl border-2 border-brand/25 bg-brand p-3.5 text-left text-white shadow-sm transition hover:bg-brand/95"
               >
-                {starting ? <Loader2 className="h-5 w-5 animate-spin" /> : <ScanFace className="h-5 w-5" />}
-                {t.startSession}
+                <div className="flex items-center justify-between">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15">
+                    {starting ? <Loader2 className="h-5 w-5 animate-spin" /> : <ScanFace className="h-5 w-5" />}
+                  </span>
+                  {sessionActive && (
+                    <span className="rounded-full bg-white/20 px-2 py-0.5 font-mono text-[10px] font-bold">
+                      {formatMmSs(remaining)}
+                    </span>
+                  )}
+                </div>
+                <div className="mt-3">
+                  <p className="text-[15px] font-black">{en ? 'Verify AI' : 'AI 판별하기'}</p>
+                  <p className="mt-0.5 text-[11px] font-medium text-white/80">
+                    {sessionActive
+                      ? en
+                        ? 'Continue active set'
+                        : '이어서 5문항 풀기'
+                      : en
+                        ? '5 Qs · Earn Pi'
+                        : '5문항 풀고 Pi 적립'}
+                  </p>
+                </div>
               </button>
-            )}
+
+              <Link
+                href="/submit"
+                className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-3.5 text-left shadow-sm transition hover:border-brand/40"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-pi-light">
+                    <FilePlus2 className="h-5 w-5" />
+                  </span>
+                  {profile && profile.freeSubmitTickets > 0 ? (
+                    <span className="chip bg-brand text-[10px] font-bold text-white">
+                      {en ? `${profile.freeSubmitTickets} Free` : `무료권 ${profile.freeSubmitTickets}`}
+                    </span>
+                  ) : overview?.live.freeQuizAvailable && overview?.live.freeQuizEligible ? (
+                    <span className="chip bg-emerald-50 text-[10px] font-bold text-human-dark">
+                      {en ? 'Free 1/d' : '오늘 무료'}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="mt-3">
+                  <p className="text-[15px] font-black text-slate-900">{en ? 'Submit Check' : '진위 의뢰하기'}</p>
+                  <p className="mt-0.5 text-[11px] font-medium text-slate-500">
+                    {en ? 'Ask 10 real humans' : '10명의 인간에게 묻기'}
+                  </p>
+                </div>
+              </Link>
+
+              <Link
+                href="/wallet"
+                className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-3.5 text-left shadow-sm transition hover:border-brand/40"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-pi-light">
+                    <Wallet className="h-5 w-5" />
+                  </span>
+                  {profile && (
+                    <span className="flex items-center gap-0.5 text-[11px] font-extrabold text-pi-light">
+                      <Coins className="h-3 w-3" />
+                      {formatPi(profile.balance)}
+                    </span>
+                  )}
+                </div>
+                <div className="mt-3">
+                  <p className="text-[15px] font-black text-slate-900">{en ? 'My Wallet' : '내 지갑'}</p>
+                  <p className="mt-0.5 text-[11px] font-medium text-slate-500">
+                    {en ? 'Rewards & Pi claim' : '보상 내역 · Pi 출금'}
+                  </p>
+                </div>
+              </Link>
+
+              <Link
+                href="/my"
+                className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-3.5 text-left shadow-sm transition hover:border-brand/40"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-soft text-brand">
+                    <UserCircle2 className="h-5 w-5" />
+                  </span>
+                  {profile && (
+                    <span className="text-[11px] font-extrabold text-brand">
+                      {getTrustTier(profile.trustScore).rewardMult}x
+                    </span>
+                  )}
+                </div>
+                <div className="mt-3">
+                  <p className="text-[15px] font-black text-slate-900">{en ? 'My · Ranking' : '마이 · 랭킹'}</p>
+                  <p className="mt-0.5 text-[11px] font-medium text-slate-500">
+                    {en ? 'Trust score, TOP 5 & guide' : '신뢰도·TOP 5·가이드'}
+                  </p>
+                </div>
+              </Link>
+            </div>
           </section>
 
-          {/* 오늘 아직 1세트도 안 풀었으면 5초 실사 맛보기 퀴즈로 즉시 몰입 유도 */}
-          {overview && !overview.quest.dailyDoneToday && (
-            <TeaserQuizCard
-              lang={lang}
-              onStartFull={() => (sessionActive ? router.push('/verify') : void startSession())}
-            />
-          )}
-
-          {/* 어제 데일리 오답 1위 복기 */}
-          {overview?.yesterdayRecap && (
-            <YesterdayRecapCard
-              recap={overview.yesterdayRecap}
-              lang={lang}
-              onPlayDaily={() => (sessionActive ? router.push('/verify?mode=daily') : void startSession('/verify?mode=daily'))}
-            />
-          )}
-
-          {/* 의뢰하기 강조: 하루 1회 무료 출제 + 실시간 의뢰 현황 (중복 빠른이동 버튼은 UX 다이어트로 제거) */}
-          <SubmitSpotlight lang={lang} live={overview?.live ?? null} tickets={profile.freeSubmitTickets} />
-
-          {/* 실시간 명예의 전당 Top 5 리더보드 */}
-          {overview && overview.leaderboard.top.length > 0 && (
-            <LeaderboardCard board={overview.leaderboard} lang={lang} />
+          {!profile && (
+            <div id="login-panel">
+              <LoginPanel title={t.loginTitle} />
+            </div>
           )}
         </>
       )}
-
-      {/* 작동 방식: 기존 유저(1세트+)는 기본 접힘으로 첫 화면 다이어트 */}
-      <section className="card space-y-3.5">
-        <div className="flex items-center justify-between gap-2">
-          <button
-            type="button"
-            onClick={() => setGuideOpen((v) => !v)}
-            className="flex flex-1 items-center gap-1.5 text-left"
-          >
-            <p className="label">{t.howItWorks}</p>
-            {profile && profile.setsCompleted >= 1 && (
-              <span className="text-[11px] font-semibold text-slate-400">
-                {guideOpen ? (lang === 'en' ? '▲ Hide' : '▲ 접기') : lang === 'en' ? '▼ Show' : '▼ 보기'}
-              </span>
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={() => setHintsOpen(true)}
-            className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 hover:bg-amber-100"
-          >
-            <Lightbulb className="h-3.5 w-3.5 text-pi-light" />
-            {lang === 'en' ? 'AI Hints' : 'AI 감별 힌트'}
-          </button>
-        </div>
-        {(!profile || profile.setsCompleted < 1 || guideOpen) && (
-          <>
-            <Step n={1} icon={<ScanFace className="h-4 w-4" />} title={t.step1Title}>
-              {t.step1Body}
-            </Step>
-            <Step n={2} icon={<Layers className="h-4 w-4" />} title={t.step2Title}>
-              {t.step2Body(GAME.QUESTIONS_PER_SET)}
-            </Step>
-            <Step n={3} icon={<Users className="h-4 w-4" />} title={t.step3Title}>
-              {t.step3Body(GAME.REWARD_PER_MATCH_PI)}
-            </Step>
-          </>
-        )}
-      </section>
-
-      <footer className="space-y-1.5 pb-2 text-center text-xs text-slate-400">
-        <p>
-          {t.tiersLabel}: {TRUST_TIERS.map((tier) => `${tier.label} ${tier.minScore}+`).join(' · ')}
-        </p>
-        <p className="flex items-center justify-center gap-3 text-slate-500">
-          <Link href="/terms" className="hover:text-brand hover:underline">
-            {t.termsLink}
-          </Link>
-          <span>·</span>
-          <Link href="/privacy" className="hover:text-brand hover:underline">
-            {t.privacyLink}
-          </Link>
-        </p>
-      </footer>
-    </div>
-  );
-}
-
-function DailyQuestBar({ quest, lang }: { quest: HomeOverviewResponse['quest']; lang: 'ko' | 'en' }) {
-  const en = lang === 'en';
-  return (
-    <div
-      className={clsx(
-        'flex items-center gap-2.5 rounded-2xl border px-3.5 py-2.5 text-xs',
-        quest.dailyDoneToday
-          ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
-          : 'border-brand/20 bg-brand-soft/70 text-slate-800',
-      )}
-    >
-      {quest.dailyDoneToday ? (
-        <CheckCircle2 className="h-4 w-4 shrink-0 text-human-dark" />
-      ) : (
-        <Target className="h-4 w-4 shrink-0 text-brand" />
-      )}
-      <div className="min-w-0 flex-1">
-        <p className="font-bold">
-          {quest.dailyDoneToday
-            ? en
-              ? `Today's Quest Complete! (+${quest.dailyBonusPts} pts earned)`
-              : `오늘의 미션 완료! (+${quest.dailyBonusPts}점 획득)`
-            : en
-              ? `Today's Quest: Finish 1 set (+${quest.dailyBonusPts} Trust pts)`
-              : `오늘의 미션: 1세트 완료 시 신뢰도 +${quest.dailyBonusPts}점`}
-        </p>
-        {quest.nextMilestone && (
-          <p className="mt-0.5 text-[11px] opacity-80">
-            {en
-              ? `${quest.nextMilestone}-day streak bonus (+${quest.milestoneBonusPts} pts) · ${quest.streak}/${quest.nextMilestone}d`
-              : `${quest.nextMilestone}일 연속 달성 시 +${quest.milestoneBonusPts}점 보너스 (${quest.streak}/${quest.nextMilestone}일)`}
-          </p>
-        )}
-      </div>
     </div>
   );
 }
@@ -360,7 +332,7 @@ function TeaserQuizCard({ lang, onStartFull }: { lang: 'ko' | 'en'; onStartFull:
   const correct = picked === q.human;
 
   return (
-    <section className="card space-y-3 border-2 border-brand/25 bg-gradient-to-br from-white via-white to-brand-soft/45">
+    <section className="card space-y-2.5 border-2 border-brand/25 bg-gradient-to-br from-white via-white to-brand-soft/45 p-4">
       <div className="flex items-center justify-between">
         <span className="chip bg-brand text-white">
           <Sparkles className="h-3.5 w-3.5" />
@@ -411,7 +383,7 @@ function TeaserQuizCard({ lang, onStartFull }: { lang: 'ko' | 'en'; onStartFull:
       </div>
 
       {picked !== null && (
-        <div className="space-y-2.5 rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
+        <div className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50 p-3">
           <p className={clsx('text-xs font-extrabold', correct ? 'text-human-dark' : 'text-rose-600')}>
             {correct
               ? en
@@ -422,67 +394,13 @@ function TeaserQuizCard({ lang, onStartFull }: { lang: 'ko' | 'en'; onStartFull:
                 : '아쉽네요! 실제 사진은 B였어요.'}
           </p>
           <p className="text-xs leading-relaxed text-slate-600">{q.explain}</p>
-          <button type="button" onClick={onStartFull} className="btn-primary w-full py-3 text-sm font-bold">
+          <button type="button" onClick={onStartFull} className="btn-primary w-full py-2.5 text-sm font-bold">
             <ScanFace className="h-4 w-4" />
             {en ? 'Play full 5-item set & earn Pi' : '본 게임 5문항 풀고 Pi 보상 받기'}
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
       )}
-    </section>
-  );
-}
-
-function LeaderboardCard({ board, lang }: { board: HomeOverviewResponse['leaderboard']; lang: 'ko' | 'en' }) {
-  const en = lang === 'en';
-  return (
-    <section className="card space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="flex items-center gap-1.5 text-sm font-extrabold text-slate-900">
-          <Trophy className="h-4 w-4 text-amber-500" />
-          {en ? 'Top 5 Human Intuition' : '명예의 전당 · 인간 직관 TOP 5'}
-        </p>
-        <span className="chip bg-slate-100 text-[11px] text-slate-600">
-          {en ? `My Rank #${board.myRank}/${board.totalUsers}` : `내 순위 #${board.myRank}/${board.totalUsers}`}
-        </span>
-      </div>
-      <div className="space-y-1.5">
-        {board.top.map((row) => (
-          <div
-            key={`${row.rank}-${row.username}`}
-            className={clsx(
-              'flex items-center gap-2.5 rounded-xl border px-3 py-2 text-xs',
-              row.isMe ? 'border-brand/40 bg-brand-soft/70 font-bold' : 'border-slate-100 bg-slate-50',
-            )}
-          >
-            <span
-              className={clsx(
-                'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-black',
-                row.rank === 1
-                  ? 'bg-amber-400 text-white'
-                  : row.rank === 2
-                    ? 'bg-slate-400 text-white'
-                    : row.rank === 3
-                      ? 'bg-amber-700 text-white'
-                      : 'bg-slate-200 text-slate-600',
-              )}
-            >
-              {row.rank === 1 ? <Crown className="h-3.5 w-3.5" /> : row.rank}
-            </span>
-            <span className="min-w-0 flex-1 truncate text-slate-800">
-              @{row.username}
-              {row.isMe && <span className="ml-1 text-[10px] text-brand">{en ? '(You)' : '(나)'}</span>}
-              {row.streak > 0 && (
-                <span className="ml-1.5 inline-flex items-center gap-0.5 text-[10px] font-bold text-orange-500">
-                  🔥{row.streak}
-                </span>
-              )}
-            </span>
-            <TierChip score={row.trustScore} className="px-2 py-0.5 text-[10px]" />
-            <span className="w-12 text-right font-mono font-extrabold text-slate-900">{row.trustScore}</span>
-          </div>
-        ))}
-      </div>
     </section>
   );
 }
@@ -498,7 +416,7 @@ function YesterdayRecapCard({
 }) {
   const en = lang === 'en';
   return (
-    <section className="card space-y-2.5 border-rose-200 bg-gradient-to-br from-rose-50/60 via-white to-amber-50/40">
+    <section className="card space-y-2.5 border-rose-200 bg-gradient-to-br from-rose-50/60 via-white to-amber-50/40 p-4">
       <div className="flex items-center justify-between gap-2">
         <span className="chip border border-rose-200 bg-rose-50 text-[11px] font-bold text-rose-700">
           {en ? `Yesterday's Top Trap · ${recap.fooledPercent}% fooled` : `어제 오답 1위 · ${recap.fooledPercent}%가 속은 문제`}
@@ -517,121 +435,11 @@ function YesterdayRecapCard({
           {recap.aiTell}
         </p>
       )}
-      <button type="button" onClick={onPlayDaily} className="btn-outline w-full py-2.5 text-xs font-bold">
+      <button type="button" onClick={onPlayDaily} className="btn-outline w-full py-2 text-xs font-bold">
         <Flame className="h-3.5 w-3.5 text-orange-500" />
         {en ? "Try Today's Daily Challenge" : '오늘의 데일리 챌린지로 감각 확인하기'}
         <ChevronRight className="h-3.5 w-3.5" />
       </button>
     </section>
-  );
-}
-
-function SubmitSpotlight({ lang, live, tickets = 0 }: { lang: 'ko' | 'en'; live: LivePoolResponse | null; tickets?: number }) {
-  const en = lang === 'en';
-
-  const free = live ? live.freeQuizAvailable : true;
-  const eligible = live ? live.freeQuizEligible : true;
-  const href = free && eligible ? '/submit?tier=free' : '/submit';
-
-  return (
-    <section className="relative overflow-hidden rounded-3xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 via-white to-brand-soft p-4 shadow-[0_6px_24px_rgba(224,168,66,0.18)]">
-      <div className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-amber-300/25 blur-2xl" />
-      <div className="flex items-start gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-amber-500 text-white shadow">
-          <HelpCircle className="h-6 w-6" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-extrabold leading-snug text-slate-900">
-            {en ? 'Not sure if it’s AI? Ask 10 real humans.' : '이 글·사진, AI인지 헷갈리나요?'}
-          </p>
-          <p className="mt-0.5 text-xs leading-relaxed text-slate-600">
-            {en
-              ? 'Suspicious reviews, chat replies, listings or photos — verified Pioneers judge it for you.'
-              : '수상한 후기·카톡 답장·중고 매물·사진을 올리면 인증된 10명이 판별해 드려요.'}
-          </p>
-        </div>
-      </div>
-
-      <Link href={href} className="btn-primary mt-3.5 w-full py-3.5 text-[15px] font-bold">
-        <Gift className="h-5 w-5" />
-        {tickets > 0
-          ? en
-            ? `Use Free Submission Ticket (${tickets} left)`
-            : `무료 의뢰 체험권 사용 가능 (${tickets}장 보유)`
-          : free && eligible
-            ? en
-              ? 'Ask 10 humans — 1 FREE today'
-              : '오늘 1회 무료로 10명에게 물어보기'
-            : !eligible
-              ? en
-                ? 'Finish 1 set to unlock a free quiz'
-                : '판별 1세트 완료 시 무료 출제 오픈'
-              : en
-                ? 'Submit for verification (1 Test-Pi)'
-                : '검증 의뢰하기 (1 Test-Pi)'}
-        <ChevronRight className="h-5 w-5" />
-      </Link>
-
-      {live && live.items.length > 0 && (
-        <div className="mt-3.5 space-y-2">
-          <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-500">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-70" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500" />
-            </span>
-            {en ? `Live now · ${live.activeCount} in verification` : `실시간 검증 중 · ${live.activeCount}건`}
-          </p>
-          {live.items.map((item) => (
-            <div key={item.id} className="rounded-xl border border-slate-100 bg-white/90 px-3 py-2.5">
-              <div className="flex items-center gap-2">
-                {item.kind === 'image' ? (
-                  <ImageIcon className="h-3.5 w-3.5 shrink-0 text-brand" />
-                ) : (
-                  <FilePlus2 className="h-3.5 w-3.5 shrink-0 text-brand" />
-                )}
-                <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-slate-800">
-                  {en ? translatePromptToEn(item.prompt) : translatePromptToKo(item.prompt)}
-                </p>
-                <span className="shrink-0 text-[11px] font-bold text-brand">
-                  {item.votes}/{item.target}
-                  {en ? ' votes' : '표'}
-                </span>
-              </div>
-              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-brand to-amber-400"
-                  style={{ width: `${(item.votes / item.target) * 100}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </section>
-  );
-}
-
-function Stat({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string; accent?: boolean }) {
-  return (
-    <div className="rounded-xl border border-slate-100 bg-slate-50 px-2 py-3.5">
-      <div className="mb-1.5 flex justify-center">{icon}</div>
-      <p className={clsx('text-lg font-extrabold leading-tight', accent ? 'text-pi-light' : 'text-slate-900')}>{value}</p>
-      <p className="mt-0.5 text-[13px] font-semibold text-slate-600">{label}</p>
-    </div>
-  );
-}
-
-function Step({ n, icon, title, children }: { n: number; icon: React.ReactNode; title: string; children: React.ReactNode }) {
-  return (
-    <div className="flex gap-3">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand">{icon}</div>
-      <div>
-        <p className="text-sm font-bold text-slate-900">
-          <span className="mr-1 text-brand">{n}.</span>
-          {title}
-        </p>
-        <p className="text-[13px] leading-relaxed text-slate-600">{children}</p>
-      </div>
-    </div>
   );
 }
