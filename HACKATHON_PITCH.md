@@ -21,7 +21,7 @@
 As AI-generated text, deepfakes, and synthetic images flood the internet, AI models increasingly retrain on synthetic outputs—causing **Model Collapse**. Traditional crowdsourcing platforms struggle with automated bots and click-farms that poison human-labeled datasets.
 
 #### The Solution: VeriLens
-**VeriLens** leverages Pi Network's verified human community to create a bot-resistant **Human Reality Filter**. In fast, 5-second comparisons, verified Pioneers distinguish authentic human-created content from AI fakes and earn Pi rewards when their intuition aligns with a 10-human consensus.
+**VeriLens** leverages Pi Network's verified human community to create a bot-resistant **Human Reality Filter**—applicable to both AI dataset curation and everyday digital fraud prevention (smishing/phishing messages, fake marketplace listings, synthetic reviews, and deepfakes). In fast comparisons, verified Pioneers distinguish authentic human-created content from AI fakes and earn Pi rewards when their intuition aligns with a 10-human consensus.
 
 #### Alignment with Pi Ecosystem Summit Vision
 VeriLens directly operationalizes the core themes highlighted at the **Pi Ecosystem Summit**:
@@ -32,7 +32,7 @@ VeriLens directly operationalizes the core themes highlighted at the **Pi Ecosys
 #### Key Features & Pi Infrastructure Integration
 1. **Pi Sign-In & Live Testnet Payments (`Pi SDK v2.0`)**:
    - Seamless authentication inside Pi Browser (`Pi.authenticate`) with automatic incomplete-payment recovery (`onIncompletePaymentFound`).
-   - **B2C & B2B Requester Portal (`/submit`)**: Supports both **Single Check (1 item)**—where everyday users ask *"Human or AI?"*—and **A/B Compare (2 items)** for B2B evaluation, complete with a **1-tap sample filler** for instant onboarding. Requesters submit text or compressed, EXIF-stripped images, confirm copyright warranty, and pay **1 Test-Pi** on Pi Testnet (`Pi.createPayment`) to publish directly into the live verification pool.
+   - **B2C & B2B Requester Portal (`/submit`)**: Features **4 1-tap real-world templates** (**Smishing/Scam**, **Marketplace Listing Photo**, **Human Tone A/B**, and **Fake Review Check**) supporting both **Single Check (1 item)** and **A/B Compare (2 items)**, plus **VeriLens Official Verdict** summaries once consensus forms. Requesters submit text or compressed, EXIF-stripped images, confirm copyright warranty, and pay **1 Test-Pi** on Pi Testnet (`Pi.createPayment`) to publish directly into the live verification pool.
    - **Demo Sandbox Mode**: Automatically enabled in regular web browsers so judges without Pi Browser can test the full end-to-end flow immediately.
 2. **3-Stage Session-Based Human Proof (`PiVerifyAdapter` Architecture)**:
    - **Stage 1 (Session Entry)**: Quick human liveness/uniqueness check issuing a signed 1-hour session token.
