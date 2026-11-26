@@ -330,20 +330,20 @@ function DailyQuestBar({ quest, lang }: { quest: HomeOverviewResponse['quest']; 
 
 const TEASER_QUIZ = {
   ko: {
-    badge: '5초 맛보기 퀴즈',
-    question: '어느 쪽이 실제 중고거래 판매자가 쓴 글일까요?',
-    a: '[급처] 아이패드 프로 미개봉 35만원! 해외 출장 중이라 직거래 불가하고 안전결제 링크로만 거래합니다.',
-    b: '아이패드 프로 쓰던 거 팔아요. 액정 오른쪽 아래 생활기스 하나 있고 배터리 89%예요. 강남역 직거래만.',
+    badge: '5초 실사 맛보기',
+    question: '둘 중 AI가 만들지 않은 실제 카페 사진은 어느 쪽일까요?',
+    aImg: '/missions/v09-a.jpg',
+    bImg: '/missions/v09-b.jpg',
     human: 'B' as const,
-    explain: '시세보다 터무니없이 싸고 "해외 출장·외부 링크"를 유도하는 A는 전형적인 AI/사기 템플릿입니다!',
+    explain: 'A는 메뉴판 글자("CΦFFΞE", "LATTƎ")가 깨져 있고 스푼 손잡이가 나무 결 속으로 녹아 있습니다. 실제 사진은 B입니다!',
   },
   en: {
-    badge: '5-Sec Quick Try',
-    question: 'Which marketplace listing was written by a real human seller?',
-    a: '[URGENT] Sealed iPad Pro $250! Overseas on business so no meetups—pay only via my secure link today!',
-    b: 'Selling my used iPad Pro. Light scratch on bottom-right screen, 89% battery health. Meetup only at Central Station.',
+    badge: '5-Sec Photo Challenge',
+    question: 'Which cafe photo is REAL (not AI-generated)?',
+    aImg: '/missions/v09-a.jpg',
+    bImg: '/missions/v09-b.jpg',
     human: 'B' as const,
-    explain: 'Unreal price + "overseas, external link only" (A) is a classic AI/scam template. Real sellers disclose flaws!',
+    explain: 'Image A has garbled menu text ("CΦFFΞE", "LATTƎ") and a warped spoon handle melting into the wood. B is real!',
   },
 };
 
@@ -360,12 +360,12 @@ function TeaserQuizCard({ lang, onStartFull }: { lang: 'ko' | 'en'; onStartFull:
           <Sparkles className="h-3.5 w-3.5" />
           {q.badge}
         </span>
-        <span className="text-[11px] font-bold text-slate-400">{en ? 'Tap A or B' : 'A 또는 B를 눌러보세요'}</span>
+        <span className="text-[11px] font-bold text-slate-400">{en ? 'Tap Photo A or B' : '사진 A 또는 B를 눌러보세요'}</span>
       </div>
       <p className="text-[15px] font-extrabold text-slate-900">{q.question}</p>
-      <div className="grid gap-2">
+      <div className="grid grid-cols-2 gap-2.5">
         {(['A', 'B'] as const).map((side) => {
-          const body = side === 'A' ? q.a : q.b;
+          const src = side === 'A' ? q.aImg : q.bImg;
           const isPick = picked === side;
           const isHuman = side === q.human;
           return (
@@ -375,29 +375,30 @@ function TeaserQuizCard({ lang, onStartFull }: { lang: 'ko' | 'en'; onStartFull:
               disabled={picked !== null}
               onClick={() => setPicked(side)}
               className={clsx(
-                'flex items-start gap-2.5 rounded-2xl border-2 p-3 text-left text-[13px] leading-relaxed transition',
+                'relative overflow-hidden rounded-2xl border-2 bg-white text-left transition',
                 picked === null
-                  ? 'border-slate-200 bg-white hover:border-brand/50'
+                  ? 'border-slate-200 hover:border-brand/60'
                   : isHuman
-                    ? 'border-emerald-400 bg-emerald-50 text-emerald-950'
+                    ? 'border-emerald-500 ring-2 ring-emerald-200'
                     : isPick
-                      ? 'border-rose-300 bg-rose-50 text-rose-900'
-                      : 'border-slate-100 bg-slate-50 text-slate-400',
+                      ? 'border-rose-400 ring-2 ring-rose-200'
+                      : 'border-slate-100 opacity-60',
               )}
             >
               <span
                 className={clsx(
-                  'mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-black',
+                  'absolute left-2.5 top-2.5 z-10 flex h-7 w-7 items-center justify-center rounded-full text-xs font-black shadow',
                   picked !== null && isHuman
                     ? 'bg-emerald-600 text-white'
                     : isPick
                       ? 'bg-rose-500 text-white'
-                      : 'bg-slate-900 text-white',
+                      : 'bg-slate-900/80 text-white',
                 )}
               >
                 {side}
               </span>
-              <span>{body}</span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={src} alt={`Sample ${side}`} draggable={false} className="aspect-[4/3] w-full select-none object-cover" />
             </button>
           );
         })}
@@ -408,11 +409,11 @@ function TeaserQuizCard({ lang, onStartFull }: { lang: 'ko' | 'en'; onStartFull:
           <p className={clsx('text-xs font-extrabold', correct ? 'text-human-dark' : 'text-rose-600')}>
             {correct
               ? en
-                ? 'Spot on! Sharp human intuition!'
-                : '정답입니다! 날카로운 인간 직관이에요!'
+                ? 'Spot on! Sharp human eye!'
+                : '정답입니다! 날카로운 눈썰미예요!'
               : en
-                ? 'Ooh, caught by the trap! Answer was B.'
-                : '아쉽네요! 진짜 판매자는 B였어요.'}
+                ? 'Tricky AI! The real photo was B.'
+                : '아쉽네요! 실제 사진은 B였어요.'}
           </p>
           <p className="text-xs leading-relaxed text-slate-600">{q.explain}</p>
           <button type="button" onClick={onStartFull} className="btn-primary w-full py-3 text-sm font-bold">

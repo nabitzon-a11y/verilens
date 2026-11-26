@@ -2,7 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Flag, Flame, Gift, Lightbulb, Loader2, RefreshCw, ScanFace, Timer, X } from 'lucide-react';
+import { Flag, Flame, Gift, Lightbulb, Loader2, RefreshCw, ScanFace, Timer, X, ZoomIn } from 'lucide-react';
 import type { AnswerInput, Choice, PublicBonusQuiz, PublicMission, PublicMissionSet, SetResult, VerifySession } from '@/types';
 import { SEED_EN, translatePromptToEn, translatePromptToKo, translateSourceLabel } from '@/data/missions.en';
 import { AiHintsModal } from '@/components/AiHintsModal';
@@ -43,6 +43,7 @@ function VerifyGame() {
   const { modal, run } = useScanModal(verifyMode === 'mock');
 
   const [phase, setPhase] = useState<Phase>('idle');
+  const [zoomImage, setZoomImage] = useState<{ src: string; alt: string } | null>(null);
   const [session, setSession] = useState<VerifySession | null>(null);
   const [missionSet, setMissionSet] = useState<PublicMissionSet | null>(null);
   const [index, setIndex] = useState(0);
@@ -370,8 +371,19 @@ function VerifyGame() {
                           <p className="whitespace-pre-line text-base leading-relaxed text-slate-800">{m.a.body}</p>
                         </div>
                       ) : (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={m.a.src} alt={m.a.alt} draggable={false} className="aspect-[4/3] w-full select-none object-cover" />
+                        <div className="relative">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={m.a.src} alt={m.a.alt} draggable={false} className="aspect-[4/3] w-full select-none object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => m.a.type === 'image' && setZoomImage({ src: m.a.src, alt: m.a.alt })}
+                            aria-label="이미지 확대 보기"
+                            className="absolute right-3 top-3 z-10 flex items-center gap-1 rounded-full bg-slate-900/75 px-3 py-1.5 text-xs font-bold text-white shadow-sm backdrop-blur-sm transition hover:bg-slate-900"
+                          >
+                            <ZoomIn className="h-3.5 w-3.5" />
+                            <span>{lang === 'en' ? 'Zoom' : '확대'}</span>
+                          </button>
+                        </div>
                       )}
                     </div>
                     <div className="grid grid-cols-2 gap-3">
@@ -407,6 +419,7 @@ function VerifyGame() {
                         selected={selected === side}
                         disabled={locked || phase !== 'playing'}
                         onSelect={(c) => void choose(c)}
+                        onZoom={(src, alt) => setZoomImage({ src, alt })}
                       />
                     ))}
                   </div>
@@ -474,6 +487,34 @@ function VerifyGame() {
           {toast && (
             <div className="fixed inset-x-0 bottom-24 z-50 flex justify-center px-4">
               <p className="rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-lg">{toast}</p>
+            </div>
+          )}
+
+          {zoomImage && (
+            <div
+              className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/90 p-4 backdrop-blur-sm"
+              role="dialog"
+              aria-modal="true"
+              onClick={() => setZoomImage(null)}
+            >
+              <button
+                type="button"
+                onClick={() => setZoomImage(null)}
+                aria-label="닫기"
+                className="mb-3 self-end rounded-full bg-white/15 p-2 text-white hover:bg-white/25"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={zoomImage.src}
+                alt={zoomImage.alt}
+                onClick={(e) => e.stopPropagation()}
+                className="max-h-[78vh] w-full max-w-md rounded-2xl object-contain shadow-2xl"
+              />
+              <p className="mt-3 text-xs font-medium text-slate-300">
+                {lang === 'en' ? 'Tap outside to close · Look closely at hands, text, and edges' : '바깥 영역을 누르면 닫힙니다 · 손가락·글자·경계선을 자세히 보세요'}
+              </p>
             </div>
           )}
         </>

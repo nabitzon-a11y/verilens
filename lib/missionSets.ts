@@ -174,12 +174,19 @@ export async function issueMissionSet(
     ).slice(0, 2);
     picked.push(...requesterFirst);
 
+    // 이미지 문항이 세트당 최소 1~2개 포함되도록 우선 선발 (눈에 끌리는 시각 몰입감)
+    const imageFirst = shuffle(
+      regular.filter((m) => m.kind === 'image' && langEligible(m) && !picked.includes(m)),
+    ).slice(0, Math.max(0, Math.min(2, need - picked.length)));
+    picked.push(...imageFirst);
+
     for (const m of shuffle(regular.filter((m) => langEligible(m) && !picked.includes(m)))) {
       if (picked.length >= need) break;
       picked.push(m);
     }
 
-    ordered = shuffle(picked.slice(0, need));
+    // 난이도 곡선: 워밍업(1) → 실전 함정(2) → 고난도(3) 순 배치 (Gold는 무작위 위치 삽입)
+    ordered = picked.slice(0, need).sort((a, b) => a.difficulty - b.difficulty);
     gold = goldPool[randomInt(goldPool.length)];
     ordered.splice(randomInt(ordered.length + 1), 0, gold);
   }

@@ -403,19 +403,101 @@ const SPECS: ExtraSpec[] = [
   },
 ];
 
-export const EXTRA_SEED_MISSIONS: Mission[] = SPECS.map((s) => ({
-  id: s.id,
-  kind: 'text',
-  category: s.category,
-  prompt: TEXT_PROMPT,
-  a: { type: 'text', sourceLabel: s.sourceLabel, body: s.a },
-  b: { type: 'text', sourceLabel: s.sourceLabel, body: s.b },
-  humanSide: s.human,
-  isGold: s.gold ?? false,
-  priorVotes: s.votes,
-  aiTell: s.tell,
-  difficulty: s.difficulty,
-  origin: 'seed',
-  status: 'active',
-  createdAt: EXTRA_CREATED_AT,
-}));
+const IMAGE_SPECS: {
+  id: string;
+  category: MissionCategory;
+  label: string;
+  human: Choice;
+  gold?: boolean;
+  votes: Choice[];
+  difficulty: 1 | 2 | 3;
+  tell: string;
+}[] = [
+  {
+    id: 'seed-v11',
+    category: 'object',
+    label: '카페 브런치 테이블',
+    human: 'A',
+    gold: true,
+    votes: ['A', 'A', 'A', 'B'],
+    difficulty: 2,
+    tell: 'B의 포크 날이 5개로 뭉쳐 있고, 오른쪽 아래 영수증 글자가 알아볼 수 없이 깨져 있습니다.',
+  },
+  {
+    id: 'seed-v13',
+    category: 'object',
+    label: '중고 노트북 직거래',
+    human: 'A',
+    votes: ['A', 'A', 'B', 'A'],
+    difficulty: 2,
+    tell: 'B의 키보드 자판 배열이 물결처럼 휘고 글자가 뭉개져 있으며, 왼쪽 힌지와 측면 USB 포트가 녹은 듯 비대칭입니다.',
+  },
+  {
+    id: 'seed-v14',
+    category: 'anatomy',
+    label: '아이스 아메리카노 인증샷',
+    human: 'A',
+    gold: true,
+    votes: ['A', 'A', 'A', 'A'],
+    difficulty: 1,
+    tell: 'B의 손가락 마디가 부자연스럽게 벌어지고 엄지가 비정상적으로 길어 컵을 감싸는 구조가 어색합니다.',
+  },
+  {
+    id: 'seed-v15',
+    category: 'lighting',
+    label: '원룸 거실 매물 사진',
+    human: 'A',
+    votes: ['A', 'B', 'A', 'B'],
+    difficulty: 3,
+    tell: 'B의 커피 테이블 오른쪽 다리가 굽어 있고, 왼쪽을 향한 벽등의 그림자가 반대 방향(오른쪽)으로 뻗어 빛 방향이 모순됩니다.',
+  },
+  {
+    id: 'seed-v16',
+    category: 'object',
+    label: '반려견 공원 산책',
+    human: 'A',
+    votes: ['A', 'A', 'B', 'A'],
+    difficulty: 2,
+    tell: 'B의 빨간 리드줄이 가슴 털에 섞여 허공에서 끊기며, 뒤쪽 공원 벤치 다리가 휘어져 있습니다.',
+  },
+];
+
+const EXTRA_IMAGE_MISSIONS: Mission[] = IMAGE_SPECS.map((s) => {
+  const num = s.id.replace('seed-', '');
+  return {
+    id: s.id,
+    kind: 'image',
+    category: s.category,
+    prompt: '어느 쪽이 AI가 만들지 않은 실제 사진일까요?',
+    a: { type: 'image', src: `/missions/${num}-a.jpg`, alt: `${s.label} A`, placeholderLabel: `${s.label} A` },
+    b: { type: 'image', src: `/missions/${num}-b.jpg`, alt: `${s.label} B`, placeholderLabel: `${s.label} B` },
+    humanSide: s.human,
+    isGold: s.gold ?? false,
+    priorVotes: s.votes,
+    aiTell: s.tell,
+    difficulty: s.difficulty,
+    origin: 'seed',
+    status: 'active',
+    createdAt: EXTRA_CREATED_AT,
+  };
+});
+
+export const EXTRA_SEED_MISSIONS: Mission[] = [
+  ...SPECS.map((s) => ({
+    id: s.id,
+    kind: 'text' as const,
+    category: s.category,
+    prompt: TEXT_PROMPT,
+    a: { type: 'text' as const, sourceLabel: s.sourceLabel, body: s.a },
+    b: { type: 'text' as const, sourceLabel: s.sourceLabel, body: s.b },
+    humanSide: s.human,
+    isGold: s.gold ?? false,
+    priorVotes: s.votes,
+    aiTell: s.tell,
+    difficulty: s.difficulty,
+    origin: 'seed' as const,
+    status: 'active' as const,
+    createdAt: EXTRA_CREATED_AT,
+  })),
+  ...EXTRA_IMAGE_MISSIONS,
+];
