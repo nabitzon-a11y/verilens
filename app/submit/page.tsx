@@ -377,7 +377,7 @@ export default function SubmitPage() {
     return null;
   })();
 
-  const submit = async () => {
+  const submit = async (useTicket = false) => {
     if (validation || busy) return;
     setError(null);
     try {
@@ -398,6 +398,16 @@ export default function SubmitPage() {
               a: imageA,
               ...(mode === 'compare' ? { b: imageB } : {}),
             };
+
+      if (useTicket) {
+        setBusy('draft');
+        const res = await api<{ missionId: string; remainingTickets: number }>('/api/missions/ticket', { body });
+        setDone({ paymentId: `ticket:${res.missionId}`, status: 'completed', missionId: res.missionId, mock: true });
+        setDraftId(null);
+        void refresh();
+        void loadMine();
+        return;
+      }
 
       if (submitTier === 'community') {
         setBusy('draft');
@@ -765,10 +775,24 @@ export default function SubmitPage() {
             <p className="text-center text-xs text-slate-500">{validation}</p>
           )}
 
+          {submitTier === 'paid' && profile.freeSubmitTickets > 0 && (
+            <button
+              type="button"
+              className="btn-primary w-full py-3.5 text-sm"
+              onClick={() => submit(true)}
+              disabled={!!validation || !!busy}
+            >
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {en
+                ? `Use Free Submission Ticket (${profile.freeSubmitTickets} left)`
+                : `무료 의뢰 체험권으로 바로 등록하기 (${profile.freeSubmitTickets}장 보유)`}
+            </button>
+          )}
+
           <button
             type="button"
             className={clsx('w-full py-4 text-base', submitTier === 'community' ? 'btn-primary' : 'btn-amber')}
-            onClick={submit}
+            onClick={() => submit(false)}
             disabled={!!validation || !!busy || (submitTier === 'community' && profile.setsCompleted < 1)}
           >
             {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : submitTier === 'community' ? <Sparkles className="h-4 w-4" /> : <Lock className="h-4 w-4" />}

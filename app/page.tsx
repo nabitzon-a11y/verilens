@@ -121,8 +121,13 @@ export default function HomePage() {
               {t.introSuffix}
             </p>
           </section>
-          <TeaserQuizCard lang={lang} onStartFull={() => void startSession()} />
-          <LoginPanel title={t.loginTitle} />
+          <TeaserQuizCard
+            lang={lang}
+            onStartFull={() => document.getElementById('login-panel')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+          />
+          <div id="login-panel">
+            <LoginPanel title={t.loginTitle} />
+          </div>
         </>
       ) : (
         <>
@@ -224,8 +229,17 @@ export default function HomePage() {
             </button>
           </section>
 
+          {/* 어제 데일리 오답 1위 복기 */}
+          {overview?.yesterdayRecap && (
+            <YesterdayRecapCard
+              recap={overview.yesterdayRecap}
+              lang={lang}
+              onPlayDaily={() => (sessionActive ? router.push('/verify?mode=daily') : void startSession('/verify?mode=daily'))}
+            />
+          )}
+
           {/* 의뢰하기 강조: 하루 1회 무료 출제 + 실시간 의뢰 현황 (중복 빠른이동 버튼은 UX 다이어트로 제거) */}
-          <SubmitSpotlight lang={lang} live={overview?.live ?? null} />
+          <SubmitSpotlight lang={lang} live={overview?.live ?? null} tickets={profile.freeSubmitTickets} />
 
           {/* 실시간 명예의 전당 Top 5 리더보드 */}
           {overview && overview.leaderboard.top.length > 0 && (
@@ -451,6 +465,11 @@ function LeaderboardCard({ board, lang }: { board: HomeOverviewResponse['leaderb
             <span className="min-w-0 flex-1 truncate text-slate-800">
               @{row.username}
               {row.isMe && <span className="ml-1 text-[10px] text-brand">{en ? '(You)' : '(나)'}</span>}
+              {row.streak > 0 && (
+                <span className="ml-1.5 inline-flex items-center gap-0.5 text-[10px] font-bold text-orange-500">
+                  🔥{row.streak}
+                </span>
+              )}
             </span>
             <TierChip score={row.trustScore} className="px-2 py-0.5 text-[10px]" />
             <span className="w-12 text-right font-mono font-extrabold text-slate-900">{row.trustScore}</span>
@@ -461,7 +480,46 @@ function LeaderboardCard({ board, lang }: { board: HomeOverviewResponse['leaderb
   );
 }
 
-function SubmitSpotlight({ lang, live }: { lang: 'ko' | 'en'; live: LivePoolResponse | null }) {
+function YesterdayRecapCard({
+  recap,
+  lang,
+  onPlayDaily,
+}: {
+  recap: NonNullable<HomeOverviewResponse['yesterdayRecap']>;
+  lang: 'ko' | 'en';
+  onPlayDaily: () => void;
+}) {
+  const en = lang === 'en';
+  return (
+    <section className="card space-y-2.5 border-rose-200 bg-gradient-to-br from-rose-50/60 via-white to-amber-50/40">
+      <div className="flex items-center justify-between gap-2">
+        <span className="chip border border-rose-200 bg-rose-50 text-[11px] font-bold text-rose-700">
+          {en ? `Yesterday's Top Trap · ${recap.fooledPercent}% fooled` : `어제 오답 1위 · ${recap.fooledPercent}%가 속은 문제`}
+        </span>
+        {recap.sourceLabel && <span className="text-[11px] font-semibold text-slate-400">{recap.sourceLabel}</span>}
+      </div>
+      <p className="text-sm font-extrabold text-slate-900">{recap.prompt}</p>
+      {recap.previewText && (
+        <p className="rounded-xl border border-slate-100 bg-white/90 px-3 py-2 text-xs leading-relaxed text-slate-700">
+          “{recap.previewText}”
+        </p>
+      )}
+      {recap.aiTell && (
+        <p className="text-xs leading-relaxed text-slate-600">
+          <b className="text-brand">{en ? 'AI Tell: ' : '감별 포인트: '}</b>
+          {recap.aiTell}
+        </p>
+      )}
+      <button type="button" onClick={onPlayDaily} className="btn-outline w-full py-2.5 text-xs font-bold">
+        <Flame className="h-3.5 w-3.5 text-orange-500" />
+        {en ? "Try Today's Daily Challenge" : '오늘의 데일리 챌린지로 감각 확인하기'}
+        <ChevronRight className="h-3.5 w-3.5" />
+      </button>
+    </section>
+  );
+}
+
+function SubmitSpotlight({ lang, live, tickets = 0 }: { lang: 'ko' | 'en'; live: LivePoolResponse | null; tickets?: number }) {
   const en = lang === 'en';
 
   const free = live ? live.freeQuizAvailable : true;
@@ -489,17 +547,21 @@ function SubmitSpotlight({ lang, live }: { lang: 'ko' | 'en'; live: LivePoolResp
 
       <Link href={href} className="btn-primary mt-3.5 w-full py-3.5 text-[15px] font-bold">
         <Gift className="h-5 w-5" />
-        {free && eligible
+        {tickets > 0
           ? en
-            ? 'Ask 10 humans — 1 FREE today'
-            : '오늘 1회 무료로 10명에게 물어보기'
-          : !eligible
+            ? `Use Free Submission Ticket (${tickets} left)`
+            : `무료 의뢰 체험권 사용 가능 (${tickets}장 보유)`
+          : free && eligible
             ? en
-              ? 'Finish 1 set to unlock a free quiz'
-              : '판별 1세트 완료 시 무료 출제 오픈'
-            : en
-              ? 'Submit for verification (1 Test-Pi)'
-              : '검증 의뢰하기 (1 Test-Pi)'}
+              ? 'Ask 10 humans — 1 FREE today'
+              : '오늘 1회 무료로 10명에게 물어보기'
+            : !eligible
+              ? en
+                ? 'Finish 1 set to unlock a free quiz'
+                : '판별 1세트 완료 시 무료 출제 오픈'
+              : en
+                ? 'Submit for verification (1 Test-Pi)'
+                : '검증 의뢰하기 (1 Test-Pi)'}
         <ChevronRight className="h-5 w-5" />
       </Link>
 

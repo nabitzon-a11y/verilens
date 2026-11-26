@@ -1,8 +1,9 @@
-import type { HomeOverviewResponse } from '@/types';
+import type { HomeOverviewResponse, Mission } from '@/types';
+import { SEED_EN } from '@/data/missions.en';
 import { requireUser } from '@/lib/auth';
 import { GAME, QUEST, getTrustTier } from '@/lib/constants';
 import { ok, withErrorHandling } from '@/lib/http';
-import { isMissionEligibleForLang } from '@/lib/missionSets';
+import { getDailyMissionsForDate, isMissionEligibleForLang } from '@/lib/missionSets';
 import { getRepository } from '@/lib/repository';
 import { migrateTrust } from '@/lib/users';
 
@@ -11,8 +12,51 @@ export const dynamic = 'force-dynamic';
 
 const COMMUNITY_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
-function kstToday(): string {
-  return new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 10);
+function kstDateOffset(days = 0): string {
+  return new Date(Date.now() + 9 * 3600_000 + days * 86400_000).toISOString().slice(0, 10);
+}
+
+async function buildYesterdayRecap(
+  repo: ReturnType<typeof getRepository>,
+  allActive: Mission[],
+  lang: 'ko' | 'en',
+): Promise<HomeOverviewResponse['yesterdayRecap']> {
+  const yesterday = kstDateOffset(-1);
+  const daily = getDailyMissionsForDate(allActive, yesterday, lang);
+  if (daily.length === 0) return undefined;
+
+  // 어제 데일리 문항 중 실제 투표 + 기준 패널 오답률이 가장 높은 1문항 선정
+  const scored = await Promise.all(
+    daily.map(async (m) => {
+      const votes = await repo.getVotes(m.id);
+      const combined = [...m.priorVotes, ...votes];
+      const fooled = m.humanSide ? combined.filter((v) => v !== m.humanSide).length : 0;
+      const fooledPercent = combined.length > 0 ? Math.round((fooled / combined.length) * 100) : m.difficulty * 22;
+      return { m, fooledPercent };
+    }),
+  );
+
+  scored.sort((a, b) => b.fooledPercent - a.fooledPercent || b.m.difficulty - a.m.difficulty);
+  const pick = scored[0]?.m;
+  if (!pick) return undefined;
+
+  const tr = lang === 'en' ? SEED_EN[pick.id] : undefined;
+  const prompt = tr?.prompt ?? pick.prompt;
+  const aiTell = tr?.aiTell ?? pick.aiTell;
+  const aContent = tr?.aBody ?? (pick.a.type === 'text' ? pick.a.body : undefined);
+  const sourceLabel = tr?.sourceLabel ?? (pick.a.type === 'text' ? pick.a.sourceLabel : undefined);
+
+  return {
+    missionId: pick.id,
+    prompt,
+    kind: pick.kind,
+    mode: pick.mode,
+    previewText: aContent ? (aContent.length > 120 ? `${aContent.slice(0, 120)}...` : aContent) : undefined,
+    sourceLabel,
+    fooledPercent: Math.max(28, Math.min(78, scored[0].fooledPercent || 48)),
+    humanSide: pick.humanSide,
+    aiTell,
+  };
 }
 
 /** 홈 화면 통합 조회 (실시간 의뢰 현황 + Top 5 리더보드 + 데일리 퀘스트) */
@@ -22,8 +66,9 @@ export const GET = withErrorHandling(async (req) => {
   const lang = new URL(req.url).searchParams.get('lang') === 'en' ? 'en' : 'ko';
   const repo = getRepository();
 
-  const [requester, allUsers] = await Promise.all([
+  const [requester, allActive, allUsers] = await Promise.all([
     repo.listMissions({ origin: 'requester' }),
+    repo.listMissions({ status: 'active' }),
     repo.listUsers(),
   ]);
 
@@ -66,12 +111,14 @@ export const GET = withErrorHandling(async (req) => {
       tier: tier.tier,
       tierLabel: tier.label,
       setsCompleted: u.setsCompleted,
+      streak: u.streak,
       isMe: u.uid === user.uid,
     };
   });
 
-  const today = kstToday();
+  const today = kstDateOffset(0);
   const nextMilestone = QUEST.STREAK_MILESTONES.find((m) => m > user.streak) ?? null;
+  const yesterdayRecap = await buildYesterdayRecap(repo, allActive, lang);
 
   return ok<HomeOverviewResponse>({
     live: {
@@ -92,5 +139,6 @@ export const GET = withErrorHandling(async (req) => {
       nextMilestone,
       milestoneBonusPts: QUEST.MILESTONE_TRUST_BONUS,
     },
+    yesterdayRecap,
   });
 });

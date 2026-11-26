@@ -137,14 +137,27 @@ function VerifyGame() {
       const s = getActiveSession();
       if (!s) throw new ApiError(401, '인간 판별 세션이 만료되었습니다.', 'VERIFY_REQUIRED');
 
+      let refUid: string | undefined;
+      try {
+        refUid = window.localStorage.getItem('verilens_ref') || undefined;
+      } catch {
+        /* 무시 */
+      }
+
       const result = await api<SetResult>('/api/missions/submit', {
         body: {
           setId: missionSet.setId,
           verifyToken: s.token,
           answers: answers.current,
           ...(typeof bonusChoice === 'number' && bonusChoice >= 0 ? { bonusChoice } : {}),
+          ...(refUid ? { refUid } : {}),
         },
       });
+      try {
+        window.localStorage.removeItem('verilens_ref');
+      } catch {
+        /* 무시 */
+      }
       saveLastResult(result);
       void refresh();
       router.push('/verify/result');

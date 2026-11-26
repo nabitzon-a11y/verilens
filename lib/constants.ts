@@ -74,6 +74,7 @@ export const QUEST = {
   DAILY_TRUST_BONUS: 20,
   STREAK_MILESTONES: [3, 7, 14, 30] as readonly number[],
   MILESTONE_TRUST_BONUS: 35,
+  REFERRAL_TRUST_BONUS: 15,
 } as const;
 
 /** PiVerify 3단계 세션 보안 규칙 */

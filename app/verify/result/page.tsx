@@ -70,9 +70,10 @@ export default function ResultPage() {
   const share = async () => {
     if (!result.challengeMissionId && !result.isDaily) return;
     const grid = result.results.map((r) => (r.matched ? '🟩' : '🟥')).join('');
+    const refParam = profile?.uid ? `&ref=${encodeURIComponent(profile.uid)}` : '';
     const url = result.isDaily
-      ? buildShareUrl('/verify?mode=daily')
-      : buildShareUrl(`/verify?challenge=${encodeURIComponent(result.challengeMissionId!)}`);
+      ? buildShareUrl(`/verify?mode=daily${refParam}`)
+      : buildShareUrl(`/verify?challenge=${encodeURIComponent(result.challengeMissionId!)}${refParam}`);
     const title = result.isDaily
       ? lang === 'en'
         ? 'VeriLens Daily Challenge'
@@ -159,7 +160,7 @@ export default function ResultPage() {
 
       <StatusBanner result={result} t={t} />
 
-      {(result.dailyQuestBonus || result.streakMilestone) && (
+      {(result.dailyQuestBonus || result.streakMilestone || result.referralBonus || result.freeTicketGranted) && (
         <section className="space-y-2">
           {result.dailyQuestBonus && (
             <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-3.5 text-sm font-bold text-emerald-900">
@@ -175,6 +176,22 @@ export default function ResultPage() {
               {lang === 'en'
                 ? `${result.streakMilestone}-Day Streak Milestone! +35 Bonus Trust pts`
                 : `${result.streakMilestone}일 연속 참여 달성! 보너스 신뢰도 +35점`}
+            </div>
+          )}
+          {result.freeTicketGranted && (
+            <div className="flex items-center gap-2 rounded-2xl border border-brand/25 bg-brand-soft p-3.5 text-sm font-bold text-brand">
+              <Gift className="h-5 w-5 shrink-0 text-brand" />
+              {lang === 'en'
+                ? 'Milestone Reward: +1 Free Submission Ticket unlocked!'
+                : '마일스톤 보상: 무료 의뢰 체험권 +1장을 받았어요!'}
+            </div>
+          )}
+          {result.referralBonus && (
+            <div className="flex items-center gap-2 rounded-2xl border border-indigo-200 bg-indigo-50 p-3.5 text-sm font-bold text-indigo-900">
+              <Users className="h-5 w-5 shrink-0 text-indigo-600" />
+              {lang === 'en'
+                ? `Friend Invite Bonus! Both you & your friend got +${result.referralBonus} Trust pts`
+                : `친구 도전장 보너스! 나 & 친구 모두 신뢰도 +${result.referralBonus}점 적립`}
             </div>
           )}
         </section>

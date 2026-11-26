@@ -56,5 +56,6 @@ export function toProfile(raw: PioneerUser): PioneerProfile {
     setsCompleted: user.setsCompleted,
     tier: tier.tier,
     tierLabel: tier.label,
+    freeSubmitTickets: user.freeSubmitTickets ?? 0,
   };
 }

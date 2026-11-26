@@ -132,6 +132,12 @@ export interface PioneerUser {
   botFlags: number;
   /** 신뢰도 점수 체계 (1000 = 0~1000점 체계, 미설정 시 구버전 0~100) */
   trustScale?: number;
+  /** 마일스톤(3·7·14·30일) 달성 등으로 지급된 무료 의뢰 체험권 수 */
+  freeSubmitTickets?: number;
+  /** 초대자 uid (최초 1회 기록) */
+  referredBy?: string;
+  /** 초대 보너스 지급 완료 여부 */
+  referralRewarded?: boolean;
   createdAt: ISODateString;
   updatedAt: ISODateString;
 }
@@ -143,6 +149,7 @@ export interface PioneerProfile extends Pick<
 > {
   tier: 'master' | 'diamond' | 'platinum' | 'gold' | 'silver' | 'bronze';
   tierLabel: string;
+  freeSubmitTickets: number;
 }
 
 /** 로그인 방식 */
@@ -268,6 +275,7 @@ export interface HomeOverviewResponse {
       tier: PioneerProfile['tier'];
       tierLabel: string;
       setsCompleted: number;
+      streak: number;
       isMe?: boolean;
     }[];
     myRank: number;
@@ -279,6 +287,18 @@ export interface HomeOverviewResponse {
     streak: number;
     nextMilestone: number | null;
     milestoneBonusPts: number;
+  };
+  /** 어제 데일리 챌린지 중 가장 헷갈렸던 1문제 복기 */
+  yesterdayRecap?: {
+    missionId: string;
+    prompt: string;
+    kind: MissionKind;
+    mode?: MissionMode;
+    previewText?: string;
+    sourceLabel?: string;
+    fooledPercent: number;
+    humanSide?: Choice;
+    aiTell: string;
   };
 }
 
@@ -310,6 +330,7 @@ export interface SetSubmission {
   setId: string;
   verifyToken: string;
   answers: AnswerInput[];
+  refUid?: string;
 }
 
 export interface VoteTally {
@@ -374,6 +395,10 @@ export interface SetResult {
   dailyQuestBonus?: number;
   /** 3/7/14/30일 연속 참여 달성 보너스 (달성 일수) */
   streakMilestone?: number;
+  /** 초대 링크 첫 세트 완료 보너스 (초대자·피초대자 각 지급) */
+  referralBonus?: number;
+  /** 마일스톤 달성으로 무료 의뢰 체험권 지급 여부 */
+  freeTicketGranted?: boolean;
   /** 상위 N% (시뮬레이션) */
   topPercent: number;
   streak: number;

@@ -22,6 +22,7 @@ const schema = z.object({
     .min(1)
     .max(GAME.QUESTIONS_PER_SET),
   bonusChoice: z.number().int().min(0).max(5).optional(),
+  refUid: z.string().min(1).max(120).optional(),
 });
 
 /** 세트 제출 → 기준 문항 + 5인 다수결 판정 → 보상/신뢰도 반영 */

@@ -92,6 +92,32 @@ function bodyHasHangul(m: Mission): boolean {
   return bodies.some(hasHangulText);
 }
 
+export function getDailyMissionsForDate(active: Mission[], dateStr: string, lang: 'ko' | 'en'): Mission[] {
+  const golds = active.filter((m) => m.isGold && m.humanSide);
+  const regular = active.filter((m) => !m.isGold);
+  const langEligible = (m: Mission) => isMissionEligibleForLang(m, lang);
+  const eligibleGolds = golds.filter(langEligible);
+  const goldPool = eligibleGolds.length > 0 ? eligibleGolds : golds;
+  const need = GAME.QUESTIONS_PER_SET - GAME.GOLD_PER_SET;
+
+  const dailySeed = `daily:${dateStr}:${lang}`;
+  const seedRegular = deterministicShuffle(
+    regular.filter((m) => m.origin === 'seed' && langEligible(m)),
+    dailySeed,
+  );
+  const seedGolds = deterministicShuffle(
+    goldPool.filter((m) => m.origin === 'seed'),
+    `${dailySeed}:gold`,
+  );
+  const ordered = seedRegular.slice(0, need);
+  const gold = seedGolds[0] ?? goldPool[0];
+  if (gold) {
+    const hashByte = createHash('sha256').update(dailySeed).digest()[0];
+    ordered.splice(hashByte % (ordered.length + 1), 0, gold);
+  }
+  return ordered;
+}
+
 export function isMissionEligibleForLang(m: Mission, lang: 'ko' | 'en'): boolean {
   if (m.origin === 'seed') {
     return lang === 'en' ? Boolean(SEED_EN[m.id]) : hasHangulText(m.prompt) || bodyHasHangul(m);
@@ -138,20 +164,7 @@ export async function issueMissionSet(
   let gold: Mission;
 
   if (isDaily) {
-    // 오늘(KST) 날짜 기반 전 세계 공통 5문항 (시드 문항 풀에서 결정적 선택)
-    const dailySeed = `daily:${kstDate()}:${lang}`;
-    const seedRegular = deterministicShuffle(
-      regular.filter((m) => m.origin === 'seed' && langEligible(m)),
-      dailySeed,
-    );
-    const seedGolds = deterministicShuffle(
-      goldPool.filter((m) => m.origin === 'seed'),
-      `${dailySeed}:gold`,
-    );
-    ordered = seedRegular.slice(0, need);
-    gold = seedGolds[0] ?? goldPool[0];
-    const hashByte = createHash('sha256').update(dailySeed).digest()[0];
-    ordered.splice(hashByte % (ordered.length + 1), 0, gold);
+    ordered = getDailyMissionsForDate(active, kstDate(), lang);
   } else {
     const challenge = challengeId ? regular.find((m) => m.id === challengeId) : undefined;
     if (challenge) picked.push(challenge);
@@ -201,7 +214,7 @@ export async function issueMissionSet(
 
 export async function submitMissionSet(
   uid: string,
-  input: { setId: string; verifyToken: string; answers: AnswerInput[]; bonusChoice?: number },
+  input: { setId: string; verifyToken: string; answers: AnswerInput[]; bonusChoice?: number; refUid?: string },
 ): Promise<SetResult> {
   const repo = getRepository();
 
@@ -354,6 +367,17 @@ export async function submitMissionSet(
           ? updatedStreak
           : undefined;
       const streakBonus = hitMilestone ? QUEST.MILESTONE_TRUST_BONUS : 0;
+      const freeTicketGranted = Boolean(hitMilestone);
+
+      let referralBonus = 0;
+      let validRefUid: string | undefined;
+      if (qualified && !user.referralRewarded && input.refUid && input.refUid !== uid) {
+        const referrer = await repo.getUser(input.refUid);
+        if (referrer) {
+          validRefUid = referrer.uid;
+          referralBonus = QUEST.REFERRAL_TRUST_BONUS;
+        }
+      }
 
       const bonusGain =
         bonusCorrect && qualified
@@ -363,7 +387,7 @@ export async function submitMissionSet(
         user.trustScore,
         rawGain,
         rawLoss,
-        bonusGain + dailyQuestBonus + streakBonus,
+        bonusGain + dailyQuestBonus + streakBonus + referralBonus,
       );
       const afterTier = getTrustTier(nextTrust);
       const tierOrder = (t: string) => GAME_TIER_ORDER.indexOf(t);
@@ -395,6 +419,9 @@ export async function submitMissionSet(
         streak: updatedStreak,
         lastActiveDate: today,
         lastQuestDate: dailyQuestBonus > 0 ? today : user.lastQuestDate,
+        freeSubmitTickets: (user.freeSubmitTickets ?? 0) + (freeTicketGranted ? 1 : 0),
+        referredBy: validRefUid ?? user.referredBy,
+        referralRewarded: validRefUid ? true : user.referralRewarded,
         updatedAt: completedAt,
       };
 
@@ -434,6 +461,8 @@ export async function submitMissionSet(
         bonus,
         dailyQuestBonus: dailyQuestBonus > 0 ? dailyQuestBonus : undefined,
         streakMilestone: hitMilestone,
+        referralBonus: referralBonus > 0 ? referralBonus : undefined,
+        freeTicketGranted: freeTicketGranted || undefined,
         topPercent: estimateTopPercent(matchedCount, set.missionIds.length),
         streak: updated.streak,
         challengeMissionId,
@@ -444,6 +473,21 @@ export async function submitMissionSet(
     });
 
     await repo.saveSet({ ...set, submittedAt: completedAt, result });
+
+    if (result.referralBonus && input.refUid && input.refUid !== uid) {
+      await withLock(`user:${input.refUid}`, async () => {
+        const refRaw = await repo.getUser(input.refUid!);
+        if (!refRaw) return;
+        const refUser = migrateTrust(refRaw);
+        const { next } = applyTrustChange(refUser.trustScore, 0, 0, QUEST.REFERRAL_TRUST_BONUS);
+        await repo.upsertUser({
+          ...refUser,
+          trustScore: next,
+          updatedAt: new Date().toISOString(),
+        });
+      });
+    }
+
     return result;
   });
 }

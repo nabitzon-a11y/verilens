@@ -55,6 +55,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       const saved = window.localStorage.getItem(LANG_STORAGE_KEY);
       if (saved === 'ko' || saved === 'en') setLangState(saved);
+      const ref = new URLSearchParams(window.location.search).get('ref')?.trim();
+      if (ref && ref.length <= 120) {
+        window.localStorage.setItem('verilens_ref', ref);
+      }
     } catch {
       /* 무시 */
     }

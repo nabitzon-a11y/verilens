@@ -158,6 +158,50 @@ export async function createCommunityMission(uid: string, input: DraftInput): Pr
   return { missionId: mission.id };
 }
 
+/** 무료 의뢰 체험권(마일스톤 보상)으로 정식 의뢰 즉시 등록 */
+export async function createTicketMission(uid: string, input: DraftInput): Promise<{ missionId: string; remainingTickets: number }> {
+  const repo = getRepository();
+  const mode = input.mode ?? 'compare';
+  const { a, b } = buildMissionContents(mode, input);
+
+  return withLock(`user:${uid}`, async () => {
+    const user = await repo.getUser(uid);
+    if (!user) throw new HttpError(401, '사용자 정보를 찾을 수 없습니다.', 'UNAUTHORIZED');
+    const tickets = user.freeSubmitTickets ?? 0;
+    if (tickets < 1) {
+      throw new HttpError(403, '보유한 무료 의뢰 체험권이 없습니다.', 'NO_TICKETS');
+    }
+
+    const now = new Date().toISOString();
+    const mission: Mission = {
+      id: `req-${randomUUID()}`,
+      kind: input.kind,
+      mode,
+      category: 'custom',
+      prompt: input.prompt || DEFAULT_PROMPT[mode][input.kind],
+      a,
+      b,
+      isGold: false,
+      priorVotes: [],
+      aiTell: '',
+      difficulty: 2,
+      origin: 'requester',
+      status: 'active',
+      requesterUid: uid,
+      createdAt: now,
+    };
+
+    await repo.saveMission(mission);
+    await repo.upsertUser({
+      ...user,
+      freeSubmitTickets: tickets - 1,
+      updatedAt: now,
+    });
+
+    return { missionId: mission.id, remainingTickets: tickets - 1 };
+  });
+}
+
 /** 내가 의뢰한 문항 + 실제 응답 집계 */
 export async function listMyMissions(uid: string): Promise<MyMissionItem[]> {
   const repo = getRepository();
