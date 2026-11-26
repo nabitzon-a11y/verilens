@@ -138,6 +138,10 @@ export interface PioneerUser {
   referredBy?: string;
   /** 초대 보너스 지급 완료 여부 */
   referralRewarded?: boolean;
+  /** 일일 신뢰도 상한 계산용 날짜 (YYYY-MM-DD, KST) */
+  dailyTrustDate?: string;
+  /** 오늘 누적 획득한 신뢰도 점수 */
+  dailyTrustGained?: number;
   createdAt: ISODateString;
   updatedAt: ISODateString;
 }
@@ -399,6 +403,8 @@ export interface SetResult {
   referralBonus?: number;
   /** 마일스톤 달성으로 무료 의뢰 체험권 지급 여부 */
   freeTicketGranted?: boolean;
+  /** 일일 신뢰도 획득 상한(+25점) 도달 여부 */
+  dailyCapReached?: boolean;
   /** 상위 N% (시뮬레이션) */
   topPercent: number;
   streak: number;

@@ -70,7 +70,7 @@ export function TrustProgress({ score, lang, label }: { score: number; lang: 'ko
   const tier = getTrustTier(score);
   const next = getNextTier(score);
   const theme = TIER_THEME[tier.tier];
-  const pct = next ? next.progress * 100 : 100;
+  const pct = Math.min(100, Math.max(0, (score / TRUST.MAX) * 100));
   return (
     <div>
       <div className="mb-1.5 flex items-end justify-between text-xs">

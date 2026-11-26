@@ -32,16 +32,18 @@ export const TRUST = {
   INITIAL: 300,
   MIN: 0,
   MAX: 1000,
+  /** 하루 최대 신뢰도 상승 상한 (과도한 속도·노가다 방지, 감점은 상한 없음) */
+  DAILY_GAIN_CAP: 25,
   /** 다수결 일치 1문항 */
-  MATCH_DELTA: 12,
+  MATCH_DELTA: 8,
   /** 고난도(difficulty 3) 문항 일치 추가 점수 */
-  HARD_MATCH_BONUS: 6,
+  HARD_MATCH_BONUS: 4,
   /** 세트 완벽 적중(기준 문항 통과 + 일반 문항 전부 일치) 추가 점수 */
-  PERFECT_SET_BONUS: 15,
+  PERFECT_SET_BONUS: 8,
   /** 보너스 문제 정답 */
-  BONUS_CORRECT_DELTA: 30,
+  BONUS_CORRECT_DELTA: 18,
   /** 보너스 문제 정답 최소 보장 점수 (최상위 등급에서도) */
-  BONUS_MIN_DELTA: 10,
+  BONUS_MIN_DELTA: 5,
   /** 다수결 불일치 1문항 */
   MISMATCH_DELTA: -8,
   /** 기준 문항(Gold) 오답 */
@@ -71,10 +73,10 @@ export const BONUS = {
 
 /** 데일리 퀘스트 & 연속 참여 마일스톤 보너스 */
 export const QUEST = {
-  DAILY_TRUST_BONUS: 20,
+  DAILY_TRUST_BONUS: 10,
   STREAK_MILESTONES: [3, 7, 14, 30] as readonly number[],
-  MILESTONE_TRUST_BONUS: 35,
-  REFERRAL_TRUST_BONUS: 15,
+  MILESTONE_TRUST_BONUS: 20,
+  REFERRAL_TRUST_BONUS: 10,
 } as const;
 
 /** PiVerify 3단계 세션 보안 규칙 */

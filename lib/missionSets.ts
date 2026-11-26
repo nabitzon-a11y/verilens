@@ -390,12 +390,18 @@ export async function submitMissionSet(
         bonusCorrect && qualified
           ? Math.max(TRUST.BONUS_MIN_DELTA, Math.round(TRUST.BONUS_CORRECT_DELTA * beforeTier.gainRate))
           : 0;
-      const { next: nextTrust, delta: trustDelta } = applyTrustChange(
+      const { delta: rawDelta } = applyTrustChange(
         user.trustScore,
         rawGain,
         rawLoss,
         bonusGain + dailyQuestBonus + streakBonus + referralBonus,
       );
+      const todayGained = user.dailyTrustDate === today ? (user.dailyTrustGained ?? 0) : 0;
+      const remainingCap = Math.max(0, TRUST.DAILY_GAIN_CAP - todayGained);
+      const trustDelta = rawDelta > 0 ? Math.min(rawDelta, remainingCap) : rawDelta;
+      const nextTrust = Math.max(TRUST.MIN, Math.min(TRUST.MAX, user.trustScore + trustDelta));
+      const dailyCapReached =
+        (rawDelta > 0 && trustDelta < rawDelta) || todayGained + Math.max(0, trustDelta) >= TRUST.DAILY_GAIN_CAP;
       const afterTier = getTrustTier(nextTrust);
       const tierOrder = (t: string) => GAME_TIER_ORDER.indexOf(t);
       const tierChange =
@@ -429,6 +435,8 @@ export async function submitMissionSet(
         freeSubmitTickets: (user.freeSubmitTickets ?? 0) + (freeTicketGranted ? 1 : 0),
         referredBy: validRefUid ?? user.referredBy,
         referralRewarded: validRefUid ? true : user.referralRewarded,
+        dailyTrustDate: today,
+        dailyTrustGained: todayGained + Math.max(0, trustDelta),
         updatedAt: completedAt,
       };
 
@@ -470,6 +478,7 @@ export async function submitMissionSet(
         streakMilestone: hitMilestone,
         referralBonus: referralBonus > 0 ? referralBonus : undefined,
         freeTicketGranted: freeTicketGranted || undefined,
+        dailyCapReached: dailyCapReached || undefined,
         topPercent: estimateTopPercent(matchedCount, set.missionIds.length),
         streak: updated.streak,
         challengeMissionId,

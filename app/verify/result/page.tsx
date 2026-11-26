@@ -160,7 +160,7 @@ export default function ResultPage() {
 
       <StatusBanner result={result} t={t} />
 
-      {(result.dailyQuestBonus || result.streakMilestone || result.referralBonus || result.freeTicketGranted) && (
+      {(result.dailyQuestBonus || result.streakMilestone || result.referralBonus || result.freeTicketGranted || result.dailyCapReached) && (
         <section className="space-y-2">
           {result.dailyQuestBonus && (
             <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-3.5 text-sm font-bold text-emerald-900">
@@ -192,6 +192,14 @@ export default function ResultPage() {
               {lang === 'en'
                 ? `Friend Invite Bonus! Both you & your friend got +${result.referralBonus} Trust pts`
                 : `친구 도전장 보너스! 나 & 친구 모두 신뢰도 +${result.referralBonus}점 적립`}
+            </div>
+          )}
+          {result.dailyCapReached && (
+            <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-xs font-semibold text-slate-700">
+              <ShieldCheck className="h-4 w-4 shrink-0 text-brand" />
+              {lang === 'en'
+                ? 'Daily Trust cap (+25 pts) reached! Extra sets still earn Pi rewards.'
+                : '오늘 신뢰도 상승 한도(+25점)를 채웠어요! 추가 세트는 Pi 보상 적립 모드로 반영됩니다.'}
             </div>
           )}
         </section>

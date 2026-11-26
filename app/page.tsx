@@ -48,6 +48,7 @@ export default function HomePage() {
   const [session, setSession] = useState<VerifySession | null>(null);
   const [starting, setStarting] = useState(false);
   const [hintsOpen, setHintsOpen] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
   const [overview, setOverview] = useState<HomeOverviewResponse | null>(null);
 
   const t = HOME_TEXT[lang];
@@ -131,81 +132,40 @@ export default function HomePage() {
         </>
       ) : (
         <>
-          {/* 프로필 */}
-          <section className="card space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="label">Pioneer</p>
-                <p className="text-xl font-extrabold text-slate-900">@{profile.username}</p>
-              </div>
-              <div className="flex flex-col items-end gap-1">
-                <TierChip score={profile.trustScore} />
-                <span className="text-[11px] font-bold text-pi-light">
-                  {lang === 'en'
-                    ? `Reward ${getTrustTier(profile.trustScore).rewardMult}x (Max 2x)`
-                    : `보상 ${getTrustTier(profile.trustScore).rewardMult}x (최대 2배)`}
+          {/* 컴팩트 프로필 */}
+          <section className="card space-y-3 p-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <p className="truncate text-lg font-black text-slate-900">@{profile.username}</p>
+                <span className="chip bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-pi-light">
+                  {getTrustTier(profile.trustScore).rewardMult}x
                 </span>
               </div>
+              <TierChip score={profile.trustScore} />
             </div>
 
             <TrustProgress label={t.trustLabel} score={profile.trustScore} lang={lang} />
 
-            <div className="grid grid-cols-3 gap-2.5 text-center">
-              <Stat icon={<Flame className="h-4 w-4 text-orange-500" />} label={t.streakLabel} value={`${profile.streak}${t.streakUnit}`} />
-              <Stat icon={<Layers className="h-4 w-4 text-brand" />} label={t.setsLabel} value={`${profile.setsCompleted}`} />
-              <Stat icon={<Coins className="h-4 w-4 text-pi-light" />} label={t.balanceLabel} value={formatPi(profile.balance)} accent />
+            <div className="grid grid-cols-3 divide-x divide-slate-200 rounded-xl border border-slate-100 bg-slate-50 py-2 text-center text-xs">
+              <div className="flex items-center justify-center gap-1 font-bold text-slate-800">
+                <Flame className="h-3.5 w-3.5 text-orange-500" />
+                <span>{profile.streak}{t.streakUnit}</span>
+              </div>
+              <div className="flex items-center justify-center gap-1 font-bold text-slate-800">
+                <Layers className="h-3.5 w-3.5 text-brand" />
+                <span>{profile.setsCompleted}{lang === 'en' ? ' sets' : '세트'}</span>
+              </div>
+              <div className="flex items-center justify-center gap-1 font-bold text-pi-light">
+                <Coins className="h-3.5 w-3.5" />
+                <span>{formatPi(profile.balance)}</span>
+              </div>
             </div>
 
             {overview && <DailyQuestBar quest={overview.quest} lang={lang} />}
           </section>
 
-          {/* 오늘 아직 1세트도 안 풀었으면 5초 맛보기 퀴즈로 즉시 몰입 유도 */}
-          {overview && !overview.quest.dailyDoneToday && (
-            <TeaserQuizCard
-              lang={lang}
-              onStartFull={() => (sessionActive ? router.push('/verify') : void startSession())}
-            />
-          )}
-
-          {/* 세션 */}
-          <section className="card space-y-3.5">
-            {sessionActive ? (
-              <>
-                <div className="flex items-center gap-2 text-sm font-semibold text-human-dark">
-                  <span className="relative flex h-2.5 w-2.5">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-human opacity-60" />
-                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-human" />
-                  </span>
-                  {t.sessionActive}
-                  <span className="ml-auto flex items-center gap-1 font-mono text-xs text-slate-600">
-                    <Timer className="h-3.5 w-3.5" />
-                    {formatMmSs(remaining)}
-                  </span>
-                </div>
-                <Link href="/verify" className="btn-primary w-full py-4 text-[17px] font-bold">
-                  <ScanFace className="h-5 w-5" />
-                  {t.continueVerify}
-                  <ChevronRight className="h-5 w-5" />
-                </Link>
-              </>
-            ) : (
-              <>
-                <p className="text-sm leading-relaxed text-slate-600">
-                  {t.sessionDesc1}
-                  <b className="text-slate-900">{t.sessionDescHighlight}</b>
-                  {t.sessionDesc2}
-                </p>
-                <button
-                  type="button"
-                  className="btn-primary w-full py-4 text-[17px] font-bold"
-                  onClick={() => void startSession()}
-                  disabled={starting}
-                >
-                  {starting ? <Loader2 className="h-5 w-5 animate-spin" /> : <ScanFace className="h-5 w-5" />}
-                  {t.startSession}
-                </button>
-              </>
-            )}
+          {/* 핵심 플레이 & 데일리 챌린지 (첫 화면 즉시 노출) */}
+          <section className="card space-y-2.5 p-4">
             <button
               type="button"
               onClick={() => (sessionActive ? router.push('/verify?mode=daily') : void startSession('/verify?mode=daily'))}
@@ -227,7 +187,38 @@ export default function HomePage() {
               </div>
               <ChevronRight className="h-5 w-5 shrink-0 text-amber-600" />
             </button>
+
+            {sessionActive ? (
+              <div className="space-y-2">
+                <Link href="/verify" className="btn-primary w-full py-3.5 text-[16px] font-bold">
+                  <ScanFace className="h-5 w-5" />
+                  {t.continueVerify}
+                  <span className="ml-1 rounded-full bg-white/20 px-2 py-0.5 font-mono text-[11px]">
+                    {formatMmSs(remaining)}
+                  </span>
+                  <ChevronRight className="h-5 w-5" />
+                </Link>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="btn-primary w-full py-3.5 text-[16px] font-bold"
+                onClick={() => void startSession()}
+                disabled={starting}
+              >
+                {starting ? <Loader2 className="h-5 w-5 animate-spin" /> : <ScanFace className="h-5 w-5" />}
+                {t.startSession}
+              </button>
+            )}
           </section>
+
+          {/* 오늘 아직 1세트도 안 풀었으면 5초 실사 맛보기 퀴즈로 즉시 몰입 유도 */}
+          {overview && !overview.quest.dailyDoneToday && (
+            <TeaserQuizCard
+              lang={lang}
+              onStartFull={() => (sessionActive ? router.push('/verify') : void startSession())}
+            />
+          )}
 
           {/* 어제 데일리 오답 1위 복기 */}
           {overview?.yesterdayRecap && (
@@ -248,10 +239,21 @@ export default function HomePage() {
         </>
       )}
 
-      {/* 작동 방식 */}
+      {/* 작동 방식: 기존 유저(1세트+)는 기본 접힘으로 첫 화면 다이어트 */}
       <section className="card space-y-3.5">
-        <div className="flex items-center justify-between">
-          <p className="label">{t.howItWorks}</p>
+        <div className="flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={() => setGuideOpen((v) => !v)}
+            className="flex flex-1 items-center gap-1.5 text-left"
+          >
+            <p className="label">{t.howItWorks}</p>
+            {profile && profile.setsCompleted >= 1 && (
+              <span className="text-[11px] font-semibold text-slate-400">
+                {guideOpen ? (lang === 'en' ? '▲ Hide' : '▲ 접기') : lang === 'en' ? '▼ Show' : '▼ 보기'}
+              </span>
+            )}
+          </button>
           <button
             type="button"
             onClick={() => setHintsOpen(true)}
@@ -261,15 +263,19 @@ export default function HomePage() {
             {lang === 'en' ? 'AI Hints' : 'AI 감별 힌트'}
           </button>
         </div>
-        <Step n={1} icon={<ScanFace className="h-4 w-4" />} title={t.step1Title}>
-          {t.step1Body}
-        </Step>
-        <Step n={2} icon={<Layers className="h-4 w-4" />} title={t.step2Title}>
-          {t.step2Body(GAME.QUESTIONS_PER_SET)}
-        </Step>
-        <Step n={3} icon={<Users className="h-4 w-4" />} title={t.step3Title}>
-          {t.step3Body(GAME.REWARD_PER_MATCH_PI)}
-        </Step>
+        {(!profile || profile.setsCompleted < 1 || guideOpen) && (
+          <>
+            <Step n={1} icon={<ScanFace className="h-4 w-4" />} title={t.step1Title}>
+              {t.step1Body}
+            </Step>
+            <Step n={2} icon={<Layers className="h-4 w-4" />} title={t.step2Title}>
+              {t.step2Body(GAME.QUESTIONS_PER_SET)}
+            </Step>
+            <Step n={3} icon={<Users className="h-4 w-4" />} title={t.step3Title}>
+              {t.step3Body(GAME.REWARD_PER_MATCH_PI)}
+            </Step>
+          </>
+        )}
       </section>
 
       <footer className="space-y-1.5 pb-2 text-center text-xs text-slate-400">
