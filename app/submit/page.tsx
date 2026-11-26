@@ -288,6 +288,7 @@ export default function SubmitPage() {
   const [contextNote, setContextNote] = useState('');
   const [minTier, setMinTier] = useState<'all' | 'gold'>('all');
   const [publicAlert, setPublicAlert] = useState(true);
+  const [showOptions, setShowOptions] = useState(false);
   const [textA, setTextA] = useState('');
   const [textB, setTextB] = useState('');
   const [imageA, setImageA] = useState<string | null>(null);
@@ -504,19 +505,13 @@ export default function SubmitPage() {
         </p>
       </header>
 
-      {/* 출제 기준 가이드 */}
-      <div className="flex gap-2.5 rounded-2xl border border-brand/20 bg-brand-soft/60 p-3.5 text-sm leading-relaxed text-slate-700">
-        <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
+      {/* 출제 기준 1줄 팁 */}
+      <div className="flex items-center gap-2 rounded-xl border border-brand/20 bg-brand-soft/60 px-3.5 py-2.5 text-xs font-medium text-slate-700">
+        <Info className="h-4 w-4 shrink-0 text-brand" />
         <p>
-          {en ? (
-            <>
-              <b className="text-slate-900">Submission Tips:</b> Include 2–4 sentences with tone, context, or lived details so human verifiers can judge clearly. Single-line plain facts can split votes.
-            </>
-          ) : (
-            <>
-              <b className="text-slate-900">좋은 의뢰 기준:</b> 단순 팩트 1줄보다 <b>화법·문맥·디테일 차이</b>가 드러나는 2~4문장을 올리셔야 다수결이 모입니다. 애매한 문항은 아래 현황에서 언제든 <b>마감</b>할 수 있어요.
-            </>
-          )}
+          {en
+            ? 'Include 2–4 sentences or clear photos for 10-human consensus.'
+            : '문맥이 드러나는 2~4문장이나 선명한 사진을 올리면 다수결이 잘 모입니다.'}
         </p>
       </div>
 
@@ -530,11 +525,20 @@ export default function SubmitPage() {
                 ? en
                   ? 'Free community quiz'
                   : '무료 커뮤니티 퀴즈'
-                : `${WALLET.SUBMISSION_FEE_PI} Test-Pi ${en ? 'payment completed' : '결제 완료'}${done.mock ? ' (Mock)' : ''}`}{' '}
+                : done.paymentId.startsWith('ticket:')
+                  ? en
+                    ? 'Free submission ticket'
+                    : '무료 의뢰 체험권'
+                  : `${WALLET.SUBMISSION_FEE_PI} Test-Pi ${en ? 'payment completed' : '결제 완료'}${done.mock ? ' (Mock)' : ''}`}{' '}
               · {en ? 'Live in the next verification set.' : '다음 판별 세트부터 바로 노출됩니다.'}
             </p>
             <p className="mt-2 break-all font-mono text-xs text-slate-400">{done.paymentId}</p>
           </div>
+          {done.missionId && (
+            <Link href={`/verdict/${encodeURIComponent(done.missionId)}`} className="btn-outline w-full">
+              {en ? 'Open Official Verdict Report >' : '공식 판정서 링크 보기 · 공유하기 >'}
+            </Link>
+          )}
           <div className="grid grid-cols-2 gap-2.5">
             <Link href="/verify" className="btn-primary">
               <ScanFace className="h-4 w-4" />
@@ -704,69 +708,8 @@ export default function SubmitPage() {
             </div>
           )}
 
-          <Field label={en ? 'Question (optional)' : '질문 (선택)'}>
-            <input
-              value={prompt}
-              maxLength={80}
-              onChange={(e) => {
-                setPrompt(e.target.value);
-                touch();
-              }}
-              placeholder={PROMPT_PRESETS[en ? 'en' : 'ko'][mode][kind][0]}
-              className="input"
-            />
-            <PresetChips
-              options={PROMPT_PRESETS[en ? 'en' : 'ko'][mode][kind]}
-              value={prompt}
-              onPick={(v) => {
-                setPrompt(v);
-                touch();
-              }}
-            />
-          </Field>
-
-          <Field
-            label={en ? 'Context Note (optional)' : '상황 메모 (선택 · 판별자 참고용)'}
-            hint={en ? `${contextNote.length}/100` : `${contextNote.length}/100`}
-          >
-            <input
-              value={contextNote}
-              maxLength={100}
-              onChange={(e) => {
-                setContextNote(e.target.value);
-                touch();
-              }}
-              placeholder={
-                en
-                  ? 'e.g. Photo sent by a secondhand seller / Suspicious delivery text'
-                  : '예: 당근 직거래 상대가 보낸 사진 / 방금 온 택배 문자'
-              }
-              className="input"
-            />
-          </Field>
-
           {kind === 'text' ? (
-            <>
-              <Field label={en ? 'Source Label (optional)' : '출처 형식 (선택)'}>
-                <input
-                  value={sourceLabel}
-                  maxLength={30}
-                  onChange={(e) => {
-                    setSourceLabel(e.target.value);
-                    touch();
-                  }}
-                  placeholder={en ? 'e.g. Product Review, News' : '예: 쇼핑몰 상품평, 뉴스 기사'}
-                  className="input"
-                />
-                <PresetChips
-                  options={SOURCE_PRESETS[en ? 'en' : 'ko']}
-                  value={sourceLabel}
-                  onPick={(v) => {
-                    setSourceLabel(v);
-                    touch();
-                  }}
-                />
-              </Field>
+            <div className="space-y-3">
               {(mode === 'single' ? (['A'] as const) : (['A', 'B'] as const)).map((side) => {
                 const value = side === 'A' ? textA : textB;
                 const label =
@@ -793,7 +736,7 @@ export default function SubmitPage() {
                   </Field>
                 );
               })}
-            </>
+            </div>
           ) : (
             <div className={clsx('grid gap-3', mode === 'single' ? 'grid-cols-1' : 'grid-cols-2')}>
               {(mode === 'single' ? (['A'] as const) : (['A', 'B'] as const)).map((side) => (
@@ -811,6 +754,140 @@ export default function SubmitPage() {
               ))}
             </div>
           )}
+
+          {/* 상세 옵션 (질문 · 상황 메모 · 출처 · 등급 · 경보 공유) — 기본 접힘 */}
+          <div className="rounded-2xl border border-slate-200 bg-slate-50/70">
+            <button
+              type="button"
+              onClick={() => setShowOptions((v) => !v)}
+              className="flex w-full items-center justify-between px-3.5 py-2.5 text-left text-xs font-bold text-slate-600"
+            >
+              <span>
+                {en
+                  ? 'Optional Settings (Question · Note · Source · Tier)'
+                  : '상세 옵션 설정 (질문 · 상황 메모 · 출처 · 등급)'}
+              </span>
+              <span>{showOptions ? '▲' : '▼'}</span>
+            </button>
+
+            {showOptions && (
+              <div className="space-y-3 border-t border-slate-200 p-3.5">
+                <Field label={en ? 'Question (optional)' : '질문 (선택)'}>
+                  <input
+                    value={prompt}
+                    maxLength={80}
+                    onChange={(e) => {
+                      setPrompt(e.target.value);
+                      touch();
+                    }}
+                    placeholder={PROMPT_PRESETS[en ? 'en' : 'ko'][mode][kind][0]}
+                    className="input"
+                  />
+                  <PresetChips
+                    options={PROMPT_PRESETS[en ? 'en' : 'ko'][mode][kind]}
+                    value={prompt}
+                    onPick={(v) => {
+                      setPrompt(v);
+                      touch();
+                    }}
+                  />
+                </Field>
+
+                <Field
+                  label={en ? 'Context Note (optional)' : '상황 메모 (선택 · 판별자 참고용)'}
+                  hint={`${contextNote.length}/100`}
+                >
+                  <input
+                    value={contextNote}
+                    maxLength={100}
+                    onChange={(e) => {
+                      setContextNote(e.target.value);
+                      touch();
+                    }}
+                    placeholder={
+                      en
+                        ? 'e.g. Photo sent by a secondhand seller / Suspicious delivery text'
+                        : '예: 당근 직거래 상대가 보낸 사진 / 방금 온 택배 문자'
+                    }
+                    className="input"
+                  />
+                </Field>
+
+                {kind === 'text' && (
+                  <Field label={en ? 'Source Label (optional)' : '출처 형식 (선택)'}>
+                    <input
+                      value={sourceLabel}
+                      maxLength={30}
+                      onChange={(e) => {
+                        setSourceLabel(e.target.value);
+                        touch();
+                      }}
+                      placeholder={en ? 'e.g. Product Review, News' : '예: 쇼핑몰 상품평, 뉴스 기사'}
+                      className="input"
+                    />
+                    <PresetChips
+                      options={SOURCE_PRESETS[en ? 'en' : 'ko']}
+                      value={sourceLabel}
+                      onPick={(v) => {
+                        setSourceLabel(v);
+                        touch();
+                      }}
+                    />
+                  </Field>
+                )}
+
+                {submitTier === 'paid' && (
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-bold text-slate-600">
+                      {en ? 'Verifier Pool Tier' : '검증단 등급 선택'}
+                    </p>
+                    <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-slate-200/70 p-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMinTier('all');
+                          touch();
+                        }}
+                        className={clsx(
+                          'rounded-lg py-2 text-xs font-bold transition',
+                          minTier === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600',
+                        )}
+                      >
+                        {en ? 'Standard (All 10)' : '일반 전체 (10인)'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMinTier('gold');
+                          touch();
+                        }}
+                        className={clsx(
+                          'rounded-lg py-2 text-xs font-bold transition',
+                          minTier === 'gold' ? 'bg-brand text-white shadow-sm' : 'text-brand',
+                        )}
+                      >
+                        {en ? '🛡️ Gold+ Experts Only' : '🛡️ Gold(550+) 전문가'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={publicAlert}
+                    onChange={(e) => setPublicAlert(e.target.checked)}
+                    className="h-4 w-4 shrink-0 rounded accent-brand"
+                  />
+                  <span>
+                    {en
+                      ? 'Allow anonymous sharing in Scam Alert Feed if flagged as AI/scam'
+                      : 'AI·사기 의심 판정 시 사기 주의 경보 피드(/alerts)에 익명 공유'}
+                  </span>
+                </label>
+              </div>
+            )}
+          </div>
 
           {/* 결제 또는 무료 출제 안내 */}
           {submitTier === 'community' ? (
@@ -847,42 +924,6 @@ export default function SubmitPage() {
             </div>
           )}
 
-          {submitTier === 'paid' && (
-            <div className="space-y-1.5">
-              <p className="text-xs font-bold text-slate-600">
-                {en ? 'Verifier Pool Tier' : '검증단 등급 선택'}
-              </p>
-              <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-slate-100 p-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMinTier('all');
-                    touch();
-                  }}
-                  className={clsx(
-                    'rounded-lg py-2 text-xs font-bold transition',
-                    minTier === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600',
-                  )}
-                >
-                  {en ? 'Standard (All 10)' : '일반 전체 (10인)'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMinTier('gold');
-                    touch();
-                  }}
-                  className={clsx(
-                    'rounded-lg py-2 text-xs font-bold transition',
-                    minTier === 'gold' ? 'bg-brand text-white shadow-sm' : 'text-brand',
-                  )}
-                >
-                  {en ? '🛡️ Gold+ Experts Only' : '🛡️ Gold(550+) 전문가'}
-                </button>
-              </div>
-            </div>
-          )}
-
           {/* 저작권·권리 보증 동의 */}
           <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-sm leading-relaxed text-slate-700">
             <input
@@ -909,21 +950,6 @@ export default function SubmitPage() {
                   )
                 </>
               )}
-            </span>
-          </label>
-
-          {/* 익명 공익 사기 경보 공유 */}
-          <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-600">
-            <input
-              type="checkbox"
-              checked={publicAlert}
-              onChange={(e) => setPublicAlert(e.target.checked)}
-              className="h-4 w-4 shrink-0 rounded accent-brand"
-            />
-            <span>
-              {en
-                ? 'Allow anonymous sharing in Scam Alert Feed if flagged as AI/scam'
-                : 'AI·사기 의심 판정 시 사기 주의 경보 피드(/alerts)에 익명 공유 허용'}
             </span>
           </label>
 
