@@ -48,27 +48,29 @@ PiVerify 는 현재 `MockPiVerifyAdapter` 로 동작합니다. (공식 API 공�
 ```
 verilens/
 ├─ app/
-│  ├─ layout.tsx · globals.css     # AppProvider + Demo 배너 + 하단 탭 바
-│  ├─ page.tsx                     # 홈 & PiVerify 세션 시작
-│  ├─ verify/page.tsx              # 5문항 A/B 판별 + 2단계 행동 감시
-│  ├─ verify/result/page.tsx       # 결과 & AI 흔적 리포트 & 도전장 공유
-│  ├─ submit/page.tsx              # 의뢰자 문항 등록 + U2A 결제 + 내 의뢰 현황
+│  ├─ layout.tsx · globals.css     # AppProvider (자동 EN 감지) + Demo 배너 + TopBar
+│  ├─ page.tsx                     # 홈 핵심 4메뉴 허브 + 실사 맛보기 + 어제 오답 1위 + 데일리 챌린지
+│  ├─ my/page.tsx                  # 마이페이지 (신뢰도 1,000점 · TOP 5 랭킹 · 이용 가이드)
+│  ├─ verify/page.tsx              # 5문항 판별(단일/비교 · 이미지 확대 뷰어) + 2단계 행동 감시
+│  ├─ verify/result/page.tsx       # 결과 & AI 흔적 리포트 & 데일리 이모지/초대(?ref=) 공유
+│  ├─ submit/page.tsx              # 의뢰자 문항 등록 + U2A 결제/체험권 + 내 의뢰 현황
 │  ├─ wallet/page.tsx              # 지갑/정산 + 3단계 Claim 재검증
 │  └─ api/
 │     ├─ auth/{signin,demo,me,signout}
+│     ├─ home/overview/            # 홈/마이 통합 데이터 (리더보드, 어제 오답 1위, 퀘스트)
 │     ├─ payments/{approve,complete,cancel,incomplete}
 │     ├─ verify/{session,recheck,claim}
-│     ├─ missions/{set,submit,draft,mine}
+│     ├─ missions/{set,submit,draft,ticket,community,live,mine,close,report}
 │     └─ wallet/ · wallet/claim
-├─ components/                     # AppProvider, TabBar, DemoBanner, ScanModal, MissionCard, WarningModal, LoginPanel
+├─ components/                     # AppProvider, TopBar, DemoBanner, ScanModal, MissionCard, TierBadge, WarningModal, LoginPanel
 ├─ lib/
-│  ├─ constants.ts                 # 게임·신뢰도·보안·지갑 규칙 (단일 기준)
+│  ├─ constants.ts                 # 게임·신뢰도(1,000점, 일일 +25점 상한, 1.0~2.0x 배율)·보안·지갑 규칙
 │  ├─ apiClient.ts · piSdk.ts · piVerifyClient.ts · image.ts · resultStore.ts · hooks.ts   # 클라이언트
 │  ├─ behavior.ts · format.ts      # 클라/서버 공용
 │  └─ 🔒 서버 전용: piPlatform.ts · payments.ts · piVerify.ts · auth.ts · users.ts · crypto.ts
 │        http.ts · lock.ts · consensus.ts · missionSets.ts · requests.ts · wallet.ts · repository/
-├─ data/missions.ts                # 시드 미션 28문항 (텍스트 20 + 시각 8, 기준 문항 5)
-├─ public/missions/                # 로컬 SVG 시각 문항 (v01~v08)
+├─ data/missions.ts · missions.extra.ts · missions.en.ts   # 시드 미션 85문항 (Gold 17, 100% KO/EN)
+├─ public/missions/                # 로컬 시각·실사 문항 (v01~v08 SVG, v09~v11 · v13~v16 JPG)
 ├─ supabase/schema.sql             # Supabase 테이블 + 중복 지급 방지 유니크 인덱스 + RLS
 ├─ app/validation-key.txt/         # Pi Developer Portal 도메인 인증 (PI_VALIDATION_KEY)
 └─ types/index.ts                  # 핵심 타입 + window.Pi 타입
@@ -85,7 +87,7 @@ verilens/
 
 ## 알려진 한계 (MVP)
 
-- 시드 문항 28개 — 반복 플레이 시 정답 암기가 여전히 가능 → 운영 시 공개용/비공개용 문항 분리 필요
+- 시드 문항 85개(Gold 17개) — 운영 확장 시 공개용/비공개용 풀 분리 및 DB 시드 지속 확충 가능
 - JSON/메모리 저장소와 프로세스 내 잠금은 단일 서버 기준. Supabase 저장소는 금전 관련 중복(Claim·세트 보상·결제 원장)만 DB 유니크 인덱스로 차단
 - Supabase 저장소는 코드 작성만 완료, **실제 Supabase 연결 테스트는 미실시** (DEPLOY.md 2단계 후 진행)
 - PiVerify·A2U 는 Mock (실제 API 연동 지점은 `lib/piVerify.ts`, `lib/wallet.ts` 의 TODO 참고)

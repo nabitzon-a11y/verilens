@@ -42,11 +42,15 @@ VeriLens directly operationalizes the core themes highlighted at the **Pi Ecosys
 3. **Dual Quality Assurance (Hidden Gold Standard + 10-Human Consensus)**:
    - Every 5-item set hides 1 ground-truth **Gold Standard** anchor item. Failing the anchor withholds set rewards and lowers the user's Trust Score, stopping random clicking.
    - Remaining items use **10-human majority consensus** (6+ votes), followed by an engaging **AI Tell Report** explaining the subtle AI artifacts—driving high retention alongside **AI Detection Hints** and **PiNet challenge link sharing**.
-4. **Content Risk, Moderation & Operations (`/admin`)**:
+4. **Gamification, Retention & Viral Growth Engine**:
+   - **Daily Challenge (`?mode=daily`)**: A deterministic global 5-item daily challenge with Wordle-style `🟩`/`🟥` emoji grid sharing and bidirectional referral bonuses (`?ref=`).
+   - **1,000-Point 6-Tier Trust System (`Bronze` → `Master`)**: Features tier reward multipliers (`1.0x` to `2.0x`), a `+25 pts/day` daily trust gain cap to preserve tier prestige, streak milestones (`3·7·14·30 days`) granting free submission tickets, **Yesterday's Top Trap** recap, and a **Top 5 Leaderboard (`/my`)**.
+   - **Mobile-First UX & Global Onboarding**: Financial-app-inspired 4-menu action hub (`/`), rotating **Photo Challenge** teaser, full-screen **Image Zoom Viewer** during verification, and automatic `EN` locale detection for international Pioneers.
+5. **Content Risk, Moderation & Operations (`/admin`)**:
    - Mandatory copyright & excerpt warranty on submission, automatic client-side image resizing & EXIF metadata removal, an in-game **Report** button (auto-hides after 2 reports), and a protected **`/admin` dashboard** for real-time metrics and moderation.
 
 #### Tech Stack & Roadmap
-- **Frontend / API**: Next.js 14 (App Router), TypeScript, Tailwind CSS (Pi Browser-native White & Plum Purple UI, KO/EN bilingual toggle)
+- **Frontend / API**: Next.js 14 (App Router), TypeScript, Tailwind CSS (Pi Browser-native White & Plum Purple UI, auto-detected `EN/KO` bilingual support)
 - **Database**: Supabase (PostgreSQL with RLS & unique ledger indexes preventing double-rewards / double-claims) via Repository Pattern
 - **Pi Integration**: Pi SDK 2.0, Pi Platform REST API (server-side `/approve`, `/complete`, `/incomplete`), PiNet (`verilens1759.pinet.com`)
 - **Phase 2 Roadmap (B2B & OUSD)**: Dual-currency (`PI` / `OUSD`) settlement so enterprise clients can pay predictable USD-pegged rates in **Open USD (OUSD)** while Pioneers earn Pi rewards.
@@ -58,9 +62,9 @@ VeriLens directly operationalizes the core themes highlighted at the **Pi Ecosys
 **VeriLens**는 Pi Ecosystem Summit에서 제시된 **'AI 시대의 인간 참여(Human-in-the-Loop)'**, **'Proof of Humanity(PiVerify)'**, **'유동성에서 실사용(Utility)으로'** 비전을 구현한 인간 진위 검증 플랫폼입니다. AI 합성물과 가짜 콘텐츠가 넘쳐나는 시대에 **Pi Network의 실명 인증(KYC) 인간 네트워크**를 활용해 '진짜 인간 원본 데이터'를 판별·생산합니다.
 
 - **Pi Testnet 실연동**: Pi Browser 로그인(`Pi.authenticate`), 1.0 Test-Pi 의뢰 결제(`Pi.createPayment`), PiNet(`verilens1759.pinet.com`) 및 도메인 인증 완료
-- **B2C + B2B 양방향 의뢰**: 개인용 **단일 감별(1개)**과 기업용 **A/B 비교(2개)**, 원클릭 예시 채우기, KO/EN 원터치 전환, 34종(텍스트 24 [단일 감별 4 포함] + 실사형·시각 10) 데이터셋 내장
-- **이중 품질 방어**: 3단계 PiVerify 세션 보안(모의 어댑터 + 실서명 토큰·행동 감시) + 숨김 기준 문항(Gold Standard) + **10인 다수결 합의**(10표 도달 시 자동 마감)
-- **안전장치 및 운영**: 의뢰 시 저작권 보증 동의, 이미지 자동 압축·EXIF 제거, 판별 중 신고 2회 누적 시 즉시 비공개, 관리자 전용 **`/admin`** 대시보드 제공
+- **B2C + B2B 양방향 의뢰**: 개인용 **단일 감별(1개)**과 기업용 **A/B 비교(2개)**, 출처별 예시 문장 채우기, 해외 유저 자동 영문(`EN`) 시작, **85종(텍스트 70 + 시각·실사 이미지 15, Gold Standard 17 포함)** 양언어 데이터셋 내장
+- **이중 품질 방어 & 게이미피케이션**: 3단계 PiVerify 세션 보안 + 숨김 기준 문항(Gold Standard) + **10인 다수결 합의**, 1,000점 6단계 등급(보상 `1.0x~2.0x` · 일일 상한 `+25점`), 데일리 챌린지(`🟩`/`🟥` 공유 · `?ref=` 초대 보너스), 모바일 이미지 확대 뷰어
+- **모바일 허브 UI & 운영**: 핵심 4대 메뉴 허브(`/`) + 실사 맛보기 + 어제 오답 1위, 마이페이지·TOP 5 랭킹(`/my`), 신고 2회 자동 비공개 및 관리자 전용 **`/admin`** 대시보드 제공
 - **Phase 2 확장**: B2B 기업용 **OUSD(Open USD) 스테이블코인 결제** + Pioneer Pi 보상 하이브리드 정산 로드맵
 
 ---
