@@ -31,8 +31,8 @@ export function TabBar() {
   return (
     <nav
       className={clsx(
-        'fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur pb-safe',
-        extraBottomPad && 'pb-12',
+        'fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white shadow-[0_-4px_16px_rgba(15,23,42,0.06)] pb-safe',
+        extraBottomPad && 'pb-14',
       )}
     >
       <ul className="mx-auto grid max-w-md grid-cols-4">
