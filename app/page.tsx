@@ -170,7 +170,7 @@ export default function HomePage() {
 
             <Link
               href="/submit"
-              className="group flex flex-col justify-between rounded-3xl border border-slate-200/90 bg-white p-3.5 text-left shadow-[0_4px_16px_rgba(15,23,42,0.05)] transition hover:border-brand/40 active:scale-[0.98]"
+              className="group flex flex-col justify-between rounded-3xl border border-amber-200/90 bg-gradient-to-br from-amber-50/55 via-white to-white p-3.5 text-left shadow-[0_6px_18px_rgba(224,168,66,0.12)] transition hover:border-amber-300 active:scale-[0.98]"
             >
               <div className="flex items-center justify-between">
                 <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-amber-50 text-pi-light">
@@ -480,10 +480,12 @@ function YesterdayRecapCard({
   return (
     <section className="card space-y-2.5 rounded-3xl border border-rose-200 bg-gradient-to-br from-rose-50/60 via-white to-amber-50/40 p-4 shadow-[0_4px_16px_rgba(244,63,94,0.06)]">
       <div className="flex items-center justify-between gap-2">
-        <span className="chip border border-rose-200 bg-rose-50 text-xs font-bold text-rose-700">
-          {en ? `Yesterday's Top Trap · ${recap.fooledPercent}% fooled` : `어제 오답 1위 · ${recap.fooledPercent}%가 속은 문제`}
+        <span className="chip shrink-0 whitespace-nowrap border border-rose-200 bg-rose-50 text-xs font-bold text-rose-700">
+          {en ? `Yesterday #1 · ${recap.fooledPercent}% fooled` : `어제 오답 1위 · 오답률 ${recap.fooledPercent}%`}
         </span>
-        {recap.sourceLabel && <span className="text-xs font-semibold text-slate-500">{recap.sourceLabel}</span>}
+        {recap.sourceLabel && (
+          <span className="truncate whitespace-nowrap text-xs font-semibold text-slate-500">{recap.sourceLabel}</span>
+        )}
       </div>
       <p className="text-sm font-extrabold text-slate-900">{recap.prompt}</p>
       {recap.previewText && (
