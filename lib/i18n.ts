@@ -4,12 +4,200 @@
  */
 
 export type Lang = 'ko' | 'en';
+export type Locale = 'ko' | 'en' | 'vi' | 'id' | 'zh' | 'es';
+
+export const LOCALE_OPTIONS: { id: Locale; code: string; name: string }[] = [
+  { id: 'ko', code: 'KO', name: '한국어' },
+  { id: 'en', code: 'EN', name: 'English' },
+  { id: 'vi', code: 'VI', name: 'Tiếng Việt' },
+  { id: 'id', code: 'ID', name: 'Indonesia' },
+  { id: 'zh', code: 'ZH', name: '中文' },
+  { id: 'es', code: 'ES', name: 'Español' },
+];
 
 export const LANG_STORAGE_KEY = 'vl_lang';
 
-export const NAV_LABELS: Record<Lang, { home: string; verify: string; submit: string; wallet: string }> = {
+export function detectBrowserLocale(raw?: string): Locale {
+  const b = (raw ?? '').toLowerCase();
+  if (b.startsWith('ko')) return 'ko';
+  if (b.startsWith('vi')) return 'vi';
+  if (b.startsWith('id') || b.startsWith('in')) return 'id';
+  if (b.startsWith('zh')) return 'zh';
+  if (b.startsWith('es')) return 'es';
+  return 'en';
+}
+
+export const NAV_LABELS_6: Record<Locale, { home: string; verify: string; submit: string; wallet: string }> = {
   ko: { home: '홈', verify: '판별하기', submit: '의뢰하기', wallet: '내 지갑' },
   en: { home: 'Home', verify: 'Verify', submit: 'Submit', wallet: 'Wallet' },
+  vi: { home: 'Trang chủ', verify: 'Xác minh', submit: 'Gửi kiểm', wallet: 'Ví Pi' },
+  id: { home: 'Beranda', verify: 'Verifikasi', submit: 'Ajukan', wallet: 'Dompet' },
+  zh: { home: '首页', verify: '鉴别', submit: '委托', wallet: '钱包' },
+  es: { home: 'Inicio', verify: 'Verificar', submit: 'Enviar', wallet: 'Billetera' },
+};
+
+export const HOME_HUB_TEXT: Record<
+  Locale,
+  {
+    heroCta: string;
+    myPage: string;
+    verifyTitle: string;
+    verifySub: string;
+    verifyResumeSub: string;
+    submitTitle: string;
+    submitSub: string;
+    walletTitle: string;
+    walletSub: string;
+    myTitle: string;
+    mySub: string;
+    dailyTitle: string;
+    dailySub: string;
+    photoBadge: string;
+    nextPhoto: string;
+    tryAnother: string;
+    fullGame: string;
+    yesterdayTrap: (p: number) => string;
+    aiSampleTag: string;
+    aiTellLabel: string;
+  }
+> = {
+  ko: {
+    heroCta: 'AI 가짜를 잡아내고 Pi 보상을 받으세요!',
+    myPage: '마이페이지',
+    verifyTitle: 'AI 판별하기',
+    verifySub: '5문항 · Pi 적립',
+    verifyResumeSub: '이어서 풀기',
+    submitTitle: '진위 의뢰하기',
+    submitSub: '10명에게 묻기',
+    walletTitle: '내 지갑',
+    walletSub: '보상 · Pi 출금',
+    myTitle: '마이 · 랭킹',
+    mySub: '신뢰도 · TOP 5',
+    dailyTitle: '오늘의 데일리 챌린지 (공통 5문제)',
+    dailySub: '전 세계 유저 공통 5문제 · 매일 도전!',
+    photoBadge: '실사 맛보기',
+    nextPhoto: '다른 사진',
+    tryAnother: '한 문제 더',
+    fullGame: '본 게임 하기',
+    yesterdayTrap: (p) => `어제 오답 1위 · 오답률 ${p}%`,
+    aiSampleTag: '🤖 많은 사람이 속은 AI 함정 예시',
+    aiTellLabel: '감별 포인트: ',
+  },
+  en: {
+    heroCta: 'Spot AI fakes & earn Pi in 1 minute!',
+    myPage: 'My Page',
+    verifyTitle: 'Verify AI',
+    verifySub: '5 Qs · Earn Pi',
+    verifyResumeSub: 'Continue set',
+    submitTitle: 'Submit Check',
+    submitSub: 'Ask 10 humans',
+    walletTitle: 'My Wallet',
+    walletSub: 'Rewards · Claim',
+    myTitle: 'My · Ranking',
+    mySub: 'Trust · TOP 5',
+    dailyTitle: "Today's Daily Challenge (5 Qs)",
+    dailySub: 'Same 5 questions worldwide · Play daily!',
+    photoBadge: 'Photo Challenge',
+    nextPhoto: 'Next photo',
+    tryAnother: 'Try another',
+    fullGame: 'Full Game',
+    yesterdayTrap: (p) => `Yesterday #1 · ${p}% fooled`,
+    aiSampleTag: '🤖 AI Trap Sample',
+    aiTellLabel: 'AI Tell: ',
+  },
+  vi: {
+    heroCta: 'Phát hiện AI giả & nhận thưởng Pi trong 1 phút!',
+    myPage: 'Trang của tôi',
+    verifyTitle: 'Xác minh AI',
+    verifySub: '5 câu · Nhận Pi',
+    verifyResumeSub: 'Tiếp tục',
+    submitTitle: 'Gửi kiểm tra',
+    submitSub: 'Hỏi 10 người thật',
+    walletTitle: 'Ví của tôi',
+    walletSub: 'Thưởng · Rút Pi',
+    myTitle: 'Cá nhân · BXH',
+    mySub: 'Uy tín · TOP 5',
+    dailyTitle: 'Thử thách Hôm nay (5 câu)',
+    dailySub: 'Cùng 5 câu toàn cầu · Chơi mỗi ngày!',
+    photoBadge: 'Thử ảnh thật',
+    nextPhoto: 'Ảnh khác',
+    tryAnother: 'Thử câu khác',
+    fullGame: 'Chơi ngay',
+    yesterdayTrap: (p) => `Bẫy khó nhất hôm qua · ${p}% nhầm`,
+    aiSampleTag: '🤖 Mẫu bẫy AI',
+    aiTellLabel: 'Dấu hiệu AI: ',
+  },
+  id: {
+    heroCta: 'Deteksi palsu AI & raih Pi dalam 1 menit!',
+    myPage: 'Halaman Saya',
+    verifyTitle: 'Verifikasi AI',
+    verifySub: '5 Soal · Dapat Pi',
+    verifyResumeSub: 'Lanjutkan',
+    submitTitle: 'Ajukan Cek',
+    submitSub: 'Tanya 10 orang',
+    walletTitle: 'Dompet Saya',
+    walletSub: 'Hadiah · Klaim Pi',
+    myTitle: 'Saya · Peringkat',
+    mySub: 'Skor · TOP 5',
+    dailyTitle: 'Tantangan Harian (5 Soal)',
+    dailySub: '5 soal sama sedunia · Main tiap hari!',
+    photoBadge: 'Tebak Foto',
+    nextPhoto: 'Foto lain',
+    tryAnother: 'Coba lagi',
+    fullGame: 'Main Penuh',
+    yesterdayTrap: (p) => `Jebakan #1 Kemarin · ${p}% tertipu`,
+    aiSampleTag: '🤖 Contoh Jebakan AI',
+    aiTellLabel: 'Ciri AI: ',
+  },
+  zh: {
+    heroCta: '1分钟识破AI造假，赢取Pi奖励！',
+    myPage: '我的主页',
+    verifyTitle: 'AI 鉴别',
+    verifySub: '5题 · 赚取 Pi',
+    verifyResumeSub: '继续答题',
+    submitTitle: '发起委托',
+    submitSub: '10人真实共识',
+    walletTitle: '我的钱包',
+    walletSub: '奖励 · 提取 Pi',
+    myTitle: '我的 · 排行',
+    mySub: '信誉分 · TOP 5',
+    dailyTitle: '每日挑战 (全球同题5题)',
+    dailySub: '全球统一5题 · 每日必玩！',
+    photoBadge: '实拍挑战',
+    nextPhoto: '换一张',
+    tryAnother: '再来一题',
+    fullGame: '进入正式赛',
+    yesterdayTrap: (p) => `昨日最难陷阱 · ${p}% 答错`,
+    aiSampleTag: '🤖 AI 陷阱示例',
+    aiTellLabel: '识别要点：',
+  },
+  es: {
+    heroCta: '¡Detecta falsos de IA y gana Pi en 1 minuto!',
+    myPage: 'Mi Perfil',
+    verifyTitle: 'Verificar IA',
+    verifySub: '5 pregs · Gana Pi',
+    verifyResumeSub: 'Continuar',
+    submitTitle: 'Enviar Duda',
+    submitSub: '10 humanos reales',
+    walletTitle: 'Billetera',
+    walletSub: 'Premios · Reclamar',
+    myTitle: 'Perfil · Ranking',
+    mySub: 'Confianza · TOP 5',
+    dailyTitle: 'Reto Diario (5 preguntas)',
+    dailySub: 'Mismas 5 preguntas globales · ¡Juega hoy!',
+    photoBadge: 'Reto Foto',
+    nextPhoto: 'Otra foto',
+    tryAnother: 'Probar otra',
+    fullGame: 'Jugar ya',
+    yesterdayTrap: (p) => `Trampa #1 de ayer · ${p}% falló`,
+    aiSampleTag: '🤖 Ejemplo trampa IA',
+    aiTellLabel: 'Pista IA: ',
+  },
+};
+
+export const NAV_LABELS: Record<Lang, { home: string; verify: string; submit: string; wallet: string }> = {
+  ko: NAV_LABELS_6.ko,
+  en: NAV_LABELS_6.en,
 };
 
 export const HOME_TEXT: Record<

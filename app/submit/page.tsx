@@ -518,6 +518,74 @@ export default function SubmitPage() {
         </section>
       ) : (
         <section className="card space-y-4">
+          {/* 목적별 4대 원클릭 템플릿 */}
+          <div className="space-y-1.5">
+            <p className="text-xs font-bold text-slate-600">
+              {en ? 'Quick Purpose Templates (1-Tap)' : '무엇을 확인하고 싶나요? (원클릭 세팅)'}
+            </p>
+            <div className="grid grid-cols-2 gap-1.5">
+              {(
+                [
+                  {
+                    ko: '🚨 스미싱·사기 의심',
+                    en: '🚨 Smishing / Scam',
+                    mode: 'single' as const,
+                    kind: 'text' as const,
+                    srcKo: 'SNS 게시글',
+                    srcEn: 'Social Post',
+                    promptKo: '이 문자/메시지, 실제 안내일까요 스미싱 사기일까요?',
+                    promptEn: 'Is this message a real notice or an AI/phishing scam?',
+                  },
+                  {
+                    ko: '📸 중고 매물 검증',
+                    en: '📸 Listing Photo Check',
+                    mode: 'single' as const,
+                    kind: 'image' as const,
+                    srcKo: '',
+                    srcEn: '',
+                    promptKo: '이 매물 사진, 실제 촬영본일까요 AI 합성일까요?',
+                    promptEn: 'Is this listing photo real or AI-manipulated?',
+                  },
+                  {
+                    ko: '✍️ 내 글 자연스러움',
+                    en: '✍️ Human Tone A/B',
+                    mode: 'compare' as const,
+                    kind: 'text' as const,
+                    srcKo: '커뮤니티 답변',
+                    srcEn: 'Forum Reply',
+                    promptKo: '어느 쪽이 실제 사람이 직접 쓴 글일까요?',
+                    promptEn: 'Which one reads like a real human wrote it?',
+                  },
+                  {
+                    ko: '⭐ 가짜 리뷰 판별',
+                    en: '⭐ Fake Review Check',
+                    mode: 'single' as const,
+                    kind: 'text' as const,
+                    srcKo: '쇼핑몰 상품평',
+                    srcEn: 'Product Review',
+                    promptKo: '실제 구매자 후기일까요, AI 생성 리뷰일까요?',
+                    promptEn: 'Is this a real buyer review or AI-generated?',
+                  },
+                ] as const
+              ).map((tpl) => (
+                <button
+                  key={tpl.ko}
+                  type="button"
+                  onClick={() => {
+                    setMode(tpl.mode);
+                    setKind(tpl.kind);
+                    setPrompt(en ? tpl.promptEn : tpl.promptKo);
+                    setSourceLabel(en ? tpl.srcEn : tpl.srcKo);
+                    touch();
+                  }}
+                  className="rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2 text-left text-xs font-bold text-slate-700 transition hover:border-brand/50 hover:bg-brand-soft/50 hover:text-brand"
+                >
+                  {en ? tpl.en : tpl.ko}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* 유료 의뢰 vs 커뮤니티 무료 출제 */}
           <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-brand-soft/70 p-1">
             <button
@@ -989,6 +1057,42 @@ function MyMissionRow({
           </button>
         )}
       </div>
+      {total > 0 && (
+        <div className="space-y-1.5 pt-1 text-xs text-slate-600">
+          <div className="flex items-center justify-between font-semibold">
+            <span>
+              {isSingle
+                ? en
+                  ? `Human ${m.votes.A} vs AI ${m.votes.B}`
+                  : `실제 인간 ${m.votes.A}표 · AI ${m.votes.B}표`
+                : `A ${m.votes.A} vs B ${m.votes.B}`}
+            </span>
+            <span>{total}/10</span>
+          </div>
+          {(m.status === 'closed' || total >= 6) && (
+            <div className="rounded-xl border border-brand/20 bg-brand-soft/60 px-3 py-2 text-[11px] font-bold text-brand">
+              {(() => {
+                const aPct = Math.round((m.votes.A / total) * 100);
+                const bPct = 100 - aPct;
+                if (isSingle) {
+                  return m.votes.A >= m.votes.B
+                    ? en
+                      ? `🛡️ VeriLens Official Verdict: ${aPct}% judged Authentic Human (${total} votes)`
+                      : `🛡️ VeriLens 검증단 판정: ${aPct}%가 실제 인간 원본으로 판정 (${total}명)`
+                    : en
+                      ? `🤖 VeriLens Official Verdict: ${bPct}% flagged AI-Generated (${total} votes)`
+                      : `🤖 VeriLens 검증단 판정: ${bPct}%가 AI 생성물로 판정 (${total}명)`;
+                }
+                const winner = m.votes.A >= m.votes.B ? 'A' : 'B';
+                const winPct = Math.max(aPct, bPct);
+                return en
+                  ? `🛡️ VeriLens Verdict: ${winPct}% picked ${winner} as Authentic Human (${total} votes)`
+                  : `🛡️ VeriLens 검증단 판정: ${winPct}%가 ${winner}를 실제 인간 원본으로 선택 (${total}명)`;
+              })()}
+            </div>
+          )}
+        </div>
+      )}
       <div className="flex items-center justify-between text-xs text-slate-500">
         <span>{formatDateTime(m.createdAt, en ? 'en' : 'ko')}</span>
         <span>

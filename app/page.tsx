@@ -26,11 +26,11 @@ import { api } from '@/lib/apiClient';
 import { getTrustTier } from '@/lib/constants';
 import { formatMmSs, formatPi } from '@/lib/format';
 import { useNow } from '@/lib/hooks';
-import { HOME_TEXT, VERIFY_TEXT } from '@/lib/i18n';
+import { HOME_HUB_TEXT, HOME_TEXT, VERIFY_TEXT } from '@/lib/i18n';
 import { getActiveSession, startHumanSession } from '@/lib/piVerifyClient';
 
 export default function HomePage() {
-  const { ready, profile, verifyMode, lang } = useApp();
+  const { ready, profile, verifyMode, lang, locale } = useApp();
   const router = useRouter();
   const now = useNow(1000);
   const { modal, run } = useScanModal(verifyMode === 'mock');
@@ -40,6 +40,7 @@ export default function HomePage() {
 
   const t = HOME_TEXT[lang];
   const vt = VERIFY_TEXT[lang];
+  const hub = HOME_HUB_TEXT[locale];
   const en = lang === 'en';
 
   useEffect(() => {
@@ -97,7 +98,7 @@ export default function HomePage() {
 
         <div className="relative flex items-center justify-between gap-2">
           <p className="text-[15px] font-black leading-snug tracking-tight text-slate-900">
-            {en ? 'Spot AI fakes & earn Pi in 1 minute!' : 'AI 가짜를 잡아내고 Pi 보상을 받으세요!'}
+            {hub.heroCta}
           </p>
           <span className="shrink-0 rounded-full bg-brand/10 px-2.5 py-1 text-[11px] font-extrabold text-brand">
             Pi Web3
@@ -114,7 +115,7 @@ export default function HomePage() {
               <span className="truncate text-xs font-extrabold text-slate-900">@{profile.username}</span>
             </div>
             <span className="flex shrink-0 items-center gap-1 text-xs font-extrabold text-brand">
-              {profile.trustScore}pt
+              {hub.myPage} · {profile.trustScore}pt
               <ChevronRight className="h-3.5 w-3.5" />
             </span>
           </Link>
@@ -155,15 +156,9 @@ export default function HomePage() {
                 )}
               </div>
               <div className="mt-2.5">
-                <p className="text-[17px] font-black leading-tight tracking-tight">{en ? 'Verify AI' : 'AI 판별하기'}</p>
+                <p className="text-[17px] font-black leading-tight tracking-tight">{hub.verifyTitle}</p>
                 <p className="mt-1 text-[13px] font-semibold text-white/90">
-                  {sessionActive
-                    ? en
-                      ? 'Continue set'
-                      : '이어서 풀기'
-                    : en
-                      ? '5 Qs · Earn Pi'
-                      : '5문항 · Pi 적립'}
+                  {sessionActive ? hub.verifyResumeSub : hub.verifySub}
                 </p>
               </div>
             </button>
@@ -190,10 +185,10 @@ export default function HomePage() {
               </div>
               <div className="mt-2.5">
                 <p className="text-[17px] font-black leading-tight tracking-tight text-slate-900">
-                  {en ? 'Submit Check' : '진위 의뢰하기'}
+                  {hub.submitTitle}
                 </p>
                 <p className="mt-1 text-[13px] font-semibold text-slate-600">
-                  {en ? 'Ask 10 humans' : '10명에게 묻기'}
+                  {hub.submitSub}
                 </p>
               </div>
             </Link>
@@ -217,10 +212,10 @@ export default function HomePage() {
               </div>
               <div className="mt-2.5">
                 <p className="text-[17px] font-black leading-tight tracking-tight text-slate-900">
-                  {en ? 'My Wallet' : '내 지갑'}
+                  {hub.walletTitle}
                 </p>
                 <p className="mt-1 text-[13px] font-semibold text-slate-600">
-                  {en ? 'Rewards · Claim' : '보상 · Pi 출금'}
+                  {hub.walletSub}
                 </p>
               </div>
             </Link>
@@ -243,10 +238,10 @@ export default function HomePage() {
               </div>
               <div className="mt-2.5">
                 <p className="text-[17px] font-black leading-tight tracking-tight text-slate-900">
-                  {en ? 'My · Ranking' : '마이 · 랭킹'}
+                  {hub.myTitle}
                 </p>
                 <p className="mt-1 text-[13px] font-semibold text-slate-600">
-                  {en ? 'Trust · TOP 5' : '신뢰도 · TOP 5'}
+                  {hub.mySub}
                 </p>
               </div>
             </Link>
@@ -255,6 +250,7 @@ export default function HomePage() {
           {/* 2. 실사 맛보기 (항상 노출 · 로테이션 지원) */}
           <TeaserQuizCard
             lang={lang}
+            hub={hub}
             onStartFull={() =>
               profile
                 ? sessionActive
@@ -266,7 +262,7 @@ export default function HomePage() {
 
           {/* 3. 어제 오답 1위 */}
           {overview?.yesterdayRecap && (
-            <YesterdayRecapCard recap={overview.yesterdayRecap} lang={lang} />
+            <YesterdayRecapCard recap={overview.yesterdayRecap} hub={hub} />
           )}
 
           {/* 4. 오늘의 데일리 챌린지 */}
@@ -280,7 +276,7 @@ export default function HomePage() {
                 : scrollToLogin()
             }
             disabled={starting}
-            className="flex w-full items-center justify-between rounded-3xl border-2 border-amber-300 bg-gradient-to-r from-amber-50 via-white to-rose-50 p-4 text-left shadow-[0_6px_20px_rgba(245,158,11,0.12)] transition hover:border-amber-400 active:scale-[0.99]"
+            className="flex w-full items-center justify-between rounded-3xl border border-amber-200 bg-gradient-to-r from-amber-50/85 via-white to-orange-50/50 p-4 text-left shadow-[0_6px_20px_rgba(224,168,66,0.12)] transition hover:border-amber-300 active:scale-[0.99]"
           >
             <div className="flex items-center gap-3">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-sm">
@@ -288,10 +284,10 @@ export default function HomePage() {
               </span>
               <div>
                 <p className="text-[15px] font-black text-slate-900">
-                  {en ? "Today's Daily Challenge (5 Qs)" : '오늘의 데일리 챌린지 (공통 5문제)'}
+                  {hub.dailyTitle}
                 </p>
                 <p className="text-xs font-semibold text-slate-500">
-                  {en ? 'Same 5 questions worldwide · Play daily!' : '전 세계 유저 공통 5문제 · 매일 도전!'}
+                  {hub.dailySub}
                 </p>
               </div>
             </div>
@@ -364,7 +360,15 @@ const PHOTO_TEASERS = [
   },
 ] as const;
 
-function TeaserQuizCard({ lang, onStartFull }: { lang: 'ko' | 'en'; onStartFull: () => void }) {
+function TeaserQuizCard({
+  lang,
+  hub,
+  onStartFull,
+}: {
+  lang: 'ko' | 'en';
+  hub: (typeof HOME_HUB_TEXT)['ko'];
+  onStartFull: () => void;
+}) {
   const en = lang === 'en';
   const [idx, setIdx] = useState(0);
   const [picked, setPicked] = useState<'A' | 'B' | null>(null);
@@ -378,11 +382,11 @@ function TeaserQuizCard({ lang, onStartFull }: { lang: 'ko' | 'en'; onStartFull:
   };
 
   return (
-    <section className="card space-y-3 rounded-3xl border border-slate-200/90 bg-white p-4 shadow-[0_4px_18px_rgba(15,23,42,0.05)]">
+    <section className="card space-y-3 rounded-3xl border border-slate-200/80 bg-white p-4 shadow-[0_4px_20px_rgba(15,23,42,0.05)]">
       <div className="flex items-center justify-between gap-2">
         <span className="chip bg-brand text-white">
           <Sparkles className="h-3.5 w-3.5" />
-          {en ? 'Photo Challenge' : '실사 맛보기'}
+          {hub.photoBadge}
         </span>
         <button
           type="button"
@@ -390,7 +394,7 @@ function TeaserQuizCard({ lang, onStartFull }: { lang: 'ko' | 'en'; onStartFull:
           className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-bold text-slate-600 transition hover:bg-slate-100"
         >
           <RotateCw className="h-3 w-3" />
-          {en ? 'Next photo' : '다른 사진'}
+          {hub.nextPhoto}
         </button>
       </div>
 
@@ -456,11 +460,11 @@ function TeaserQuizCard({ lang, onStartFull }: { lang: 'ko' | 'en'; onStartFull:
           <div className="grid grid-cols-2 gap-2">
             <button type="button" onClick={nextTeaser} className="btn-outline py-2.5 text-xs font-bold">
               <RotateCw className="h-3.5 w-3.5" />
-              {en ? 'Try another' : '한 문제 더'}
+              {hub.tryAnother}
             </button>
             <button type="button" onClick={onStartFull} className="btn-primary py-2.5 text-xs font-bold">
               <ScanFace className="h-3.5 w-3.5" />
-              {en ? 'Full Game' : '본 게임 하기'}
+              {hub.fullGame}
             </button>
           </div>
         </div>
@@ -471,17 +475,16 @@ function TeaserQuizCard({ lang, onStartFull }: { lang: 'ko' | 'en'; onStartFull:
 
 function YesterdayRecapCard({
   recap,
-  lang,
+  hub,
 }: {
   recap: NonNullable<HomeOverviewResponse['yesterdayRecap']>;
-  lang: 'ko' | 'en';
+  hub: (typeof HOME_HUB_TEXT)['ko'];
 }) {
-  const en = lang === 'en';
   return (
-    <section className="card space-y-2.5 rounded-3xl border border-rose-200 bg-gradient-to-br from-rose-50/60 via-white to-amber-50/40 p-4 shadow-[0_4px_16px_rgba(244,63,94,0.06)]">
+    <section className="card space-y-2.5 rounded-3xl border border-slate-200/80 bg-white p-4 shadow-[0_4px_20px_rgba(15,23,42,0.05)]">
       <div className="flex items-center justify-between gap-2">
         <span className="chip shrink-0 whitespace-nowrap border border-rose-200 bg-rose-50 text-xs font-bold text-rose-700">
-          {en ? `Yesterday #1 · ${recap.fooledPercent}% fooled` : `어제 오답 1위 · 오답률 ${recap.fooledPercent}%`}
+          {hub.yesterdayTrap(recap.fooledPercent)}
         </span>
         {recap.sourceLabel && (
           <span className="truncate whitespace-nowrap text-xs font-semibold text-slate-500">{recap.sourceLabel}</span>
@@ -489,16 +492,16 @@ function YesterdayRecapCard({
       </div>
       <p className="text-sm font-extrabold text-slate-900">{recap.prompt}</p>
       {recap.previewText && (
-        <div className="space-y-1.5 rounded-2xl border border-slate-100 bg-white/95 p-3">
+        <div className="space-y-1.5 rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
           <span className="inline-block rounded-md bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-600">
-            {en ? '🤖 AI Trap Sample' : '🤖 많은 사람이 속은 AI 함정 예시'}
+            {hub.aiSampleTag}
           </span>
           <p className="text-[13px] leading-relaxed text-slate-700">“{recap.previewText}”</p>
         </div>
       )}
       {recap.aiTell && (
         <p className="text-[13px] leading-relaxed text-slate-700">
-          <b className="text-brand">{en ? 'AI Tell: ' : '감별 포인트: '}</b>
+          <b className="text-brand">{hub.aiTellLabel}</b>
           {recap.aiTell}
         </p>
       )}

@@ -5,7 +5,7 @@ import type { MeResponse, PaymentsMode, PioneerProfile } from '@/types';
 import { UNAUTHORIZED_EVENT, api } from '@/lib/apiClient';
 import { DEMO_MODE_ALLOWED } from '@/lib/constants';
 import { errorMessage } from '@/lib/format';
-import { LANG_STORAGE_KEY, type Lang } from '@/lib/i18n';
+import { LANG_STORAGE_KEY, LOCALE_OPTIONS, detectBrowserLocale, type Lang, type Locale } from '@/lib/i18n';
 import {
   type PiEnvironment,
   detectEnvironment,
@@ -30,7 +30,9 @@ interface AppState {
   signingIn: boolean;
   error: string | null;
   lang: Lang;
+  locale: Locale;
   setLang: (lang: Lang) => void;
+  setLocale: (locale: Locale) => void;
   signIn: (opts?: { forceDemo?: boolean }) => Promise<void>;
   signOut: () => void;
   setDemoMode: (on: boolean) => Promise<void>;
@@ -49,17 +51,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [demoActive, setDemoActive] = useState(false);
   const [signingIn, setSigningIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [lang, setLangState] = useState<Lang>('ko');
+  const [locale, setLocaleState] = useState<Locale>('ko');
+  const lang: Lang = locale === 'ko' ? 'ko' : 'en';
 
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(LANG_STORAGE_KEY);
-      if (saved === 'ko' || saved === 'en') {
-        setLangState(saved);
+      if (saved && LOCALE_OPTIONS.some((o) => o.id === saved)) {
+        setLocaleState(saved as Locale);
       } else {
-        const browserLang = (window.navigator.languages?.[0] ?? window.navigator.language ?? '').toLowerCase();
-        if (browserLang && !browserLang.startsWith('ko')) {
-          setLangState('en');
+        const browserLang = window.navigator.languages?.[0] ?? window.navigator.language ?? '';
+        if (browserLang) {
+          setLocaleState(detectBrowserLocale(browserLang));
         }
       }
       const ref = new URLSearchParams(window.location.search).get('ref')?.trim();
@@ -71,14 +74,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const setLang = useCallback((next: Lang) => {
-    setLangState(next);
+  const setLocale = useCallback((next: Locale) => {
+    setLocaleState(next);
     try {
       window.localStorage.setItem(LANG_STORAGE_KEY, next);
     } catch {
       /* 무시 */
     }
   }, []);
+
+  const setLang = useCallback(
+    (next: Lang) => {
+      setLocale(next);
+    },
+    [setLocale],
+  );
 
   const applyMe = useCallback((me: MeResponse) => {
     setPaymentsMode(me.paymentsMode);
@@ -195,13 +205,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       signingIn,
       error,
       lang,
+      locale,
       setLang,
+      setLocale,
       signIn,
       signOut,
       setDemoMode,
       refresh,
     }),
-    [ready, profile, paymentsMode, verifyMode, demoAllowed, env, demoActive, signingIn, error, lang, setLang, signIn, signOut, setDemoMode, refresh],
+    [ready, profile, paymentsMode, verifyMode, demoAllowed, env, demoActive, signingIn, error, lang, locale, setLang, setLocale, signIn, signOut, setDemoMode, refresh],
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

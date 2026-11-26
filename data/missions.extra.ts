@@ -460,6 +460,43 @@ const IMAGE_SPECS: {
     difficulty: 2,
     tell: 'B의 빨간 리드줄이 가슴 털에 섞여 허공에서 끊기며, 뒤쪽 공원 벤치 다리가 휘어져 있습니다.',
   },
+  {
+    id: 'seed-v17',
+    category: 'object',
+    label: '레스토랑 파스타 테이블',
+    human: 'A',
+    votes: ['A', 'A', 'A', 'B'],
+    difficulty: 2,
+    tell: 'B의 포크 날이 휘어져 뭉쳐 있고, 뒤쪽 미니 메뉴판 글자가 알 수 없는 문자로 깨져 있습니다.',
+  },
+  {
+    id: 'seed-v18',
+    category: 'typography',
+    label: '저녁 베이커리 매장 간판',
+    human: 'A',
+    gold: true,
+    votes: ['A', 'A', 'A', 'A'],
+    difficulty: 1,
+    tell: 'B의 유리창 간판 글자("BRE4D & COFFΞE")가 깨져 있고 오른쪽 창틀 세로 프레임이 휘어져 있습니다.',
+  },
+  {
+    id: 'seed-v19',
+    category: 'object',
+    label: '아날로그 손목시계',
+    human: 'A',
+    votes: ['A', 'B', 'A', 'A'],
+    difficulty: 2,
+    tell: 'B의 11시 숫자와 4~6시 눈금이 뭉개져 있고, 작은 보조 다이얼 바늘이 메인 시계 바늘과 어색하게 붙어 있습니다.',
+  },
+  {
+    id: 'seed-v20',
+    category: 'anatomy',
+    label: '야외 안경 인물 사진',
+    human: 'A',
+    votes: ['A', 'B', 'A', 'B'],
+    difficulty: 3,
+    tell: 'B의 오른쪽 안경 다리가 귀에 닿기 전에 녹아 사라지고, 링 귀걸이와 셔츠 깃 모양이 비대칭입니다.',
+  },
 ];
 
 const EXTRA_IMAGE_MISSIONS: Mission[] = IMAGE_SPECS.map((s) => {
