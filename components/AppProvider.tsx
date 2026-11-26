@@ -54,7 +54,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(LANG_STORAGE_KEY);
-      if (saved === 'ko' || saved === 'en') setLangState(saved);
+      if (saved === 'ko' || saved === 'en') {
+        setLangState(saved);
+      } else {
+        const browserLang = (window.navigator.languages?.[0] ?? window.navigator.language ?? '').toLowerCase();
+        if (browserLang && !browserLang.startsWith('ko')) {
+          setLangState('en');
+        }
+      }
       const ref = new URLSearchParams(window.location.search).get('ref')?.trim();
       if (ref && ref.length <= 120) {
         window.localStorage.setItem('verilens_ref', ref);
