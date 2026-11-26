@@ -262,7 +262,7 @@ export async function submitMissionSet(
     let regularCount = 0;
     let mismatchedRegular = 0;
     let challengeMissionId: string | undefined;
-    const pendingVotes: { missionId: string; choice: AnswerInput['choice'] }[] = [];
+    const pendingVotes: { missionId: string; choice: AnswerInput['choice']; reason?: string }[] = [];
 
     for (const id of set.missionIds) {
       const mission = await repo.getMission(id);
@@ -317,7 +317,7 @@ export async function submitMissionSet(
 
       // 의뢰자 문항: 정상 응답만 실제 투표로 누적 (기준 문항 판정 후 아래에서 일괄 반영)
       if (mission.origin === 'requester' && !excludedFast && !ownMission) {
-        pendingVotes.push({ missionId: id, choice: answer.choice });
+        pendingVotes.push({ missionId: id, choice: answer.choice, reason: answer.reason });
       }
     }
 
@@ -325,10 +325,18 @@ export async function submitMissionSet(
     if (!flagged && goldPassed) {
       for (const v of pendingVotes) {
         const allVotes = await repo.addVote(v.missionId, v.choice);
-        if (allVotes.length >= GAME.REQUESTER_TARGET_VOTES) {
-          const m = await repo.getMission(v.missionId);
-          if (m && m.origin === 'requester' && m.status === 'active') {
-            await repo.saveMission({ ...m, status: 'closed' });
+        const m = await repo.getMission(v.missionId);
+        if (m && m.origin === 'requester') {
+          const nextReasons = v.reason
+            ? { ...(m.reasonCounts ?? {}), [v.reason]: (m.reasonCounts?.[v.reason] ?? 0) + 1 }
+            : m.reasonCounts;
+          const shouldClose = allVotes.length >= GAME.REQUESTER_TARGET_VOTES && m.status === 'active';
+          if (v.reason || shouldClose) {
+            await repo.saveMission({
+              ...m,
+              ...(nextReasons ? { reasonCounts: nextReasons } : {}),
+              ...(shouldClose ? { status: 'closed' as const } : {}),
+            });
           }
         }
       }

@@ -48,6 +48,7 @@ function VerifyGame() {
   const [missionSet, setMissionSet] = useState<PublicMissionSet | null>(null);
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<Choice | null>(null);
+  const [pickedReason, setPickedReason] = useState<string | undefined>(undefined);
   const [locked, setLocked] = useState(false);
   const [warning, setWarning] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -185,6 +186,7 @@ function VerifyGame() {
     if (index + 1 < missionSet.missions.length) {
       setIndex(index + 1);
       setSelected(null);
+      setPickedReason(undefined);
       setLocked(false);
     } else if (missionSet.bonus) {
       setPhase('bonus');
@@ -208,7 +210,12 @@ function VerifyGame() {
 
     setLocked(true);
     setSelected(choice);
-    answers.current.push({ missionId: mission.id, choice, reactionMs });
+    answers.current.push({
+      missionId: mission.id,
+      choice,
+      reactionMs,
+      ...(pickedReason ? { reason: pickedReason } : {}),
+    });
     const verdict = monitor.current.record({ missionId: mission.id, reactionMs, at: Date.now() });
 
     await sleep(SELECT_FEEDBACK_MS);
@@ -360,6 +367,39 @@ function VerifyGame() {
                   </span>
                 )}
                 <h1 className="text-xl font-bold leading-snug text-slate-900">{m.prompt}</h1>
+                {m.contextNote && (
+                  <p className="rounded-xl border border-amber-200 bg-amber-50/75 px-3 py-2 text-xs font-semibold text-amber-900">
+                    💬 {lang === 'en' ? 'Requester note: ' : '의뢰자 메모: '}
+                    {m.contextNote}
+                  </p>
+                )}
+                {m.origin === 'requester' && (
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-bold text-slate-500">
+                      {lang === 'en' ? 'Optional reason tag (tap before choosing):' : '판정 근거 태그 (선택 · 고른 뒤 아래 A/B 선택)'}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(lang === 'en'
+                        ? ['Suspicious link / scam', 'Robotic / ad tone', 'Visual distortion', 'Authentic detail']
+                        : ['외부 링크·유도', '광고·기계적 문체', '이미지 왜곡', '실제 경험·디테일']
+                      ).map((tag) => (
+                        <button
+                          key={tag}
+                          type="button"
+                          disabled={locked}
+                          onClick={() => setPickedReason((prev) => (prev === tag ? undefined : tag))}
+                          className={
+                            pickedReason === tag
+                              ? 'rounded-full border border-brand bg-brand-soft px-2.5 py-1 text-[11px] font-bold text-brand'
+                              : 'rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:border-brand/40'
+                          }
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {isSingle ? (
                   <div className="space-y-3" key={m.id}>
                     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">

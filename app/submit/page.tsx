@@ -285,6 +285,7 @@ export default function SubmitPage() {
   const [kind, setKind] = useState<MissionKind>('text');
   const [prompt, setPrompt] = useState('');
   const [sourceLabel, setSourceLabel] = useState('');
+  const [contextNote, setContextNote] = useState('');
   const [textA, setTextA] = useState('');
   const [textB, setTextB] = useState('');
   const [imageA, setImageA] = useState<string | null>(null);
@@ -407,6 +408,7 @@ export default function SubmitPage() {
               mode,
               prompt: prompt.trim() || undefined,
               sourceLabel: sourceLabel.trim() || undefined,
+              contextNote: contextNote.trim() || undefined,
               a: textA.trim(),
               ...(mode === 'compare' ? { b: textB.trim() } : {}),
             }
@@ -414,6 +416,7 @@ export default function SubmitPage() {
               kind,
               mode,
               prompt: prompt.trim() || undefined,
+              contextNote: contextNote.trim() || undefined,
               a: imageA,
               ...(mode === 'compare' ? { b: imageB } : {}),
             };
@@ -468,6 +471,7 @@ export default function SubmitPage() {
     setDone(null);
     setPrompt('');
     setSourceLabel('');
+    setContextNote('');
     setTextA('');
     setTextB('');
     setImageA(null);
@@ -712,6 +716,26 @@ export default function SubmitPage() {
                 setPrompt(v);
                 touch();
               }}
+            />
+          </Field>
+
+          <Field
+            label={en ? 'Context Note (optional)' : '상황 메모 (선택 · 판별자 참고용)'}
+            hint={en ? `${contextNote.length}/100` : `${contextNote.length}/100`}
+          >
+            <input
+              value={contextNote}
+              maxLength={100}
+              onChange={(e) => {
+                setContextNote(e.target.value);
+                touch();
+              }}
+              placeholder={
+                en
+                  ? 'e.g. Photo sent by a secondhand seller / Suspicious delivery text'
+                  : '예: 당근 직거래 상대가 보낸 사진 / 방금 온 택배 문자'
+              }
+              className="input"
             />
           </Field>
 
@@ -1111,6 +1135,14 @@ function MyMissionRow({
                   : `🛡️ VeriLens 검증단 판정: ${winPct}%가 ${winner}를 실제 인간 원본으로 선택 (${total}명)`;
               })()}
             </div>
+          )}
+          {m.status !== 'draft' && (
+            <Link
+              href={`/verdict/${encodeURIComponent(m.id)}`}
+              className="inline-flex items-center gap-1 text-xs font-bold text-brand hover:underline"
+            >
+              {en ? 'Open Official Verdict Report >' : '공식 판정서 열기 · 공유하기 >'}
+            </Link>
           )}
         </div>
       )}

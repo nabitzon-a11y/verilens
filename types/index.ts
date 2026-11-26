@@ -90,6 +90,10 @@ export interface Mission {
   status: MissionStatus;
   /** 의뢰자 문항인 경우 의뢰자 uid */
   requesterUid?: string;
+  /** 의뢰자가 남긴 1줄 상황 메모 (판별자 참고용) */
+  contextNote?: string;
+  /** 판별자들이 남긴 판정 근거 태그 누적 횟수 */
+  reasonCounts?: Record<string, number>;
   /** 의뢰자 문항인 경우 연결된 결제 ID */
   paymentId?: string;
   /** [서버 전용] 신고 누적 횟수 (2회 이상 시 자동 비공개) */
@@ -332,6 +336,7 @@ export interface AnswerInput {
   missionId: string;
   choice: Choice;
   reactionMs: number;
+  reason?: string;
 }
 
 export interface SetSubmission {
@@ -608,11 +613,31 @@ export interface MyMissionItem {
   kind: MissionKind;
   mode?: MissionMode;
   prompt: string;
+  contextNote?: string;
   status: MissionStatus;
   /** 실제 판별자 응답 집계 (가상 응답 제외) */
   votes: VoteTally;
   /** 실제 응답이 과반(3표 이상)으로 모였을 때의 합의 라벨 */
   consensus: Choice | null;
+  reasonCounts?: Record<string, number>;
+  createdAt: ISODateString;
+}
+
+/** 공개 공식 판정서 (/verdict/[id]) */
+export interface PublicVerdictResponse {
+  id: string;
+  kind: MissionKind;
+  mode?: MissionMode;
+  prompt: string;
+  contextNote?: string;
+  a: MissionContent;
+  b?: MissionContent;
+  status: MissionStatus;
+  votes: VoteTally;
+  total: number;
+  target: number;
+  consensus: Choice | null;
+  reasonCounts?: Record<string, number>;
   createdAt: ISODateString;
 }
 

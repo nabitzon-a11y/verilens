@@ -17,6 +17,7 @@ const schema = z.object({
         missionId: z.string().min(1).max(100),
         choice: z.enum(['A', 'B']),
         reactionMs: z.number().int().min(0).max(10 * 60 * 1000),
+        reason: z.string().trim().max(40).optional(),
       }),
     )
     .min(1)

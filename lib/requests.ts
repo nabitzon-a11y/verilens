@@ -1,9 +1,9 @@
 import 'server-only';
 import { randomUUID } from 'crypto';
 import { z } from 'zod';
-import type { DraftResponse, Mission, MissionContent, MyMissionItem } from '@/types';
+import type { DraftResponse, Mission, MissionContent, MyMissionItem, PublicVerdictResponse } from '@/types';
 import { decideConsensus, tallyVotes } from './consensus';
-import { WALLET } from './constants';
+import { GAME, WALLET } from './constants';
 import { HttpError } from './http';
 import { withLock } from './lock';
 import { getRepository } from './repository';
@@ -32,6 +32,7 @@ export const draftSchema = z.discriminatedUnion('kind', [
     mode: modeSchema,
     prompt: z.string().trim().max(80).optional(),
     sourceLabel: z.string().trim().max(30).optional(),
+    contextNote: z.string().trim().max(100).optional(),
     a: text,
     b: text.optional(),
   }),
@@ -39,6 +40,7 @@ export const draftSchema = z.discriminatedUnion('kind', [
     kind: z.literal('image'),
     mode: modeSchema,
     prompt: z.string().trim().max(80).optional(),
+    contextNote: z.string().trim().max(100).optional(),
     a: image,
     b: image.optional(),
   }),
@@ -106,6 +108,7 @@ export async function createDraft(uid: string, input: DraftInput): Promise<Draft
     origin: 'requester',
     status: 'draft',
     requesterUid: uid,
+    contextNote: input.contextNote || undefined,
     createdAt: new Date().toISOString(),
   };
   await repo.saveMission(mission);
@@ -151,6 +154,7 @@ export async function createCommunityMission(uid: string, input: DraftInput): Pr
     origin: 'requester',
     status: 'active',
     requesterUid: uid,
+    contextNote: input.contextNote || undefined,
     createdAt: new Date().toISOString(),
   };
   await repo.saveMission(mission);
@@ -188,6 +192,7 @@ export async function createTicketMission(uid: string, input: DraftInput): Promi
       origin: 'requester',
       status: 'active',
       requesterUid: uid,
+      contextNote: input.contextNote || undefined,
       createdAt: now,
     };
 
@@ -217,13 +222,42 @@ export async function listMyMissions(uid: string): Promise<MyMissionItem[]> {
         kind: m.kind,
         mode: m.mode,
         prompt: m.prompt,
+        contextNote: m.contextNote,
         status: m.status,
         votes,
         consensus: decideConsensus(votes),
+        reasonCounts: m.reasonCounts,
         createdAt: m.createdAt,
       };
     }),
   );
+}
+
+/** 공개 공식 판정서 조회 (의뢰자 문항 전용, 비로그인 열람 가능) */
+export async function getPublicVerdict(missionId: string): Promise<PublicVerdictResponse> {
+  const repo = getRepository();
+  const m = await repo.getMission(missionId);
+  if (!m || m.origin !== 'requester' || m.status === 'draft') {
+    throw new HttpError(404, '판정서를 찾을 수 없습니다.', 'VERDICT_NOT_FOUND');
+  }
+  const votes = tallyVotes(await repo.getVotes(m.id));
+  const total = votes.A + votes.B;
+  return {
+    id: m.id,
+    kind: m.kind,
+    mode: m.mode,
+    prompt: m.prompt,
+    contextNote: m.contextNote,
+    a: m.a,
+    b: m.mode === 'compare' || !m.mode ? m.b : undefined,
+    status: m.status,
+    votes,
+    total,
+    target: GAME.REQUESTER_TARGET_VOTES,
+    consensus: decideConsensus(votes),
+    reasonCounts: m.reasonCounts,
+    createdAt: m.createdAt,
+  };
 }
 
 const REPORT_AUTO_HIDE_THRESHOLD = 2;
