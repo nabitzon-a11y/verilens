@@ -1,5 +1,5 @@
 import type { HomeOverviewResponse, Mission } from '@/types';
-import { SEED_EN } from '@/data/missions.en';
+import { SEED_EN, translateSourceLabel } from '@/data/missions.en';
 import { requireUser } from '@/lib/auth';
 import { GAME, QUEST, getTrustTier } from '@/lib/constants';
 import { ok, withErrorHandling } from '@/lib/http';
@@ -43,8 +43,12 @@ async function buildYesterdayRecap(
   const tr = lang === 'en' ? SEED_EN[pick.id] : undefined;
   const prompt = tr?.prompt ?? pick.prompt;
   const aiTell = tr?.aiTell ?? pick.aiTell;
-  const aContent = tr?.aBody ?? (pick.a.type === 'text' ? pick.a.body : undefined);
-  const sourceLabel = tr?.sourceLabel ?? (pick.a.type === 'text' ? pick.a.sourceLabel : undefined);
+  const aiIsB = pick.humanSide === 'A';
+  const aContent = aiIsB
+    ? (tr?.bBody ?? (pick.b.type === 'text' ? pick.b.body : undefined))
+    : (tr?.aBody ?? (pick.a.type === 'text' ? pick.a.body : undefined));
+  const rawSource = pick.a.type === 'text' ? pick.a.sourceLabel : undefined;
+  const sourceLabel = tr?.sourceLabel ?? translateSourceLabel(rawSource, lang);
 
   return {
     missionId: pick.id,

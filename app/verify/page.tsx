@@ -26,7 +26,7 @@ type Phase = 'idle' | 'need-session' | 'loading' | 'playing' | 'bonus' | 'submit
 
 export default function VerifyPage() {
   return (
-    <Suspense fallback={<CenterSpinner label="불러오는 중…" />}>
+    <Suspense fallback={<CenterSpinner label="Loading…" />}>
       <VerifyGame />
     </Suspense>
   );
@@ -377,7 +377,7 @@ function VerifyGame() {
                           <button
                             type="button"
                             onClick={() => m.a.type === 'image' && setZoomImage({ src: m.a.src, alt: m.a.alt })}
-                            aria-label="이미지 확대 보기"
+                            aria-label={lang === 'en' ? 'Zoom image' : '이미지 확대 보기'}
                             className="absolute right-3 top-3 z-10 flex items-center gap-1 rounded-full bg-slate-900/75 px-3 py-1.5 text-xs font-bold text-white shadow-sm backdrop-blur-sm transition hover:bg-slate-900"
                           >
                             <ZoomIn className="h-3.5 w-3.5" />
@@ -500,7 +500,7 @@ function VerifyGame() {
               <button
                 type="button"
                 onClick={() => setZoomImage(null)}
-                aria-label="닫기"
+                aria-label={lang === 'en' ? 'Close' : '닫기'}
                 className="mb-3 self-end rounded-full bg-white/15 p-2 text-white hover:bg-white/25"
               >
                 <X className="h-5 w-5" />

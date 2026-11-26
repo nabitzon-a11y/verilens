@@ -17,6 +17,7 @@ interface MissionCardProps {
 
 /** A/B 판별 카드 — 화이트 카드 + 보라색 선택 강조 */
 export function MissionCard({ side, content, selected, disabled, onSelect, onZoom }: MissionCardProps) {
+  const { lang } = useApp();
   return (
     <div className="relative">
       <button
@@ -24,7 +25,7 @@ export function MissionCard({ side, content, selected, disabled, onSelect, onZoo
         onClick={() => onSelect(side)}
         disabled={disabled}
         aria-pressed={selected}
-        aria-label={`${side} 선택`}
+        aria-label={lang === 'en' ? `Select ${side}` : `${side} 선택`}
         className={clsx(
           'relative w-full overflow-hidden rounded-2xl border-2 bg-white text-left shadow-sm transition',
           'active:scale-[0.99] disabled:cursor-default',
@@ -47,7 +48,7 @@ export function MissionCard({ side, content, selected, disabled, onSelect, onZoo
         <button
           type="button"
           onClick={() => onZoom(content.src, content.alt)}
-          aria-label="이미지 확대 보기"
+          aria-label={lang === 'en' ? 'Zoom image' : '이미지 확대 보기'}
           className="absolute right-3 top-3 z-10 flex items-center gap-1 rounded-full bg-slate-900/75 px-2.5 py-1.5 text-[11px] font-bold text-white shadow-sm backdrop-blur-sm transition hover:bg-slate-900"
         >
           <ZoomIn className="h-3.5 w-3.5" />
