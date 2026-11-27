@@ -67,6 +67,23 @@ export default function ResultPage() {
     );
   }
 
+  const imgMatches = result.results.filter((r) => r.kind === 'image' && r.matched).length;
+  const txtMatches = result.results.filter((r) => r.kind === 'text' && r.matched).length;
+  const intuitionGrade =
+    result.matchedCount >= 5 ? 'S' : result.matchedCount === 4 ? 'A' : result.matchedCount === 3 ? 'B' : 'C';
+  const personaTitle =
+    result.matchedCount === 5
+      ? lang === 'en'
+        ? '🛡️ Human Intuition Master'
+        : '🛡️ 매의 눈 · 직관 마스터'
+      : imgMatches >= txtMatches && imgMatches > 0
+        ? lang === 'en'
+          ? '📸 Deepfake Spotter'
+          : '📸 실사 · 딥페이크 감별사'
+        : lang === 'en'
+          ? '🔍 Scam & Text Hunter'
+          : '🔍 스미싱 · 문맥 헌터';
+
   const share = async () => {
     if (!result.challengeMissionId && !result.isDaily) return;
     const grid = result.results.map((r) => (r.matched ? '🟩' : '🟥')).join('');
@@ -138,7 +155,10 @@ export default function ResultPage() {
           )}
         </div>
 
-        <div className="mt-3 flex justify-center gap-2">
+        <div className="mt-3 flex flex-wrap justify-center gap-2">
+          <span className="chip border border-brand/25 bg-brand-soft text-brand">
+            {personaTitle} · {lang === 'en' ? `Condition ${intuitionGrade}` : `오늘 감각 ${intuitionGrade}급`}
+          </span>
           <span
             className={clsx(
               'chip',
@@ -232,7 +252,11 @@ export default function ResultPage() {
         <div className="grid grid-cols-2 gap-2.5">
           <Link href="/verify" className="btn-primary">
             <RotateCcw className="h-4 w-4" />
-            {t.nextSetBtn}
+            {result.matchedCount <= 3
+              ? lang === 'en'
+                ? 'Bounce Back (1 Set)'
+                : '감각 회복 1판 더!'
+              : t.nextSetBtn}
           </Link>
           <Link href="/" className="btn-ghost">
             <Home className="h-4 w-4" />

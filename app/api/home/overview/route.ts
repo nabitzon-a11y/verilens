@@ -128,6 +128,12 @@ export const GET = withErrorHandling(async (req) => {
   const nextMilestone = QUEST.STREAK_MILESTONES.find((m) => m > user.streak) ?? null;
   const yesterdayRecap = await buildYesterdayRecap(repo, allActive, lang);
 
+  // 최근 내가 판별에 참여한 의뢰 문항 중 마감(closed)된 1건 찾기 (Open Loop)
+  const recentIds = new Set(user.recentMissionIds ?? []);
+  const closedVoted = requester
+    .filter((m) => m.status === 'closed' && recentIds.has(m.id) && m.requesterUid !== user.uid)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+
   return ok<HomeOverviewResponse>({
     live: {
       activeCount: active.length,
@@ -148,5 +154,6 @@ export const GET = withErrorHandling(async (req) => {
       milestoneBonusPts: QUEST.MILESTONE_TRUST_BONUS,
     },
     yesterdayRecap,
+    ...(closedVoted ? { closedVotedMission: { id: closedVoted.id, prompt: closedVoted.prompt } } : {}),
   });
 });

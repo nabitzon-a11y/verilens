@@ -23,7 +23,7 @@ import { LoginPanel } from '@/components/LoginPanel';
 import { useScanModal } from '@/components/ScanModal';
 import { TierChip } from '@/components/TierBadge';
 import { api } from '@/lib/apiClient';
-import { getTrustTier } from '@/lib/constants';
+import { getNextTier, getTrustTier } from '@/lib/constants';
 import { formatMmSs, formatPi } from '@/lib/format';
 import { useNow } from '@/lib/hooks';
 import { HOME_HUB_TEXT, HOME_TEXT, VERIFY_TEXT } from '@/lib/i18n';
@@ -108,19 +108,60 @@ export default function HomePage() {
         {ready && profile && (
           <Link
             href="/my"
-            className="relative mt-2.5 flex items-center justify-between gap-2 rounded-2xl border border-white/80 bg-white/95 px-3 py-2 shadow-sm transition hover:border-brand/30"
+            className="relative mt-2.5 block space-y-1.5 rounded-2xl border border-white/80 bg-white/95 px-3 py-2 shadow-sm transition hover:border-brand/30"
           >
-            <div className="flex min-w-0 items-center gap-2">
-              <TierChip score={profile.trustScore} className="px-2 py-0.5 text-[11px]" />
-              <span className="truncate text-xs font-extrabold text-slate-900">@{profile.username}</span>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <TierChip score={profile.trustScore} className="px-2 py-0.5 text-[11px]" />
+                <span className="truncate text-xs font-extrabold text-slate-900">@{profile.username}</span>
+              </div>
+              <span className="flex shrink-0 items-center gap-1 text-xs font-extrabold text-brand">
+                {hub.myPage} · {profile.trustScore}pt
+                <ChevronRight className="h-3.5 w-3.5" />
+              </span>
             </div>
-            <span className="flex shrink-0 items-center gap-1 text-xs font-extrabold text-brand">
-              {hub.myPage} · {profile.trustScore}pt
-              <ChevronRight className="h-3.5 w-3.5" />
-            </span>
+            {(() => {
+              const next = getNextTier(profile.trustScore);
+              const daysLeft = overview?.quest.nextMilestone
+                ? Math.max(1, overview.quest.nextMilestone - overview.quest.streak)
+                : null;
+              if (!next && !daysLeft) return null;
+              return (
+                <p className="flex items-center justify-between border-t border-slate-100 pt-1 text-[11px] font-semibold text-slate-500">
+                  <span>
+                    {next
+                      ? en
+                        ? `${next.remaining}pt to ${next.label}`
+                        : `${next.label}까지 ${next.remaining}점`
+                      : en
+                        ? 'Top Tier Master'
+                        : '최고 등급 Master'}
+                  </span>
+                  {daysLeft && (
+                    <span className="font-bold text-orange-600">
+                      {en ? `${daysLeft}d to Free Ticket 🔥` : `무료권까지 ${daysLeft}일 🔥`}
+                    </span>
+                  )}
+                </p>
+              );
+            })()}
           </Link>
         )}
       </header>
+
+      {ready && overview?.closedVotedMission && (
+        <Link
+          href={`/verdict/${encodeURIComponent(overview.closedVotedMission.id)}`}
+          className="flex items-center justify-between gap-2 rounded-2xl border border-brand/25 bg-brand-soft/65 px-3.5 py-2.5 text-xs font-bold text-brand shadow-sm transition hover:bg-brand-soft"
+        >
+          <span className="truncate">
+            {en
+              ? `🔔 Consensus closed on an item you verified!`
+              : `🔔 내가 판별한 의뢰가 마감됐어요! 결과 확인`}
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0" />
+        </Link>
+      )}
 
       {!ready ? (
         <div className="card flex items-center justify-center py-10 text-slate-400">

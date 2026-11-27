@@ -318,6 +318,11 @@ export interface HomeOverviewResponse {
     humanSide?: Choice;
     aiTell: string;
   };
+  /** 최근 내가 판별에 참여한 의뢰 중 마감된 1건 (Open Loop 결과 확인용) */
+  closedVotedMission?: {
+    id: string;
+    prompt: string;
+  };
 }
 
 /** 홈 화면 실시간 의뢰 현황 */
