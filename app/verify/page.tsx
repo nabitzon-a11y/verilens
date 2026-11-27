@@ -20,7 +20,47 @@ import { clearVerifySession, getActiveSession, recheckHuman, startHumanSession }
 import { saveLastResult } from '@/lib/resultStore';
 
 const SELECT_FEEDBACK_MS = 260;
+const PROGRESS_KEY = 'verilens_verify_progress';
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+interface SavedVerifyProgress {
+  uid: string;
+  mode: string;
+  challenge?: string;
+  missionSet: PublicMissionSet;
+  index: number;
+  answers: AnswerInput[];
+}
+
+function saveVerifyProgress(p: SavedVerifyProgress) {
+  try {
+    window.sessionStorage.setItem(PROGRESS_KEY, JSON.stringify(p));
+  } catch {
+    /* 용량 초과 등 무시 */
+  }
+}
+
+function loadVerifyProgress(uid: string, mode: string, challenge?: string): SavedVerifyProgress | null {
+  try {
+    const raw = window.sessionStorage.getItem(PROGRESS_KEY);
+    if (!raw) return null;
+    const p = JSON.parse(raw) as SavedVerifyProgress;
+    if (p.uid !== uid || p.mode !== mode || p.challenge !== challenge) return null;
+    if (!p.missionSet?.setId || !Array.isArray(p.answers)) return null;
+    if (p.answers.length >= p.missionSet.missions.length) return null;
+    return p;
+  } catch {
+    return null;
+  }
+}
+
+function clearVerifyProgress() {
+  try {
+    window.sessionStorage.removeItem(PROGRESS_KEY);
+  } catch {
+    /* 무시 */
+  }
+}
 
 type Phase = 'idle' | 'need-session' | 'loading' | 'playing' | 'bonus' | 'submitting' | 'error';
 
@@ -71,9 +111,24 @@ function VerifyGame() {
   /** 세트를 준비한 계정 uid (재로그인 등으로 계정이 바뀌면 다시 초기화) */
   const initializedFor = useRef<string | null>(null);
 
-  /* ---------------- 세트 발급 ---------------- */
+  /* ---------------- 세트 발급 (새로고침 복원 포함) ---------------- */
   const loadSet = useCallback(
     async (s: VerifySession) => {
+      if (profile) {
+        const saved = loadVerifyProgress(profile.uid, mode, challenge);
+        if (saved) {
+          monitor.current.reset();
+          answers.current = saved.answers;
+          setMissionSet(saved.missionSet);
+          setIndex(Math.min(saved.index, Math.max(0, saved.missionSet.missions.length - 1)));
+          setSelected(null);
+          setPickedReason(undefined);
+          setLocked(false);
+          setBonusPicked(null);
+          setPhase('playing');
+          return;
+        }
+      }
       setPhase('loading');
       setError(null);
       try {
@@ -85,9 +140,13 @@ function VerifyGame() {
         setMissionSet(data);
         setIndex(0);
         setSelected(null);
+        setPickedReason(undefined);
         setLocked(false);
         setBonusPicked(null);
         setPhase('playing');
+        if (profile) {
+          saveVerifyProgress({ uid: profile.uid, mode, challenge, missionSet: data, index: 0, answers: [] });
+        }
       } catch (err) {
         if (err instanceof ApiError && err.code === 'VERIFY_REQUIRED') {
           clearVerifySession();
@@ -99,7 +158,7 @@ function VerifyGame() {
         setPhase('error');
       }
     },
-    [challenge, lang, mode],
+    [challenge, lang, mode, profile],
   );
 
   useEffect(() => {
@@ -160,6 +219,7 @@ function VerifyGame() {
       } catch {
         /* 무시 */
       }
+      clearVerifyProgress();
       saveLastResult(result);
       void refresh();
       router.push('/verify/result');
@@ -216,6 +276,16 @@ function VerifyGame() {
       reactionMs,
       ...(pickedReason ? { reason: pickedReason } : {}),
     });
+    if (profile) {
+      saveVerifyProgress({
+        uid: profile.uid,
+        mode,
+        challenge,
+        missionSet,
+        index: index + 1,
+        answers: answers.current,
+      });
+    }
     const verdict = monitor.current.record({ missionId: mission.id, reactionMs, at: Date.now() });
 
     await sleep(SELECT_FEEDBACK_MS);
@@ -305,6 +375,7 @@ function VerifyGame() {
             type="button"
             className="btn-ghost w-full"
             onClick={() => {
+              clearVerifyProgress();
               const s = getActiveSession();
               if (s) void loadSet(s);
               else setPhase('need-session');
@@ -364,6 +435,11 @@ function VerifyGame() {
                   <span className="chip w-fit border border-rose-200 bg-rose-50 text-rose-600">
                     <Flame className="h-3.5 w-3.5" />
                     {lang === 'en' ? 'HARD · Most people get fooled' : '고난도 · 많은 사람이 속는 문제'}
+                  </span>
+                )}
+                {m.minTier === 'gold' && (
+                  <span className="chip w-fit border border-brand/25 bg-brand-soft text-brand">
+                    🛡️ {lang === 'en' ? 'Gold+ Expert Verification' : 'Gold+ 전문가 정밀 검증 의뢰'}
                   </span>
                 )}
                 <h1 className="text-xl font-bold leading-snug text-slate-900">{m.prompt}</h1>
