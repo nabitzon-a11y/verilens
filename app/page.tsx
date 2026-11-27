@@ -477,13 +477,34 @@ function TeaserQuizCard({
   const en = lang === 'en';
   const [idx, setIdx] = useState(0);
   const [picked, setPicked] = useState<'A' | 'B' | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem('verilens_teaser_idx');
+      const next = raw === null ? 0 : (Number(raw) + 1) % PHOTO_TEASERS.length;
+      const safe = Number.isFinite(next) ? next : 0;
+      setIdx(safe);
+      window.localStorage.setItem('verilens_teaser_idx', String(safe));
+    } catch {
+      /* ignore storage errors */
+    }
+  }, []);
+
   const item = PHOTO_TEASERS[idx % PHOTO_TEASERS.length];
   const copy = item[lang];
   const correct = picked === item.human;
 
   const nextTeaser = () => {
     setPicked(null);
-    setIdx((prev) => (prev + 1) % PHOTO_TEASERS.length);
+    setIdx((prev) => {
+      const next = (prev + 1) % PHOTO_TEASERS.length;
+      try {
+        window.localStorage.setItem('verilens_teaser_idx', String(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
   };
 
   return (

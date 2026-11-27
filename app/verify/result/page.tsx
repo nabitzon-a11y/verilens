@@ -69,6 +69,7 @@ export default function ResultPage() {
 
   const imgMatches = result.results.filter((r) => r.kind === 'image' && r.matched).length;
   const txtMatches = result.results.filter((r) => r.kind === 'text' && r.matched).length;
+  const requesterHelpedCount = result.results.filter((r) => r.origin === 'requester' && !r.ownMission).length;
   const intuitionGrade =
     result.matchedCount >= 5 ? 'S' : result.matchedCount === 4 ? 'A' : result.matchedCount === 3 ? 'B' : 'C';
   const personaTitle =
@@ -137,8 +138,16 @@ export default function ResultPage() {
           {t.topSuffix}
         </p>
 
-        <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 py-3.5">
-          <p className="text-xs font-medium text-amber-800">{t.rewardTitle}</p>
+        <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-3.5">
+          <p className="text-xs font-semibold text-amber-800">
+            {requesterHelpedCount > 0
+              ? lang === 'en'
+                ? 'Requester Help Reward'
+                : '의뢰 해결 감사 보상'
+              : lang === 'en'
+                ? 'AI Defense Contribution Reward'
+                : '가짜 방어 기여 보상'}
+          </p>
           <p className={clsx('text-2xl font-black', result.reward > 0 ? 'text-pi-light' : 'text-slate-400')}>
             {formatSignedPi(result.reward)}
           </p>
@@ -153,6 +162,15 @@ export default function ResultPage() {
                 : ''}
             </p>
           )}
+          <p className="mt-2 border-t border-amber-200/70 pt-2 text-[11px] font-bold text-amber-900">
+            {requesterHelpedCount > 0
+              ? lang === 'en'
+                ? `🛡️ Your eye just helped resolve ${requesterHelpedCount} real user check(s)!`
+                : `🛡️ 방금 당신의 1표로 실제 의뢰 ${requesterHelpedCount}건의 진위 해결이 한 걸음 더 완료됐어요!`
+              : lang === 'en'
+                ? '✨ Your intuition just sharpened VeriLens 10-human fraud defense!'
+                : '✨ 당신의 1분 눈썰미가 VeriLens 10인 사기·가짜 방어망을 더 정밀하게 만들었어요!'}
+          </p>
         </div>
 
         <div className="mt-3 flex flex-wrap justify-center gap-2">

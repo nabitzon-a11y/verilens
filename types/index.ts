@@ -367,6 +367,7 @@ export interface MissionResult {
   prompt: string;
   kind: MissionKind;
   mode?: MissionMode;
+  origin?: MissionOrigin;
   choice: Choice;
   /** 5인 다수결 확정 라벨 (과반 미달 시 null) */
   consensus: Choice | null;

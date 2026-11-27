@@ -172,33 +172,34 @@ export async function issueMissionSet(
     const challenge = challengeId ? regular.find((m) => m.id === challengeId) : undefined;
     if (challenge) picked.push(challenge);
 
-    // 아직 안 푼 문항 우선 선발 (중복 출제 방지), 부족하면 기존 풀에서 보충
+    // 1단계: 아직 안 푼 문항만 우선 선발 (의뢰자 최대 2 -> 이미지 최대 2 -> 일반 시드)
     const freshRequester = shuffle(
       regular.filter((m) => m.origin === 'requester' && langEligible(m) && !recentSet.has(m.id) && !picked.includes(m)),
     );
-    const fallbackRequester = shuffle(
-      regular.filter((m) => m.origin === 'requester' && langEligible(m) && recentSet.has(m.id) && !picked.includes(m)),
-    );
-    picked.push(...[...freshRequester, ...fallbackRequester].slice(0, 2));
+    picked.push(...freshRequester.slice(0, 2));
 
-    // 이미지 문항이 세트당 최소 1~2개 포함되도록 안 푼 이미지 우선 선발
     const freshImages = shuffle(
       regular.filter((m) => m.kind === 'image' && langEligible(m) && !recentSet.has(m.id) && !picked.includes(m)),
     );
-    const fallbackImages = shuffle(
-      regular.filter((m) => m.kind === 'image' && langEligible(m) && recentSet.has(m.id) && !picked.includes(m)),
-    );
-    picked.push(...[...freshImages, ...fallbackImages].slice(0, Math.max(0, Math.min(2, need - picked.length))));
+    picked.push(...freshImages.slice(0, Math.max(0, Math.min(2, need - picked.length))));
 
     const freshRegular = shuffle(
       regular.filter((m) => langEligible(m) && !recentSet.has(m.id) && !picked.includes(m)),
     );
-    const fallbackRegular = shuffle(
-      regular.filter((m) => langEligible(m) && recentSet.has(m.id) && !picked.includes(m)),
-    );
-    for (const m of [...freshRegular, ...fallbackRegular]) {
+    for (const m of freshRegular) {
       if (picked.length >= need) break;
       picked.push(m);
+    }
+
+    // 2단계: 안 푼 문항을 모두 소진해 자리가 남을 때만 기존 풀에서 보충
+    if (picked.length < need) {
+      const fallbackPool = shuffle(
+        regular.filter((m) => langEligible(m) && !picked.includes(m)),
+      );
+      for (const m of fallbackPool) {
+        if (picked.length >= need) break;
+        picked.push(m);
+      }
     }
 
     // 난이도 곡선: 워밍업(1) → 실전 함정(2) → 고난도(3) 순 배치 (Gold는 무작위 위치 삽입)
@@ -316,6 +317,7 @@ export async function submitMissionSet(
         prompt: mission.prompt,
         kind: mission.kind,
         mode: mission.mode,
+        origin: mission.origin,
         choice: answer.choice,
         consensus,
         tally,
