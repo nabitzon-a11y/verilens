@@ -340,6 +340,11 @@ export default function SubmitPage() {
       setSourceLabel(en ? 'Product Review' : '쇼핑몰 상품평');
       setPrompt(en ? 'Is this a real buyer review or AI-generated?' : '실제 구매자 후기일까요, AI 생성 리뷰일까요?');
     }
+    const prefillText = params.get('text')?.trim();
+    if (prefillText) {
+      setKind('text');
+      setTextA(prefillText.slice(0, TEXT_MAX));
+    }
   }, [en]);
 
   const touch = () => {

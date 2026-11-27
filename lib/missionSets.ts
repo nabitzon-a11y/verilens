@@ -155,10 +155,12 @@ export async function issueMissionSet(
 
   const need = GAME.QUESTIONS_PER_SET - GAME.GOLD_PER_SET;
   const picked: Mission[] = [];
+  const recentSet = new Set(user.recentMissionIds ?? []);
   const langEligible = (m: Mission) =>
     isMissionEligibleForLang(m, lang) && (m.minTier !== 'gold' || user.trustScore >= 550 || m.requesterUid === user.uid);
   const eligibleGolds = golds.filter(langEligible);
-  const goldPool = eligibleGolds.length > 0 ? eligibleGolds : golds;
+  const freshGolds = eligibleGolds.filter((g) => !recentSet.has(g.id));
+  const goldPool = freshGolds.length > 0 ? freshGolds : eligibleGolds.length > 0 ? eligibleGolds : golds;
 
   const isDaily = mode === 'daily';
   let ordered: Mission[];
@@ -170,18 +172,31 @@ export async function issueMissionSet(
     const challenge = challengeId ? regular.find((m) => m.id === challengeId) : undefined;
     if (challenge) picked.push(challenge);
 
-    const requesterFirst = shuffle(
-      regular.filter((m) => m.origin === 'requester' && langEligible(m) && !picked.includes(m)),
-    ).slice(0, 2);
-    picked.push(...requesterFirst);
+    // 아직 안 푼 문항 우선 선발 (중복 출제 방지), 부족하면 기존 풀에서 보충
+    const freshRequester = shuffle(
+      regular.filter((m) => m.origin === 'requester' && langEligible(m) && !recentSet.has(m.id) && !picked.includes(m)),
+    );
+    const fallbackRequester = shuffle(
+      regular.filter((m) => m.origin === 'requester' && langEligible(m) && recentSet.has(m.id) && !picked.includes(m)),
+    );
+    picked.push(...[...freshRequester, ...fallbackRequester].slice(0, 2));
 
-    // 이미지 문항이 세트당 최소 1~2개 포함되도록 우선 선발 (눈에 끌리는 시각 몰입감)
-    const imageFirst = shuffle(
-      regular.filter((m) => m.kind === 'image' && langEligible(m) && !picked.includes(m)),
-    ).slice(0, Math.max(0, Math.min(2, need - picked.length)));
-    picked.push(...imageFirst);
+    // 이미지 문항이 세트당 최소 1~2개 포함되도록 안 푼 이미지 우선 선발
+    const freshImages = shuffle(
+      regular.filter((m) => m.kind === 'image' && langEligible(m) && !recentSet.has(m.id) && !picked.includes(m)),
+    );
+    const fallbackImages = shuffle(
+      regular.filter((m) => m.kind === 'image' && langEligible(m) && recentSet.has(m.id) && !picked.includes(m)),
+    );
+    picked.push(...[...freshImages, ...fallbackImages].slice(0, Math.max(0, Math.min(2, need - picked.length))));
 
-    for (const m of shuffle(regular.filter((m) => langEligible(m) && !picked.includes(m)))) {
+    const freshRegular = shuffle(
+      regular.filter((m) => langEligible(m) && !recentSet.has(m.id) && !picked.includes(m)),
+    );
+    const fallbackRegular = shuffle(
+      regular.filter((m) => langEligible(m) && recentSet.has(m.id) && !picked.includes(m)),
+    );
+    for (const m of [...freshRegular, ...fallbackRegular]) {
       if (picked.length >= need) break;
       picked.push(m);
     }
@@ -446,6 +461,7 @@ export async function submitMissionSet(
         referralRewarded: validRefUid ? true : user.referralRewarded,
         dailyTrustDate: today,
         dailyTrustGained: todayGained + Math.max(0, trustDelta),
+        recentMissionIds: [...(user.recentMissionIds ?? []).filter((id) => !set.missionIds.includes(id)), ...set.missionIds].slice(-45),
         updatedAt: completedAt,
       };
 

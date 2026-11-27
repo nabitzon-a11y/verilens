@@ -150,6 +150,8 @@ export interface PioneerUser {
   dailyTrustDate?: string;
   /** 오늘 누적 획득한 신뢰도 점수 */
   dailyTrustGained?: number;
+  /** 중복 출제 방지용 최근 풀이한 문항 ID 목록 (슬라이딩 윈도우) */
+  recentMissionIds?: string[];
   createdAt: ISODateString;
   updatedAt: ISODateString;
 }
