@@ -88,11 +88,111 @@ export default function HomePage() {
     }
   };
 
+  const primaryActions = (
+    <section className="grid grid-cols-2 gap-2.5">
+      <button
+        type="button"
+        onClick={() =>
+          profile
+            ? sessionActive
+              ? router.push('/verify')
+              : void startSession('/verify')
+            : scrollToLogin()
+        }
+        disabled={starting}
+        className="group relative flex flex-col justify-between overflow-hidden rounded-3xl bg-gradient-to-br from-brand to-[#58228B] p-3.5 text-left text-white shadow-[0_8px_22px_rgba(112,60,144,0.28)] transition active:scale-[0.98]"
+      >
+        <div className="pointer-events-none absolute -right-5 -top-5 h-20 w-20 rounded-full bg-white/10 blur-xl" />
+        <div className="flex items-center justify-between">
+          <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-sm">
+            {starting ? <Loader2 className="h-5 w-5 animate-spin" /> : <ScanFace className="h-5 w-5" />}
+          </span>
+          {sessionActive ? (
+            <span className="rounded-full bg-white/20 px-2 py-0.5 font-mono text-[11px] font-bold">
+              {formatMmSs(remaining)}
+            </span>
+          ) : (
+            <ChevronRight className="h-4 w-4 text-white/75 transition group-hover:translate-x-0.5" />
+          )}
+        </div>
+        <div className="mt-2.5">
+          <p className="text-[17px] font-black leading-tight tracking-tight">{hub.verifyTitle}</p>
+          <p className="mt-1 text-[13px] font-semibold text-white/90">
+            {sessionActive ? hub.verifyResumeSub : hub.verifySub}
+          </p>
+        </div>
+      </button>
+
+      <Link
+        href="/submit"
+        className="group flex flex-col justify-between rounded-3xl border border-amber-200/90 bg-gradient-to-br from-amber-50/55 via-white to-white p-3.5 text-left shadow-[0_6px_18px_rgba(224,168,66,0.12)] transition hover:border-amber-300 active:scale-[0.98]"
+      >
+        <div className="flex items-center justify-between">
+          <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-amber-50 text-pi-light">
+            <FilePlus2 className="h-5 w-5" />
+          </span>
+          {profile && profile.freeSubmitTickets > 0 ? (
+            <span className="chip bg-brand text-[11px] font-bold text-white">
+              {en ? `${profile.freeSubmitTickets} Free` : `무료권 ${profile.freeSubmitTickets}`}
+            </span>
+          ) : overview?.live.freeQuizAvailable && overview?.live.freeQuizEligible ? (
+            <span className="chip bg-emerald-50 text-[11px] font-bold text-human-dark">
+              {en ? 'Free 1/d' : '오늘 무료'}
+            </span>
+          ) : (
+            <ChevronRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-0.5" />
+          )}
+        </div>
+        <div className="mt-2.5">
+          <p className="text-[17px] font-black leading-tight tracking-tight text-slate-900">
+            {hub.submitTitle}
+          </p>
+          <p className="mt-1 text-[13px] font-semibold text-slate-600">
+            {hub.submitSub}
+          </p>
+        </div>
+      </Link>
+    </section>
+  );
+
+  const quickChips = (
+    <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+      {[
+        { href: '/submit?tpl=smishing', label: hub.chipSmishing },
+        { href: '/submit?tpl=listing', label: hub.chipListing },
+        { href: '/submit?tpl=review', label: hub.chipReview },
+        { href: '/alerts', label: hub.chipAlerts },
+      ].map((chip) => (
+        <Link
+          key={chip.href}
+          href={chip.href}
+          className="shrink-0 whitespace-nowrap rounded-full border border-slate-200/90 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm transition hover:border-brand/40 hover:text-brand"
+        >
+          {chip.label}
+        </Link>
+      ))}
+    </div>
+  );
+
+  const teaserCard = (
+    <TeaserQuizCard
+      lang={lang}
+      hub={hub}
+      onStartFull={() =>
+        profile
+          ? sessionActive
+            ? router.push('/verify')
+            : void startSession('/verify')
+          : scrollToLogin()
+      }
+    />
+  );
+
   return (
     <div className="space-y-4 pb-2">
       {modal}
 
-      {/* 상단 히어로 배너 (로고 중복 제거 + 행동 문구 & 상태 요약 집중) */}
+      {/* 상단 히어로 배너 */}
       <header className="relative overflow-hidden rounded-3xl border border-brand/15 bg-gradient-to-br from-white via-brand-soft/45 to-amber-50/60 p-3.5 shadow-[0_6px_22px_rgba(112,60,144,0.08)]">
         <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-brand/10 blur-2xl" />
 
@@ -104,6 +204,14 @@ export default function HomePage() {
             Pi Web3
           </span>
         </div>
+
+        {ready && !profile && (
+          <p className="relative mt-1 text-xs font-semibold text-slate-600">
+            {en
+              ? 'Try 1 sample below first · Earn Pi & submit checks in 10s'
+              : '아래 실사 문제 먼저 눌러보세요 · 맞히면 Pi 적립, 의심되면 바로 의뢰'}
+          </p>
+        )}
 
         {ready && profile && (
           <Link
@@ -167,172 +275,63 @@ export default function HomePage() {
         <div className="card flex items-center justify-center py-10 text-slate-400">
           <Loader2 className="h-5 w-5 animate-spin text-brand" />
         </div>
+      ) : !profile ? (
+        <>
+          {/* 비로그인: 선체험(실사 맛보기) 최우선 배치 -> 핵심 2대 액션 -> 로그인 */}
+          {teaserCard}
+          {primaryActions}
+          {quickChips}
+          <div id="login-panel">
+            <LoginPanel title={t.loginTitle} />
+          </div>
+        </>
       ) : (
         <>
-          {/* 1. 4개 핵심 메뉴 (시원한 타이포그래피 & 콤팩트 비율) */}
+          {/* 로그인: 핵심 2대 액션 -> 슬림 지갑/마이 바 -> 의뢰 칩 -> 맛보기/오답/데일리 */}
+          {primaryActions}
+
           <section className="grid grid-cols-2 gap-2.5">
-            <button
-              type="button"
-              onClick={() =>
-                profile
-                  ? sessionActive
-                    ? router.push('/verify')
-                    : void startSession('/verify')
-                  : scrollToLogin()
-              }
-              disabled={starting}
-              className="group relative flex flex-col justify-between overflow-hidden rounded-3xl bg-gradient-to-br from-brand to-[#58228B] p-3.5 text-left text-white shadow-[0_8px_22px_rgba(112,60,144,0.28)] transition active:scale-[0.98]"
-            >
-              <div className="pointer-events-none absolute -right-5 -top-5 h-20 w-20 rounded-full bg-white/10 blur-xl" />
-              <div className="flex items-center justify-between">
-                <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-sm">
-                  {starting ? <Loader2 className="h-5 w-5 animate-spin" /> : <ScanFace className="h-5 w-5" />}
-                </span>
-                {sessionActive ? (
-                  <span className="rounded-full bg-white/20 px-2 py-0.5 font-mono text-[11px] font-bold">
-                    {formatMmSs(remaining)}
-                  </span>
-                ) : (
-                  <ChevronRight className="h-4 w-4 text-white/75 transition group-hover:translate-x-0.5" />
-                )}
-              </div>
-              <div className="mt-2.5">
-                <p className="text-[17px] font-black leading-tight tracking-tight">{hub.verifyTitle}</p>
-                <p className="mt-1 text-[13px] font-semibold text-white/90">
-                  {sessionActive ? hub.verifyResumeSub : hub.verifySub}
-                </p>
-              </div>
-            </button>
-
-            <Link
-              href="/submit"
-              className="group flex flex-col justify-between rounded-3xl border border-amber-200/90 bg-gradient-to-br from-amber-50/55 via-white to-white p-3.5 text-left shadow-[0_6px_18px_rgba(224,168,66,0.12)] transition hover:border-amber-300 active:scale-[0.98]"
-            >
-              <div className="flex items-center justify-between">
-                <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-amber-50 text-pi-light">
-                  <FilePlus2 className="h-5 w-5" />
-                </span>
-                {profile && profile.freeSubmitTickets > 0 ? (
-                  <span className="chip bg-brand text-[11px] font-bold text-white">
-                    {en ? `${profile.freeSubmitTickets} Free` : `무료권 ${profile.freeSubmitTickets}`}
-                  </span>
-                ) : overview?.live.freeQuizAvailable && overview?.live.freeQuizEligible ? (
-                  <span className="chip bg-emerald-50 text-[11px] font-bold text-human-dark">
-                    {en ? 'Free 1/d' : '오늘 무료'}
-                  </span>
-                ) : (
-                  <ChevronRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-0.5" />
-                )}
-              </div>
-              <div className="mt-2.5">
-                <p className="text-[17px] font-black leading-tight tracking-tight text-slate-900">
-                  {hub.submitTitle}
-                </p>
-                <p className="mt-1 text-[13px] font-semibold text-slate-600">
-                  {hub.submitSub}
-                </p>
-              </div>
-            </Link>
-
             <Link
               href="/wallet"
-              className="group flex flex-col justify-between rounded-3xl border border-slate-200/90 bg-white p-3.5 text-left shadow-[0_4px_16px_rgba(15,23,42,0.05)] transition hover:border-brand/40 active:scale-[0.98]"
+              className="flex items-center justify-between rounded-2xl border border-slate-200/90 bg-white px-3.5 py-2.5 shadow-sm transition hover:border-brand/40"
             >
-              <div className="flex items-center justify-between">
-                <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-amber-50 text-pi-light">
-                  <Wallet className="h-5 w-5" />
-                </span>
-                {profile ? (
-                  <span className="flex items-center gap-0.5 text-xs font-extrabold text-pi-light">
-                    <Coins className="h-3.5 w-3.5" />
-                    {formatPi(profile.balance)}
-                  </span>
-                ) : (
-                  <ChevronRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-0.5" />
-                )}
-              </div>
-              <div className="mt-2.5">
-                <p className="text-[17px] font-black leading-tight tracking-tight text-slate-900">
-                  {hub.walletTitle}
-                </p>
-                <p className="mt-1 text-[13px] font-semibold text-slate-600">
-                  {hub.walletSub}
-                </p>
-              </div>
+              <span className="flex items-center gap-2 text-xs font-extrabold text-slate-800">
+                <Wallet className="h-4 w-4 text-pi-light" />
+                {hub.walletTitle}
+              </span>
+              <span className="flex items-center gap-0.5 text-xs font-extrabold text-pi-light">
+                <Coins className="h-3.5 w-3.5" />
+                {formatPi(profile.balance)}
+              </span>
             </Link>
 
             <Link
               href="/my"
-              className="group flex flex-col justify-between rounded-3xl border border-slate-200/90 bg-white p-3.5 text-left shadow-[0_4px_16px_rgba(15,23,42,0.05)] transition hover:border-brand/40 active:scale-[0.98]"
+              className="flex items-center justify-between rounded-2xl border border-slate-200/90 bg-white px-3.5 py-2.5 shadow-sm transition hover:border-brand/40"
             >
-              <div className="flex items-center justify-between">
-                <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-brand-soft text-brand">
-                  <UserCircle2 className="h-5 w-5" />
-                </span>
-                {profile ? (
-                  <span className="rounded-full bg-brand-soft px-2.5 py-0.5 text-xs font-extrabold text-brand">
-                    {getTrustTier(profile.trustScore).rewardMult}x
-                  </span>
-                ) : (
-                  <ChevronRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-0.5" />
-                )}
-              </div>
-              <div className="mt-2.5">
-                <p className="text-[17px] font-black leading-tight tracking-tight text-slate-900">
-                  {hub.myTitle}
-                </p>
-                <p className="mt-1 text-[13px] font-semibold text-slate-600">
-                  {hub.mySub}
-                </p>
-              </div>
+              <span className="flex items-center gap-2 text-xs font-extrabold text-slate-800">
+                <UserCircle2 className="h-4 w-4 text-brand" />
+                {hub.myTitle}
+              </span>
+              <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-extrabold text-brand">
+                {getTrustTier(profile.trustScore).rewardMult}x
+              </span>
             </Link>
           </section>
 
-          {/* 실생활 의뢰 & 경보 원클릭 칩 (컴팩트 1줄) */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
-            {[
-              { href: '/submit?tpl=smishing', label: hub.chipSmishing },
-              { href: '/submit?tpl=listing', label: hub.chipListing },
-              { href: '/submit?tpl=review', label: hub.chipReview },
-              { href: '/alerts', label: hub.chipAlerts },
-            ].map((chip) => (
-              <Link
-                key={chip.href}
-                href={chip.href}
-                className="shrink-0 whitespace-nowrap rounded-full border border-slate-200/90 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm transition hover:border-brand/40 hover:text-brand"
-              >
-                {chip.label}
-              </Link>
-            ))}
-          </div>
+          {quickChips}
+          {teaserCard}
 
-          {/* 2. 실사 맛보기 (항상 노출 · 로테이션 지원) */}
-          <TeaserQuizCard
-            lang={lang}
-            hub={hub}
-            onStartFull={() =>
-              profile
-                ? sessionActive
-                  ? router.push('/verify')
-                  : void startSession('/verify')
-                : scrollToLogin()
-            }
-          />
-
-          {/* 3. 어제 오답 1위 */}
           {overview?.yesterdayRecap && (
             <YesterdayRecapCard recap={overview.yesterdayRecap} hub={hub} />
           )}
 
-          {/* 4. 오늘의 데일리 챌린지 */}
           <button
             type="button"
             onClick={() =>
-              profile
-                ? sessionActive
-                  ? router.push('/verify?mode=daily')
-                  : void startSession('/verify?mode=daily')
-                : scrollToLogin()
+              sessionActive
+                ? router.push('/verify?mode=daily')
+                : void startSession('/verify?mode=daily')
             }
             disabled={starting}
             className="flex w-full items-center justify-between rounded-3xl border border-amber-200 bg-gradient-to-r from-amber-50/85 via-white to-orange-50/50 p-4 text-left shadow-[0_6px_20px_rgba(224,168,66,0.12)] transition hover:border-amber-300 active:scale-[0.99]"
@@ -352,12 +351,6 @@ export default function HomePage() {
             </div>
             <ChevronRight className="h-5 w-5 shrink-0 text-amber-600" />
           </button>
-
-          {!profile && (
-            <div id="login-panel">
-              <LoginPanel title={t.loginTitle} />
-            </div>
-          )}
         </>
       )}
     </div>

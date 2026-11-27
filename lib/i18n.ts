@@ -68,7 +68,7 @@ export const HOME_HUB_TEXT: Record<
   }
 > = {
   ko: {
-    heroCta: 'AI 가짜를 잡아내고 Pi 보상을 받으세요!',
+    heroCta: '둘 중 진짜는? 10명의 눈으로 AI 가짜를 가려냅니다',
     myPage: '마이페이지',
     verifyTitle: 'AI 판별하기',
     verifySub: '5문항 · Pi 적립',
@@ -96,7 +96,7 @@ export const HOME_HUB_TEXT: Record<
     yesterdayLose: (ans) => `아쉽네요! 실제 인간 원본은 ${ans}였어요.`,
   },
   en: {
-    heroCta: 'Spot AI fakes & earn Pi in 1 minute!',
+    heroCta: 'Real or AI? 10 human eyes verify what is real',
     myPage: 'My Page',
     verifyTitle: 'Verify AI',
     verifySub: '5 Qs · Earn Pi',
